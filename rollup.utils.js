@@ -129,9 +129,9 @@ function validateReplacedVersion() {
 
         requiredStrs.forEach((str) => {
           if (!contents.code.includes(str)) {
-            // throw new Error(
-            //   `Expected ${filename} to include \`${str}\` but it did not`
-            // );
+            throw new Error(
+              `Expected ${filename} to include \`${str}\` but it did not`
+            );
           }
         });
       });
