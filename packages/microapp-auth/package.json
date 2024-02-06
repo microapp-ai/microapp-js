@@ -1,0 +1,30 @@
+{
+  "name": "@microapp-io/auth",
+  "version": "0.1.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/microapp-io/microapp-js",
+    "directory": "packages/microapp-auth"
+  },
+  "license": "MIT",
+  "author": "Microapp <hi@microapp.io>",
+  "sideEffects": false,
+  "main": "./dist/microapp-auth.cjs.js",
+  "unpkg": "./dist/microapp-auth.umd.min.js",
+  "module": "./dist/microapp-auth.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist/",
+    "*.ts",
+    "CHANGELOG.md"
+  ],
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@auth0/nextjs-auth0": "^3.5.0"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "files": [],
+  "references": [
+    { "path": "packages/microapp-auth" },
+    { "path": "packages/microapp-react" }
+  ]
+}

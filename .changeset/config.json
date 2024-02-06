@@ -1,0 +1,14 @@
+{
+  "$schema": "https://unpkg.com/@changesets/config@2.0.0/schema.json",
+  "changelog": [
+    "@microapp-io/changelog",
+    { "repo": "microapp-io/microapp-js" }
+  ],
+  "commit": false,
+  "fixed": [["@microapp-io/auth", "@microapp-io/react"]],
+  "linked": [],
+  "access": "public",
+  "baseBranch": "dev",
+  "updateInternalDependencies": "patch",
+  "ignore": []
+}
