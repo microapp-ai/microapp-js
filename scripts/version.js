@@ -103,7 +103,7 @@ async function run() {
       });
     }
 
-    // 7. Commit and tag
+    // 6. Commit and tag
     execSync(`git commit --all --message="Version ${version}"`);
     execSync(`git tag -a -m "Version ${version}" v${version}`);
     console.log(chalk.green(`  Committed and tagged version ${version}`));

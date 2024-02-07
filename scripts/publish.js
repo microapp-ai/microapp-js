@@ -55,20 +55,14 @@ function publishBuild(packageName, tag) {
  */
 async function run() {
   try {
-    // 0. Ensure we are in CI. We don't do this manually
-    invariant(
-      process.env.CI,
-      `You should always run the publish script from the CI environment!`
-    );
-
-    // 1. Get the current tag, which has the release version number
+    // 0. Get the current tag, which has the release version number
     let version = getTaggedVersion();
     invariant(
       version !== "",
       "Missing release version. Run the version script first."
     );
 
-    // 2. Determine the appropriate npm tag to use
+    // 1. Determine the appropriate npm tag to use
     let tag = version.includes("experimental")
       ? "experimental"
       : semver.prerelease(version) == null
@@ -78,13 +72,13 @@ async function run() {
     console.log();
     console.log(`  Publishing version ${version} to npm with tag "${tag}"`);
 
-    // 3. Ensure build versions match the release version
-    await ensureBuildVersion("@microapp-io/auth", version);
-    await ensureBuildVersion("@microapp-io/react", version);
+    // 2. Ensure build versions match the release version
+    await ensureBuildVersion("microapp-auth", version);
+    await ensureBuildVersion("microapp-react", version);
 
-    // 4. Publish to npm
-    publishBuild("@microapp-io/auth", tag);
-    publishBuild("@microapp-io/react", tag);
+    // 3. Publish to npm
+    publishBuild("microapp-auth", tag);
+    publishBuild("microapp-react", tag);
   } catch (error) {
     console.log();
     console.error(`  ${error.message}`);
