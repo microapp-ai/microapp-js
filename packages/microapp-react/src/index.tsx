@@ -1,31 +1,112 @@
 import * as React from "react";
+import type { AuthConfigParams, User } from "@microapp-io/auth";
 import { Auth } from "@microapp-io/auth";
 
-export type MicroappContextType = {
-  isAuthenticated: boolean;
+export type AuthContextType =
+  | {
+      isAuthenticated: false;
+      isLoading: boolean;
+      error?: Error;
+      user?: undefined;
+      refresh: () => void;
+      requestLogin: () => void;
+      buildLoginUrl: (params?: { returnTo?: string }) => string;
+    }
+  | {
+      isAuthenticated: true;
+      isLoading: boolean;
+      error?: Error;
+      user: User;
+      refresh: () => void;
+      requestLogin: () => void;
+      buildLoginUrl: (params?: { returnTo?: string }) => string;
+    };
+
+const INITIAL_AUTH_CONTEXT: AuthContextType = {
+  isAuthenticated: false,
+  isLoading: false,
+  error: undefined,
+  user: undefined,
+  refresh: () => {},
+  requestLogin: () => {},
+  buildLoginUrl: (params?: { returnTo?: string }) => {
+    return "";
+  },
 };
 
-export const MicroappContext = React.createContext<MicroappContextType>({
-  isAuthenticated: false,
-});
+export const AuthContext = React.createContext<AuthContextType | undefined>(
+  undefined
+);
 
-export function MicroappProvider({ children }: { children: React.ReactNode }) {
-  const auth = new Auth();
+export function AuthProvider({
+  config,
+  children,
+}: {
+  config?: AuthConfigParams;
+  children: React.ReactNode;
+}) {
+  const auth = React.useMemo(() => new Auth({ config }), [config]);
+  const [state, setState] = React.useState<AuthContextType>(() => {
+    return Object.assign({}, INITIAL_AUTH_CONTEXT);
+  });
 
-  return (
-    <MicroappContext.Provider
-      value={{ isAuthenticated: auth.isAuthenticated() }}
-    >
-      {children}
-    </MicroappContext.Provider>
+  const load = React.useCallback(
+    ({ shouldForceRefresh }: { shouldForceRefresh?: boolean } = {}) => {
+      setState((previousState) => ({
+        ...previousState,
+        isLoading: true,
+        error: undefined,
+      }));
+
+      auth
+        .isAuthenticated()
+        .then(() => {
+          if (shouldForceRefresh) {
+            return auth.getUser();
+          }
+          return auth.getCachedUser();
+        })
+        .then((user) => {
+          setState((previousState) => ({
+            ...previousState,
+            isAuthenticated: true,
+            isLoading: false,
+            user,
+          }));
+        })
+        .catch((error) => {
+          setState((previousState) => ({
+            ...previousState,
+            isAuthenticated: false,
+            isLoading: false,
+            user: undefined,
+            error,
+          }));
+        });
+    },
+    [auth]
   );
+
+  React.useEffect(() => {
+    setState((previousState) => ({
+      ...previousState,
+      refresh: () => load({ shouldForceRefresh: true }),
+      requestLogin: () => auth.requestLogin(),
+      buildLoginUrl: (params?: { returnTo?: string }) =>
+        auth.buildLoginUrl(params),
+    }));
+
+    load();
+  }, [auth, load]);
+
+  return <AuthContext.Provider value={state}>{children}</AuthContext.Provider>;
 }
 
-export function useAuth(): MicroappContextType {
-  const context = React.useContext(MicroappContext);
+export function useAuth(): AuthContextType {
+  const context = React.useContext(AuthContext);
 
   if (!context) {
-    throw new Error("useAuth must be used within a MicroappProvider");
+    throw new Error("useAuth must be used within an AuthProvider");
   }
 
   return context;

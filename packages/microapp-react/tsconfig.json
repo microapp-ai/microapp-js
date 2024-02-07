@@ -15,7 +15,7 @@
 
     "skipLibCheck": true,
 
-    "outDir": ".",
-    "rootDir": "."
+    "outDir": "./dist",
+    "rootDir": "./src"
   }
 }

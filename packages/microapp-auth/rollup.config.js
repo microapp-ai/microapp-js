@@ -23,6 +23,7 @@ function getRollupConfig(
     name,
     "microapp-auth"
   );
+
   const banner = createBanner("@microapp-io/auth", version);
 
   return {
