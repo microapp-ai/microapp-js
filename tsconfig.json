@@ -3,6 +3,7 @@
   "references": [
     { "path": "packages/auth" },
     { "path": "packages/build" },
+    { "path": "packages/cli" },
     { "path": "packages/react" }
   ]
 }

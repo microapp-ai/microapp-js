@@ -1,5 +1,5 @@
-export class MicroappConfigError extends Error {
-  readonly cause?: unknown;
+export class MicroappCLIError extends Error {
+  readonly cause?: any;
 
   constructor(message: string, options: { cause?: unknown } = {}) {
     super(message);

@@ -1,3 +1,4 @@
+export * from './errors';
 export * from './reader';
 export * from './types';
-export * from './invalid-config-error';
+export * from './validator';

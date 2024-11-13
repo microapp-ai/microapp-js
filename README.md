@@ -9,6 +9,7 @@ This repository is a monorepo containing the following packages:
 
 - [`auth`](/packages/auth)
 - [`build`](/packages/build)
+- [`cli`](/packages/cli)
 - [`react`](/packages/react)
 
 ## About

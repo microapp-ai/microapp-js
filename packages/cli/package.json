@@ -1,0 +1,40 @@
+{
+  "name": "@microapp-io/cli",
+  "version": "0.1.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/microapp-io/microapp-js",
+    "directory": "packages/cli"
+  },
+  "license": "MIT",
+  "author": "Microapp <hi@microapp.io>",
+  "sideEffects": false,
+  "main": "./dist/cli.cjs.js",
+  "module": "./dist/cli.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist/",
+    "*.ts",
+    "CHANGELOG.md"
+  ],
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@babel/parser": "^7.26.2",
+    "@module-federation/nextjs-mf": "^8.7.7",
+    "recast": "^0.23.9",
+    "semver": "^7.5.4"
+  },
+  "peerDependencies": {
+    "styled-jsx": "^5.1.6"
+  },
+  "devDependencies": {
+    "@types/webpack": "^5.28.0",
+    "styled-jsx": "^5.1.6",
+    "webpack": "^5.0.0"
+  }
+}
