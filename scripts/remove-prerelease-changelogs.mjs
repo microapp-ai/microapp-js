@@ -1,25 +1,25 @@
-import * as fs from "node:fs";
-import path from "node:path";
-import * as url from "node:url";
-import { getPackagesSync } from "@manypkg/get-packages";
-import remarkParse from "remark-parse";
-import remarkGfm from "remark-gfm";
-import rehypeStringify from "remark-stringify";
-import { unified } from "unified";
-import { remove } from "unist-util-remove";
+import * as fs from 'node:fs';
+import path from 'node:path';
+import * as url from 'node:url';
+import { getPackagesSync } from '@manypkg/get-packages';
+import remarkParse from 'remark-parse';
+import remarkGfm from 'remark-gfm';
+import rehypeStringify from 'remark-stringify';
+import { unified } from 'unified';
+import { remove } from 'unist-util-remove';
 
-const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
-const rootDir = path.join(__dirname, "..");
+const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
+const rootDir = path.join(__dirname, '..');
 
 main();
 
 async function main() {
   if (isPrereleaseMode()) {
-    console.log("🚫 Skipping changelog removal in prerelease mode");
+    console.log('🚫 Skipping changelog removal in prerelease mode');
     return;
   }
   await removePreReleaseChangelogs();
-  console.log("✅ Removed pre-release changelogs");
+  console.log('✅ Removed pre-release changelogs');
 }
 
 async function removePreReleaseChangelogs() {
@@ -28,11 +28,11 @@ async function removePreReleaseChangelogs() {
   /** @type {Promise<any>[]} */
   let processes = [];
   for (let pkg of allPackages) {
-    let changelogPath = path.join(pkg.dir, "CHANGELOG.md");
+    let changelogPath = path.join(pkg.dir, 'CHANGELOG.md');
     if (!fs.existsSync(changelogPath)) {
       continue;
     }
-    let changelogFileContents = fs.readFileSync(changelogPath, "utf-8");
+    let changelogFileContents = fs.readFileSync(changelogPath, 'utf-8');
     processes.push(
       (async () => {
         let file = await unified()
@@ -45,14 +45,14 @@ async function removePreReleaseChangelogs() {
           // same problem
           // @ts-expect-error
           .use(rehypeStringify, {
-            bullet: "-",
-            emphasis: "_",
-            listItemIndent: "one",
+            bullet: '-',
+            emphasis: '_',
+            listItemIndent: 'one',
           })
           .process(changelogFileContents);
 
         let fileContents = file.toString();
-        await fs.promises.writeFile(changelogPath, fileContents, "utf-8");
+        await fs.promises.writeFile(changelogPath, fileContents, 'utf-8');
       })()
     );
   }
@@ -75,9 +75,9 @@ function removePreReleaseSectionFromMarkdown() {
       (node, index, parent) => {
         if (node.__REMOVE__ === true) return true;
         if (
-          node.type === "heading" &&
+          node.type === 'heading' &&
           node.depth === 2 &&
-          node.children[0].type === "text" &&
+          node.children[0].type === 'text' &&
           isPrereleaseVersion(node.children[0].value)
         ) {
           if (index == null || parent == null) return false;
@@ -88,7 +88,7 @@ function removePreReleaseSectionFromMarkdown() {
 
           /** @type {import('./unist').FlowNode[]} */
           while (nextNode && !found) {
-            if (nextNode.type === "heading" && nextNode.depth === 2) {
+            if (nextNode.type === 'heading' && nextNode.depth === 2) {
               found = true;
               break;
             }
@@ -115,7 +115,7 @@ function isPrereleaseVersion(str) {
 
 function isPrereleaseMode() {
   try {
-    let prereleaseFilePath = path.join(rootDir, ".changeset", "pre.json");
+    let prereleaseFilePath = path.join(rootDir, '.changeset', 'pre.json');
     return fs.existsSync(prereleaseFilePath);
   } catch (err) {
     return false;

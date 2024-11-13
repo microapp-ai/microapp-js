@@ -1,7 +1,7 @@
-const path = require("path");
-const fse = require("fs-extra");
-const { version } = require("./package.json");
-const majorVersion = version.split(".").shift();
+const path = require('path');
+const fse = require('fs-extra');
+const { version } = require('./package.json');
+const majorVersion = version.split('.').shift();
 
 const PRETTY = !!process.env.PRETTY;
 
@@ -9,43 +9,43 @@ const PRETTY = !!process.env.PRETTY;
  * Determine the relevant directories for a rollup build, relative to the
  * current working directory and taking LOCAL_BUILD_DIRECTORY into account
  *
- * ROOT_DIR     Root directory for the microapp-auth repo
+ * ROOT_DIR     Root directory for the repo
  * SOURCE_DIR   Source package directory we will read input files from
  * OUTPUT_DIR   Destination directory to write rollup output to
  *
  * @param {string} packageName  npm package name (i.e., @microapp-io/auth)
- * @param {string} [folderName] folder name (i.e., microapp-react). Defaults to package name
+ * @param {string} [folderName] folder name (i.e., react). Defaults to package name
  */
 function getBuildDirectories(packageName, folderName) {
   let ROOT_DIR = __dirname;
   let PKG_DIR = folderName
-    ? path.join(__dirname, "packages", folderName)
-    : path.join(__dirname, "packages", ...packageName.split("/"));
+    ? path.join(__dirname, 'packages', folderName)
+    : path.join(__dirname, 'packages', ...packageName.split('/'));
 
-  let SOURCE_DIR = path.join(PKG_DIR, "src");
+  let SOURCE_DIR = path.join(PKG_DIR, 'src');
 
   // Update if we're not running from root
   if (process.cwd() !== __dirname) {
     ROOT_DIR = path.dirname(path.dirname(process.cwd()));
     PKG_DIR = process.cwd();
-    SOURCE_DIR = path.join(PKG_DIR, "src");
+    SOURCE_DIR = path.join(PKG_DIR, 'src');
   }
 
-  let OUTPUT_DIR = path.join(SOURCE_DIR, "../", "dist");
+  let OUTPUT_DIR = path.join(SOURCE_DIR, '../', 'dist');
 
   if (process.env.LOCAL_BUILD_DIRECTORY) {
     try {
       let nodeModulesDir = path.resolve(
         process.env.LOCAL_BUILD_DIRECTORY,
-        "node_modules"
+        'node_modules'
       );
       fse.readdirSync(nodeModulesDir);
-      OUTPUT_DIR = path.join(nodeModulesDir, ...packageName.split("/"), "dist");
+      OUTPUT_DIR = path.join(nodeModulesDir, ...packageName.split('/'), 'dist');
     } catch (e) {
       console.error(
-        "Oops! You pointed LOCAL_BUILD_DIRECTORY to a directory that " +
-          "does not have a node_modules/ folder. Please `npm install` in that " +
-          "directory and try again."
+        'Oops! You pointed LOCAL_BUILD_DIRECTORY to a directory that ' +
+          'does not have a node_modules/ folder. Please `npm install` in that ' +
+          'directory and try again.'
       );
       process.exit(1);
     }
@@ -74,9 +74,9 @@ function babelPluginReplaceVersionPlaceholder() {
   return function (babel) {
     var t = babel.types;
 
-    const KIND = "const";
-    const NAME = "MICROAPP_JS_VERSION";
-    const PLACEHOLDER = "__MICROAPP_JS_VERSION_PLACEHOLDER__";
+    const KIND = 'const';
+    const NAME = 'MICROAPP_JS_VERSION';
+    const PLACEHOLDER = '__MICROAPP_JS_VERSION_PLACEHOLDER__';
 
     return {
       visitor: {
@@ -113,14 +113,14 @@ function babelPluginReplaceVersionPlaceholder() {
 // Post-build plugin to validate that the version placeholder was replaced
 function validateReplacedVersion() {
   return {
-    name: "validate-replaced-version",
+    name: 'validate-replaced-version',
     writeBundle(_, bundle) {
       Object.entries(bundle).forEach(([filename, contents]) => {
-        if (!filename.endsWith(".js")) {
+        if (!filename.endsWith('.js')) {
           return;
         }
 
-        let requiredStrs = filename.endsWith(".min.js")
+        let requiredStrs = filename.endsWith('.min.js')
           ? [`{window.__microappJsVersion="${majorVersion}"}`]
           : [
               `const MICROAPP_JS_VERSION = "${majorVersion}";`,

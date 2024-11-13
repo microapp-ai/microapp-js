@@ -1,10 +1,10 @@
-const fs = require("fs");
-const path = require("path");
+const fs = require('fs');
+const path = require('path');
 
 module.exports = function rollup(options) {
-  return ["microapp-auth", "microapp-react"]
+  return ['auth', 'build', 'react']
     .flatMap((dir) => {
-      let configPath = path.join("packages", dir, "rollup.config.js");
+      let configPath = path.join('packages', dir, 'rollup.config.js');
       try {
         fs.readFileSync(configPath);
       } catch (e) {

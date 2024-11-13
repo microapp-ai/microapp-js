@@ -4,8 +4,9 @@
   "private": true,
   "workspaces": {
     "packages": [
-      "packages/microapp-auth",
-      "packages/microapp-react"
+      "packages/auth",
+      "packages/build",
+      "packages/react"
     ]
   },
   "scripts": {
@@ -18,8 +19,9 @@
     "prerelease": "yarn build",
     "release": "changeset publish",
     "size": "filesize",
-    "test": "jest --passWithNoTests",
-    "test:inspect": "node --inspect-brk ./node_modules/.bin/jest --passWithNoTests",
+    "test": "yarn workspaces run jest --passWithNoTests",
+    "test:dev": "yarn workspaces run jest --watch",
+    "test:inspect": "yarn workspaces run jest --inspect-brk",
     "changeset": "changeset",
     "version": "changeset version && node ./scripts/remove-prerelease-changelogs.mjs",
     "publish": "node scripts/publish.js",
