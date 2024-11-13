@@ -16,14 +16,11 @@ const CONFIG_KEY = 'config';
 const CONFIG_PLUGINS_KEY = `${CONFIG_KEY}.plugins`;
 const PLUGIN_USAGE_CODE = `${CONFIG_PLUGINS_KEY}.push(new ${PLUGIN_CLASS_NAME}());\n`;
 const CONFIG_WEBPACK_KEY = 'webpack';
-const DEFAULT_JS_CONFIG_CONTENT = `module.exports = {
-  ${CONFIG_WEBPACK_KEY}: (config) => {
-    ${PLUGIN_USAGE_CODE}
-    return config;
-  },
-};
-`;
-const DEFAULT_TS_CONFIG_CONTENT = `export default {
+
+export class MicroappNextConfigFileTransformer
+  implements MicroappFileTransformer
+{
+  public static readonly DEFAULT_JS_CONFIG_CONTENT = `module.exports = {
   ${CONFIG_WEBPACK_KEY}: (config) => {
     ${PLUGIN_USAGE_CODE}
     return config;
@@ -31,9 +28,14 @@ const DEFAULT_TS_CONFIG_CONTENT = `export default {
 };
 `;
 
-export class MicroappNextConfigFileTransformer
-  implements MicroappFileTransformer
-{
+  public static readonly DEFAULT_TS_CONFIG_CONTENT = `export default {
+  ${CONFIG_WEBPACK_KEY}: (config) => {
+    ${PLUGIN_USAGE_CODE}
+    return config;
+  },
+};
+`;
+
   async transformByFilePath(filePath: string): Promise<string> {
     const resolvedPath = path.resolve(process.cwd(), filePath);
     const isTypeScript = filePath.endsWith(TYPE_SCRIPT_FILE_EXTENSION);
@@ -56,8 +58,8 @@ export class MicroappNextConfigFileTransformer
     });
 
     const configContent = isTypeScript
-      ? DEFAULT_TS_CONFIG_CONTENT
-      : DEFAULT_JS_CONFIG_CONTENT;
+      ? MicroappNextConfigFileTransformer.DEFAULT_TS_CONFIG_CONTENT
+      : MicroappNextConfigFileTransformer.DEFAULT_JS_CONFIG_CONTENT;
 
     return `${pluginImportCode}${configContent}`;
   }
