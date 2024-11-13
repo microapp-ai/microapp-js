@@ -12,7 +12,7 @@ const {
   getBuildDirectories,
   PRETTY,
 } = require('../../rollup.utils');
-const { name, version } = require('./package.json');
+const { name, version, dependencies } = require('./package.json');
 
 function getRollupConfig(
   format,
@@ -28,7 +28,7 @@ function getRollupConfig(
 
   return {
     input: `${SOURCE_DIR}/index.ts`,
-    external: ['fs', 'path', 'semver', '@module-federation/nextjs-mf'],
+    external: ['fs', 'path', ...Object.keys(dependencies)],
     output: {
       file: `${OUTPUT_DIR}/${filename}`,
       format,

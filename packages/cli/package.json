@@ -25,9 +25,8 @@
   },
   "dependencies": {
     "@babel/parser": "^7.26.2",
-    "@module-federation/nextjs-mf": "^8.7.7",
-    "recast": "^0.23.9",
-    "semver": "^7.5.4"
+    "ast-types": "^0.14.2",
+    "recast": "^0.23.9"
   },
   "peerDependencies": {
     "styled-jsx": "^5.1.6"
