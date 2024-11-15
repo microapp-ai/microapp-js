@@ -1,4 +1,4 @@
-import { MicroappNextFederationPlugin } from '@microapp-io/build';
+import { MicroappNextFederationPlugin } from '@microapp-io/scripts';
 
 // NB: We do this call below so that ESLint doesn't remove the import it
 // eslint-disable-next-line @typescript-eslint/no-unused-expressions

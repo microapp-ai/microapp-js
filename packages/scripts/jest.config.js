@@ -6,6 +6,6 @@ module.exports = {
     '\\.[jt]sx?$': './jest-transformer.js',
   },
   moduleNameMapper: {
-    '^@microapp-io/build$': '<rootDir>/index.ts',
+    '^@microapp-io/scripts$': '<rootDir>/index.ts',
   },
 };

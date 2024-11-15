@@ -1,16 +1,16 @@
 {
-  "name": "@microapp-io/build",
+  "name": "@microapp-io/scripts",
   "version": "0.1.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/microapp-io/microapp-js",
-    "directory": "packages/build"
+    "directory": "packages/scripts"
   },
   "license": "MIT",
   "author": "Microapp <hi@microapp.io>",
   "sideEffects": false,
-  "main": "./dist/build.cjs.js",
-  "module": "./dist/build.js",
+  "main": "./dist/scripts.cjs.js",
+  "module": "./dist/scripts.js",
   "types": "./dist/index.d.ts",
   "files": [
     "dist/",

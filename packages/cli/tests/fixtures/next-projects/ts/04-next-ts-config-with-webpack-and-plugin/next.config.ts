@@ -1,4 +1,4 @@
-import { MicroappNextFederationPlugin } from '@microapp-io/build';
+import { MicroappNextFederationPlugin } from '@microapp-io/scripts';
 
 export default {
   webpack: (config) => {

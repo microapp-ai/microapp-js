@@ -2,7 +2,7 @@
   "files": [],
   "references": [
     { "path": "packages/auth" },
-    { "path": "packages/build" },
+    { "path": "packages/scripts" },
     { "path": "packages/cli" },
     { "path": "packages/react" }
   ]

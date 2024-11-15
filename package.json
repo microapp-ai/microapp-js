@@ -5,7 +5,7 @@
   "workspaces": {
     "packages": [
       "packages/auth",
-      "packages/build",
+      "packages/scripts",
       "packages/cli",
       "packages/react"
     ]

@@ -8,7 +8,7 @@ import type { MicroappFileTransformer } from '../file-transformer';
 import { CannotUpdateNextConfigFileError } from './errors';
 
 const TYPE_SCRIPT_FILE_EXTENSION = '.ts';
-const PLUGIN_MODULE = '@microapp-io/build';
+const PLUGIN_MODULE = '@microapp-io/scripts';
 const PLUGIN_CLASS_NAME = 'MicroappNextFederationPlugin';
 const PLUGIN_IMPORT_CODE_ESM = `import { ${PLUGIN_CLASS_NAME} } from '${PLUGIN_MODULE}';\n`;
 const PLUGIN_IMPORT_CODE_CJS = `const { ${PLUGIN_CLASS_NAME} } = require('${PLUGIN_MODULE}');\n`;

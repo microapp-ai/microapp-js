@@ -21,10 +21,10 @@ function getRollupConfig(
 ) {
   const { ROOT_DIR, PKG_DIR, SOURCE_DIR, OUTPUT_DIR } = getBuildDirectories(
     name,
-    'build'
+    'scripts'
   );
 
-  const banner = createBanner('@microapp-io/build', version);
+  const banner = createBanner('@microapp-io/scripts', version);
 
   return {
     input: `${SOURCE_DIR}/index.ts`,
@@ -69,8 +69,8 @@ function getRollupConfig(
 
 module.exports = function rollup() {
   return [
-    getRollupConfig('esm', 'build.js', { includeTypesAndCopy: true }),
-    getRollupConfig('cjs', 'build.cjs.js'),
+    getRollupConfig('esm', 'scripts.js', { includeTypesAndCopy: true }),
+    getRollupConfig('cjs', 'scripts.cjs.js'),
   ];
 };
 
