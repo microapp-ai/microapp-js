@@ -73,16 +73,19 @@ export class MicroappNextConfigFileTransformer
   }): string {
     try {
       const ast = this.parseConfig({ content, isTypeScript });
-      const doesAstContainRequireOrImport =
-        this.doesAstContainRequireOrImport(ast);
-      const isUsingImportStyle = isTypeScript || !doesAstContainRequireOrImport;
+      const usedTypeOfRequireOrImport = this.getUsedTypeOfRequireOrImport(ast);
+      const isUsingImportStyle = usedTypeOfRequireOrImport
+        ? usedTypeOfRequireOrImport === 'import' ||
+          usedTypeOfRequireOrImport === 'require-and-import'
+        : isTypeScript;
+
       const pluginImportCode = this.getPluginImportCode({ isUsingImportStyle });
 
-      if (!this.doesAstHavePluginImport(ast)) {
+      if (!this.doesAstImportPlugin(ast)) {
         this.addPluginImport({ ast, pluginImportCode });
       }
 
-      if (!this.doesAstHavePluginUsage(ast)) {
+      if (!this.doesAstUsePlugin(ast)) {
         this.addPluginUsageToAst(ast);
       }
 
@@ -115,31 +118,41 @@ export class MicroappNextConfigFileTransformer
     }
   }
 
-  private doesAstContainRequireOrImport(ast: namedTypes.Program): boolean {
-    let containsRequireOrImport = false;
+  private getUsedTypeOfRequireOrImport(
+    ast: namedTypes.Program
+  ): 'require' | 'import' | 'require-and-import' | false {
+    let containsRequire = false;
+    let containsImport = false;
 
     recast.visit(ast, {
       visitImportDeclaration() {
-        containsRequireOrImport = true;
+        containsImport = true;
         return false;
       },
       visitVariableDeclaration(path) {
         const declaration = path.node
           .declarations[0] as namedTypes.VariableDeclarator;
+
         const isRequireCall =
           declaration?.init?.type === 'CallExpression' &&
           declaration.init.callee.type === 'Identifier' &&
           declaration.init.callee.name === 'require';
 
         if (isRequireCall) {
-          containsRequireOrImport = true;
+          containsRequire = true;
         }
 
         return false;
       },
     });
 
-    return containsRequireOrImport;
+    return containsRequire && containsImport
+      ? 'require-and-import'
+      : containsRequire
+      ? 'require'
+      : containsImport
+      ? 'import'
+      : false;
   }
 
   private getPluginImportCode({
@@ -150,7 +163,7 @@ export class MicroappNextConfigFileTransformer
     return isUsingImportStyle ? PLUGIN_IMPORT_CODE_ESM : PLUGIN_IMPORT_CODE_CJS;
   }
 
-  private doesAstHavePluginImport(ast: namedTypes.Program): boolean {
+  private doesAstImportPlugin(ast: namedTypes.Program): boolean {
     let hasPluginImport = false;
 
     recast.visit(ast, {
@@ -199,7 +212,7 @@ export class MicroappNextConfigFileTransformer
     return hasPluginImport;
   }
 
-  private doesAstHavePluginUsage(ast: namedTypes.Program): boolean {
+  private doesAstUsePlugin(ast: namedTypes.Program): boolean {
     let hasPluginUsage = false;
 
     recast.visit(ast, {
