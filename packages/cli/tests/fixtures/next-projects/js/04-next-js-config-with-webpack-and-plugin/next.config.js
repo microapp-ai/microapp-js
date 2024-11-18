@@ -1,4 +1,4 @@
-const { MicroappNextFederationPlugin } = require('@microapp-io/build');
+const { MicroappNextFederationPlugin } = require('@microapp-io/scripts');
 
 module.exports = {
   webpack: (config) => {

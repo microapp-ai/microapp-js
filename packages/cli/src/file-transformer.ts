@@ -1,3 +1,5 @@
 export interface MicroappFileTransformer {
-  transformByFilePath(filePath: string): Promise<string>;
+  transform(filePath: string): Promise<string>;
+
+  transformAndPersist(filePath: string): Promise<void>;
 }

@@ -18,9 +18,7 @@ describe('MicroappNextConfigFileTransformer', () => {
       const filePath = getFixtureFilePath(folderName, 'next.config.js');
       const fileContent = readFixtureFile(filePath);
 
-      const transformedFileContent = await transformer.transformByFilePath(
-        filePath
-      );
+      const transformedFileContent = await transformer.transform(filePath);
 
       expect(transformedFileContent).not.toBe(fileContent);
       expect(transformedFileContent).toContain('webpack: (config) =>');
@@ -34,9 +32,7 @@ describe('MicroappNextConfigFileTransformer', () => {
       const filePath = getFixtureFilePath(folderName, 'next.config.js');
       const fileContent = readFixtureFile(filePath);
 
-      const transformedFileContent = await transformer.transformByFilePath(
-        filePath
-      );
+      const transformedFileContent = await transformer.transform(filePath);
 
       expect(transformedFileContent).not.toBe(fileContent);
       expect(transformedFileContent).toContain('webpack: config =>');
@@ -50,9 +46,7 @@ describe('MicroappNextConfigFileTransformer', () => {
       const filePath = getFixtureFilePath(folderName, 'next.config.js');
       const fileContent = readFixtureFile(filePath);
 
-      const transformedFileContent = await transformer.transformByFilePath(
-        filePath
-      );
+      const transformedFileContent = await transformer.transform(filePath);
 
       expect(transformedFileContent).not.toBe(fileContent);
       expect(transformedFileContent).toContain('webpack: (config) =>');
@@ -66,9 +60,7 @@ describe('MicroappNextConfigFileTransformer', () => {
       const filePath = getFixtureFilePath(folderName, 'next.config.js');
       const fileContent = readFixtureFile(filePath);
 
-      const transformedFileContent = await transformer.transformByFilePath(
-        filePath
-      );
+      const transformedFileContent = await transformer.transform(filePath);
 
       expect(transformedFileContent).not.toBe(fileContent);
       expect(transformedFileContent).toContain('webpack: (config) =>');
@@ -82,9 +74,7 @@ describe('MicroappNextConfigFileTransformer', () => {
       const filePath = getFixtureFilePath(folderName, 'next.config.js');
       const fileContent = readFixtureFile(filePath);
 
-      const transformedFileContent = await transformer.transformByFilePath(
-        filePath
-      );
+      const transformedFileContent = await transformer.transform(filePath);
 
       expect(transformedFileContent).not.toBe(fileContent);
       expect(transformedFileContent).toContain('webpack: (config) =>');
@@ -98,9 +88,7 @@ describe('MicroappNextConfigFileTransformer', () => {
       const filePath = getFixtureFilePath(folderName, 'next.config.js');
       const fileContent = readFixtureFile(filePath);
 
-      const transformedFileContent = await transformer.transformByFilePath(
-        filePath
-      );
+      const transformedFileContent = await transformer.transform(filePath);
 
       expect(transformedFileContent).not.toBe(fileContent);
       expect(transformedFileContent).toContain('webpack: (config) =>');
@@ -114,9 +102,7 @@ describe('MicroappNextConfigFileTransformer', () => {
       const filePath = getFixtureFilePath(folderName, 'next.config.js');
       const fileContent = readFixtureFile(filePath);
 
-      const transformedFileContent = await transformer.transformByFilePath(
-        filePath
-      );
+      const transformedFileContent = await transformer.transform(filePath);
 
       expect(transformedFileContent).not.toBe(fileContent);
       expect(transformedFileContent).toContain('webpack: (config) =>');
@@ -132,9 +118,7 @@ describe('MicroappNextConfigFileTransformer', () => {
       const filePath = getFixtureFilePath(folderName, 'next.config.ts');
       const fileContent = readFixtureFile(filePath);
 
-      const transformedFileContent = await transformer.transformByFilePath(
-        filePath
-      );
+      const transformedFileContent = await transformer.transform(filePath);
 
       expect(transformedFileContent).not.toBe(fileContent);
       expect(transformedFileContent).toContain(
@@ -151,9 +135,7 @@ describe('MicroappNextConfigFileTransformer', () => {
       const filePath = getFixtureFilePath(folderName, 'next.config.ts');
       const fileContent = readFixtureFile(filePath);
 
-      const transformedFileContent = await transformer.transformByFilePath(
-        filePath
-      );
+      const transformedFileContent = await transformer.transform(filePath);
 
       expect(transformedFileContent).not.toBe(fileContent);
       expect(transformedFileContent).toContain(
@@ -170,9 +152,7 @@ describe('MicroappNextConfigFileTransformer', () => {
       const filePath = getFixtureFilePath(folderName, 'next.config.ts');
       const fileContent = readFixtureFile(filePath);
 
-      const transformedFileContent = await transformer.transformByFilePath(
-        filePath
-      );
+      const transformedFileContent = await transformer.transform(filePath);
 
       expect(transformedFileContent).not.toBe(fileContent);
       expect(transformedFileContent).toContain(
@@ -189,9 +169,7 @@ describe('MicroappNextConfigFileTransformer', () => {
       const filePath = getFixtureFilePath(folderName, 'next.config.ts');
       const fileContent = readFixtureFile(filePath);
 
-      const transformedFileContent = await transformer.transformByFilePath(
-        filePath
-      );
+      const transformedFileContent = await transformer.transform(filePath);
 
       expect(transformedFileContent).not.toBe(fileContent);
       expect(transformedFileContent).toContain(
@@ -208,9 +186,7 @@ describe('MicroappNextConfigFileTransformer', () => {
       const filePath = getFixtureFilePath(folderName, 'next.config.ts');
       const fileContent = readFixtureFile(filePath);
 
-      const transformedFileContent = await transformer.transformByFilePath(
-        filePath
-      );
+      const transformedFileContent = await transformer.transform(filePath);
 
       expect(transformedFileContent).not.toBe(fileContent);
       expect(transformedFileContent).toContain(
@@ -227,9 +203,7 @@ describe('MicroappNextConfigFileTransformer', () => {
       const filePath = getFixtureFilePath(folderName, 'next.config.ts');
       const fileContent = readFixtureFile(filePath);
 
-      const transformedFileContent = await transformer.transformByFilePath(
-        filePath
-      );
+      const transformedFileContent = await transformer.transform(filePath);
 
       expect(transformedFileContent).not.toBe(fileContent);
       expect(transformedFileContent).toContain(
@@ -246,9 +220,7 @@ describe('MicroappNextConfigFileTransformer', () => {
       const filePath = getFixtureFilePath(folderName, 'next.config.ts');
       const fileContent = readFixtureFile(filePath);
 
-      const transformedFileContent = await transformer.transformByFilePath(
-        filePath
-      );
+      const transformedFileContent = await transformer.transform(filePath);
 
       expect(transformedFileContent).not.toBe(fileContent);
       expect(transformedFileContent).toContain(

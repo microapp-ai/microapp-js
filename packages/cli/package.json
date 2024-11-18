@@ -17,6 +17,9 @@
     "*.ts",
     "CHANGELOG.md"
   ],
+  "bin": {
+    "microapp": "./bin/run.js"
+  },
   "engines": {
     "node": ">=14.0.0"
   },
@@ -25,15 +28,30 @@
   },
   "dependencies": {
     "@babel/parser": "^7.26.2",
+    "@oclif/core": "^4.0.32",
+    "@microapp-io/scripts": "^0.1.0",
     "ast-types": "^0.14.2",
+    "inquirer": "^12.1.0",
     "recast": "^0.23.9"
   },
   "peerDependencies": {
     "styled-jsx": "^5.1.6"
   },
   "devDependencies": {
+    "@types/node": "^18",
     "@types/webpack": "^5.28.0",
     "styled-jsx": "^5.1.6",
+    "ts-node": "^10.9.2",
     "webpack": "^5.0.0"
+  },
+  "oclif": {
+    "bin": "microapp",
+    "commands": {
+      "strategy": "explicit",
+      "target": "./dist/cli.cjs.js",
+      "identifier": "COMMANDS"
+    },
+    "dirname": "microapp",
+    "topicSeparator": " "
   }
 }

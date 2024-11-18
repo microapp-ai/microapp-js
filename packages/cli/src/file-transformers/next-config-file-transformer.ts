@@ -20,6 +20,8 @@ const CONFIG_WEBPACK_KEY = 'webpack';
 export class MicroappNextConfigFileTransformer
   implements MicroappFileTransformer
 {
+  public static readonly DEFAULT_CONFIG_FILE_NAME = 'next.config.js';
+
   public static readonly DEFAULT_JS_CONFIG_CONTENT = `module.exports = {
   ${CONFIG_WEBPACK_KEY}: (config) => {
     ${PLUGIN_USAGE_CODE}
@@ -36,7 +38,11 @@ export class MicroappNextConfigFileTransformer
 };
 `;
 
-  async transformByFilePath(filePath: string): Promise<string> {
+  buildSampleFileContent(): string {
+    return this.createNewConfigContent({ isTypeScript: false });
+  }
+
+  async transform(filePath: string): Promise<string> {
     const resolvedPath = path.resolve(process.cwd(), filePath);
     const isTypeScript = filePath.endsWith(TYPE_SCRIPT_FILE_EXTENSION);
 
@@ -45,7 +51,17 @@ export class MicroappNextConfigFileTransformer
     }
 
     const fileContent = this.safeReadFileContentByPath(resolvedPath);
-    return this.processExistingConfig({ content: fileContent, isTypeScript });
+    return this.processExistingConfig({
+      content: fileContent,
+      isTypeScript,
+    });
+  }
+
+  async transformAndPersist(filePath: string): Promise<void> {
+    const resolvedPath = path.resolve(process.cwd(), filePath);
+    const updatedContent = await this.transform(filePath);
+
+    this.safeWriteFileContentByPath(resolvedPath, updatedContent);
   }
 
   private createNewConfigContent({
@@ -265,7 +281,9 @@ export class MicroappNextConfigFileTransformer
         }
 
         if (!hasWebpackProperty) {
-          self.addNewWebpackPropertyToObjectExpression(path.node);
+          self.addNewWebpackPropertyToObjectExpression(
+            path.node as namedTypes.ObjectExpression
+          );
         }
 
         return false;
@@ -314,6 +332,17 @@ export class MicroappNextConfigFileTransformer
   private safeReadFileContentByPath(resolvedPath: string): string {
     try {
       return fs.readFileSync(resolvedPath, 'utf-8');
+    } catch (error) {
+      throw new CannotUpdateNextConfigFileError({ cause: error });
+    }
+  }
+
+  private safeWriteFileContentByPath(
+    resolvedPath: string,
+    content: string
+  ): void {
+    try {
+      fs.writeFileSync(resolvedPath, content, 'utf-8');
     } catch (error) {
       throw new CannotUpdateNextConfigFileError({ cause: error });
     }

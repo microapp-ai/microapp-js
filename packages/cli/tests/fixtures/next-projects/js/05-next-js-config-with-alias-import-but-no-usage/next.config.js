@@ -1,6 +1,6 @@
 const {
   MicroappNextFederationPlugin: AliasPlugin,
-} = require('@microapp-io/build');
+} = require('@microapp-io/scripts');
 
 module.exports = {
   webpack: (config) => {

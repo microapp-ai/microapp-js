@@ -1,7 +1,7 @@
 import type { Compiler } from 'webpack';
 import { NextFederationPlugin } from '@module-federation/nextjs-mf';
-import { MicroappConfigReader } from '../config';
 import type { MicroappConfigOptions } from '../config';
+import { MicroappConfigManager } from '../config';
 
 export class MicroappNextFederationPlugin {
   static readonly DEFAULT_NAME = 'microapp';
@@ -15,11 +15,15 @@ export class MicroappNextFederationPlugin {
     automaticPageStitching: false,
   };
 
-  constructor(private readonly options: MicroappConfigOptions = {}) {}
+  constructor(private readonly options: MicroappConfigOptions) {}
 
   apply(compiler: Compiler) {
-    const configReader = new MicroappConfigReader(this.options);
+    const configReader = new MicroappConfigManager(this.options);
     const config = configReader.read();
+
+    if (!config) {
+      throw new Error('Microapp config not found');
+    }
 
     const federationConfig = {
       name: config.name || MicroappNextFederationPlugin.DEFAULT_NAME,

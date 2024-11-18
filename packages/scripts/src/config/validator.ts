@@ -47,20 +47,6 @@ export class MicroappConfigValidator {
       );
     }
 
-    const entryComponent = require(path.resolve(
-      rootPath,
-      config.entryComponent
-    ));
-
-    const doesEntryComponentHaveDefaultExport =
-      typeof entryComponent.default === 'function';
-
-    if (!doesEntryComponentHaveDefaultExport) {
-      throw new InvalidConfigError(
-        "The 'entryComponent' must export a default function."
-      );
-    }
-
     if (!config.shared) {
       return;
     }

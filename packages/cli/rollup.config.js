@@ -28,7 +28,7 @@ function getRollupConfig(
 
   return {
     input: `${SOURCE_DIR}/index.ts`,
-    external: ['fs', 'path', ...Object.keys(dependencies)],
+    external: ['fs', 'path', 'child_process', ...Object.keys(dependencies)],
     output: {
       file: `${OUTPUT_DIR}/${filename}`,
       format,

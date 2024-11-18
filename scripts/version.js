@@ -87,12 +87,12 @@ async function run() {
       chalk.green(`  Updated @microapp-io/react to version ${version}`)
     );
 
-    // 5. Update build version
-    await updatePackageConfig('build', (config) => {
+    // 5. Update scripts version
+    await updatePackageConfig('scripts', (config) => {
       config.version = version;
     });
     console.log(
-      chalk.green(`  Updated @microapp-io/build to version ${version}`)
+      chalk.green(`  Updated @microapp-io/scripts to version ${version}`)
     );
 
     // 6. Update repo versions in the examples
@@ -108,8 +108,8 @@ async function run() {
         if (config.dependencies['@microapp-io/react']) {
           config.dependencies['@microapp-io/react'] = version;
         }
-        if (config.dependencies['@microapp-io/build']) {
-          config.dependencies['@microapp-io/build'] = version;
+        if (config.dependencies['@microapp-io/scripts']) {
+          config.dependencies['@microapp-io/scripts'] = version;
         }
       });
     }

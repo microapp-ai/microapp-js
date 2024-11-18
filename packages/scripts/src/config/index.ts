@@ -1,4 +1,4 @@
 export * from './errors';
-export * from './reader';
+export * from './manager';
 export * from './types';
 export * from './validator';
