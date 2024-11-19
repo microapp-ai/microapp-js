@@ -9,6 +9,9 @@ import {
 } from '@microapp-io/scripts';
 import { MicroappNextConfigFileDetector } from '../file-detectors';
 import { execSync } from 'child_process';
+import * as pc from 'picocolors';
+
+type SupportedPackageManager = 'yarn' | 'pnpm' | 'npm' | 'bun';
 
 export class InitCommand extends Command {
   static description = 'Initialize a microapp project';
@@ -25,7 +28,7 @@ export class InitCommand extends Command {
     const rootPath = path.resolve(process.cwd(), folderPath);
 
     if (fs.existsSync(rootPath)) {
-      this.log(`Folder exists: ${rootPath}`);
+      this.log(pc.yellow(`Folder exists: ${pc.bold(rootPath)}\n`));
       await this.handleExistingFolder(rootPath);
       return;
     }
@@ -48,14 +51,20 @@ export class InitCommand extends Command {
     try {
       await nextConfigFileTransformer.transformAndPersist(nextConfigFilePath);
     } catch (error) {
-      const isMicroappConfigError = error instanceof MicroappConfigError;
+      const isConfigError = error instanceof MicroappConfigError;
 
-      if (!isMicroappConfigError) {
+      if (!isConfigError) {
         throw error;
       }
 
       this.log(
-        `\nCould not automatically modify the ${nextConfigFilePath} file.\nPlease modify it manually:\n\n${nextConfigFileTransformer.buildSampleFileContent()}\n`
+        pc.red(
+          `\nCould not automatically modify the ${pc.bold(
+            nextConfigFilePath
+          )} file.\nPlease modify it manually:\n\n${pc.bold(
+            nextConfigFileTransformer.buildSampleFileContent()
+          )}\n`
+        )
       );
     }
 
@@ -79,19 +88,25 @@ export class InitCommand extends Command {
 
     configReader.write({ name, entryComponent });
 
-    this.log('Project initialized successfully');
+    this.log(pc.green('Project initialized successfully\n'));
   }
 
   private installScripts(rootPath: string): void {
     const packageManager = this.detectPackageManager();
-    this.log(`Installing @microapp-io/scripts using ${packageManager}`);
+    this.log(
+      pc.cyan(
+        `Installing @microapp-io/scripts using ${pc.bold(packageManager)}\n`
+      )
+    );
     execSync(this.getInstallScriptCommand(packageManager), {
       cwd: rootPath,
       stdio: 'inherit',
     });
   }
 
-  private getInstallScriptCommand(packageManager: string) {
+  private getInstallScriptCommand(
+    packageManager: SupportedPackageManager
+  ): string {
     if (packageManager === 'yarn') {
       return 'yarn add -D @microapp-io/scripts';
     }
@@ -102,6 +117,10 @@ export class InitCommand extends Command {
 
     if (packageManager === 'npm') {
       return 'npm install --save-dev @microapp-io/scripts';
+    }
+
+    if (packageManager === 'bun') {
+      return 'bun add -D @microapp-io/scripts';
     }
 
     throw new Error(`Unsupported package manager: ${packageManager}`);
@@ -120,7 +139,7 @@ export class InitCommand extends Command {
 
   private createAndEnterFolder(folderPath: string): void {
     fs.mkdirSync(folderPath, { recursive: true });
-    this.log(`Folder created: ${folderPath}`);
+    this.log(pc.green(`Folder created: ${pc.bold(folderPath)}\n`));
     process.chdir(folderPath);
   }
 
@@ -139,17 +158,21 @@ export class InitCommand extends Command {
 
   private initializeNextJsProjectInCurrentPath(): void {
     const packageManager = this.detectPackageManager();
-    this.log(`Using package manager: ${packageManager}`);
+    this.log(pc.cyan(`Using package manager: ${pc.bold(packageManager)}\n`));
     execSync(`${packageManager} create next-app .`, { stdio: 'inherit' });
   }
 
-  private detectPackageManager(): string {
+  private detectPackageManager(): SupportedPackageManager {
     if (fs.existsSync(path.join(process.cwd(), 'yarn.lock'))) {
       return 'yarn';
     }
 
     if (fs.existsSync(path.join(process.cwd(), 'pnpm-lock.yaml'))) {
       return 'pnpm';
+    }
+
+    if (fs.existsSync(path.join(process.cwd(), 'bun.lock'))) {
+      return 'bun';
     }
 
     return 'npm';

@@ -5,9 +5,10 @@
   "workspaces": {
     "packages": [
       "packages/auth",
-      "packages/scripts",
       "packages/cli",
-      "packages/react"
+      "packages/create-microapp-app",
+      "packages/react",
+      "packages/scripts"
     ]
   },
   "scripts": {

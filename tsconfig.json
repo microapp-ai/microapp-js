@@ -2,8 +2,9 @@
   "files": [],
   "references": [
     { "path": "packages/auth" },
-    { "path": "packages/scripts" },
     { "path": "packages/cli" },
-    { "path": "packages/react" }
+    { "path": "packages/create-microapp-app" },
+    { "path": "packages/react" },
+    { "path": "packages/scripts" }
   ]
 }

@@ -1,16 +1,16 @@
 {
-  "name": "@microapp-io/cli",
+  "name": "@microapp-io/create-microapp-app",
   "version": "0.1.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/microapp-io/microapp-js",
-    "directory": "packages/cli"
+    "directory": "packages/create-microapp-app"
   },
   "license": "MIT",
   "author": "Microapp <hi@microapp.io>",
   "sideEffects": false,
-  "main": "./dist/cli.cjs.js",
-  "module": "./dist/cli.js",
+  "main": "./dist/create-microapp-app.cjs.js",
+  "module": "./dist/create-microapp-app.js",
   "types": "./dist/index.d.ts",
   "files": [
     "dist/",
@@ -18,7 +18,7 @@
     "CHANGELOG.md"
   ],
   "bin": {
-    "microapp": "./bin/run.js"
+    "create-microapp-app": "./bin/run.js"
   },
   "engines": {
     "node": ">=14.0.0"
@@ -27,32 +27,21 @@
     "access": "public"
   },
   "dependencies": {
-    "@babel/parser": "^7.26.2",
-    "@microapp-io/scripts": "^0.1.0",
-    "@oclif/core": "^4.0.32",
-    "ast-types": "^0.14.2",
-    "inquirer": "^12.1.0",
-    "picocolors": "^1.1.1",
-    "recast": "^0.23.9"
-  },
-  "peerDependencies": {
-    "styled-jsx": "^5.1.6"
+    "@microapp-io/cli": "^0.1.0",
+    "@oclif/core": "^4.0.32"
   },
   "devDependencies": {
     "@types/node": "^18",
-    "@types/webpack": "^5.28.0",
-    "styled-jsx": "^5.1.6",
-    "ts-node": "^10.9.2",
-    "webpack": "^5.0.0"
+    "ts-node": "^10.9.2"
   },
   "oclif": {
-    "bin": "microapp",
+    "bin": "create-microapp-app",
     "commands": {
       "strategy": "explicit",
-      "target": "./dist/cli.cjs.js",
+      "target": "./dist/create-microapp-app.cjs.js",
       "identifier": "COMMANDS"
     },
-    "dirname": "microapp",
+    "dirname": "create-microapp-app",
     "topicSeparator": " "
   }
 }
