@@ -1,0 +1,27 @@
+{
+  "name": "@microapp-io/auth",
+  "version": "0.1.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/microapp-io/microapp-js",
+    "directory": "packages/auth"
+  },
+  "license": "MIT",
+  "author": "Microapp <hi@microapp.io>",
+  "sideEffects": false,
+  "main": "./dist/auth.cjs.js",
+  "unpkg": "./dist/auth.umd.min.js",
+  "module": "./dist/auth.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist/",
+    "*.ts",
+    "CHANGELOG.md"
+  ],
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

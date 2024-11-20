@@ -5,7 +5,7 @@
     { "repo": "microapp-io/microapp-js" }
   ],
   "commit": false,
-  "fixed": [["@microapp-io/auth", "@microapp-io/react"]],
+  "fixed": [["@microapp-io/auth", "@microapp-io/build", "@microapp-io/react"]],
   "linked": [],
   "access": "public",
   "baseBranch": "dev",

@@ -1,8 +1,8 @@
-const path = require("path");
-const { execSync } = require("child_process");
-const fsp = require("fs/promises");
-const chalk = require("chalk");
-const semver = require("semver");
+const path = require('path');
+const { execSync } = require('child_process');
+const fsp = require('fs/promises');
+const chalk = require('chalk');
+const semver = require('semver');
 
 const {
   ensureCleanWorkingDirectory,
@@ -11,8 +11,8 @@ const {
   prompt,
   updateExamplesPackageConfig,
   updatePackageConfig,
-} = require("./utils");
-const { EXAMPLES_DIR } = require("./constants");
+} = require('./utils');
+const { EXAMPLES_DIR } = require('./constants');
 
 /**
  * @param {string} currentVersion
@@ -34,7 +34,7 @@ function getNextVersion(currentVersion, givenVersion, prereleaseId) {
   }
 
   let nextVersion;
-  if (givenVersion === "experimental") {
+  if (givenVersion === 'experimental') {
     let hash = execSync(`git rev-parse --short HEAD`).toString().trim();
     nextVersion = `0.0.0-experimental-${hash}`;
   } else {
@@ -58,7 +58,7 @@ async function run() {
 
     // 1. Get the next version number
     let version = semver.valid(givenVersion);
-    let currentVersion = await getPackageVersion("microapp-react");
+    let currentVersion = await getPackageVersion('react');
     if (version == null) {
       version = getNextVersion(currentVersion, givenVersion, prereleaseId);
     }
@@ -70,40 +70,51 @@ async function run() {
 
     if (answer === false) return 0;
 
-    // 3. Update microapp-auth version
-    await updatePackageConfig("microapp-auth", (config) => {
+    // 3. Update auth version
+    await updatePackageConfig('auth', (config) => {
       config.version = version;
     });
     console.log(
       chalk.green(`  Updated @microapp-io/auth to version ${version}`)
     );
 
-    // 4. Update microapp-react version + microapp-auth dep
-    await updatePackageConfig("microapp-react", (config) => {
+    // 4. Update react version + auth dep
+    await updatePackageConfig('react', (config) => {
       config.version = version;
-      config.dependencies["@microapp-io/auth"] = version;
+      config.dependencies['@microapp-io/auth'] = version;
     });
     console.log(
       chalk.green(`  Updated @microapp-io/react to version ${version}`)
     );
 
-    // 5. Update microapp-auth and microapp-react versions in the examples
+    // 5. Update scripts version
+    await updatePackageConfig('scripts', (config) => {
+      config.version = version;
+    });
+    console.log(
+      chalk.green(`  Updated @microapp-io/scripts to version ${version}`)
+    );
+
+    // 6. Update repo versions in the examples
     let examples = await fsp.readdir(EXAMPLES_DIR);
     for (const example of examples) {
       let stat = await fsp.stat(path.join(EXAMPLES_DIR, example));
       if (!stat.isDirectory()) continue;
 
       await updateExamplesPackageConfig(example, (config) => {
-        if (config.dependencies["@microapp-io/auth"]) {
-          config.dependencies["@microapp-io/auth"] = version;
+        if (config.dependencies['@microapp-io/auth']) {
+          config.dependencies['@microapp-io/auth'] = version;
         }
-        if (config.dependencies["@microapp-io/react"]) {
-          config.dependencies["@microapp-io/react"] = version;
+        if (config.dependencies['@microapp-io/react']) {
+          config.dependencies['@microapp-io/react'] = version;
+        }
+        if (config.dependencies['@microapp-io/scripts']) {
+          config.dependencies['@microapp-io/scripts'] = version;
         }
       });
     }
 
-    // 6. Commit and tag
+    // 7. Commit and tag
     execSync(`git commit --all --message="Version ${version}"`);
     execSync(`git tag -a -m "Version ${version}" v${version}`);
     console.log(chalk.green(`  Committed and tagged version ${version}`));

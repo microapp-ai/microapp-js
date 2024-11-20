@@ -1,0 +1,4 @@
+{
+  "name": "05-missing-component-file",
+  "entryComponent": "./file-that-does-not-exist.js"
+}

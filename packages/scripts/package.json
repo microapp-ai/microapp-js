@@ -1,0 +1,38 @@
+{
+  "name": "@microapp-io/scripts",
+  "version": "0.1.5",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/microapp-io/microapp-js",
+    "directory": "packages/scripts"
+  },
+  "license": "MIT",
+  "author": "Microapp <hi@microapp.io>",
+  "sideEffects": false,
+  "main": "./dist/scripts.cjs.js",
+  "module": "./dist/scripts.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist/",
+    "*.ts",
+    "CHANGELOG.md"
+  ],
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@module-federation/nextjs-mf": "^7.0.8",
+    "semver": "^7.5.4",
+    "webpack": "^5.0.0"
+  },
+  "peerDependencies": {
+    "styled-jsx": "^5.1.6"
+  },
+  "devDependencies": {
+    "@types/webpack": "^5.28.0",
+    "styled-jsx": "^5.1.6"
+  }
+}
