@@ -66,8 +66,9 @@ export class MicroappNextFederationPlugin {
     }
 
     console.info(
-      'Building Microapp with the following federation config:',
-      federationConfig
+      '\nBuilding Microapp with the following federation config:',
+      federationConfig,
+      '\n'
     );
 
     const { NextFederationPlugin } = require('@module-federation/nextjs-mf');
