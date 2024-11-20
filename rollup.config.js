@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 
 module.exports = function rollup(options) {
-  return ['auth', 'build', 'react']
+  return ['auth', 'cli', 'create-microapp', 'react', 'scripts']
     .flatMap((dir) => {
       let configPath = path.join('packages', dir, 'rollup.config.js');
       try {

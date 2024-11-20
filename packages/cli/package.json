@@ -1,0 +1,58 @@
+{
+  "name": "@microapp-io/cli",
+  "version": "0.1.2",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/microapp-io/microapp-js",
+    "directory": "packages/cli"
+  },
+  "license": "MIT",
+  "author": "Microapp <hi@microapp.io>",
+  "sideEffects": false,
+  "main": "./dist/cli.cjs.js",
+  "module": "./dist/cli.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist/",
+    "*.ts",
+    "CHANGELOG.md"
+  ],
+  "bin": {
+    "microapp": "./bin/run.js"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@babel/parser": "^7.26.2",
+    "@microapp-io/scripts": "^0.1.0",
+    "@oclif/core": "^4.0.32",
+    "ast-types": "^0.14.2",
+    "inquirer": "^12.1.0",
+    "picocolors": "^1.1.1",
+    "recast": "^0.23.9"
+  },
+  "peerDependencies": {
+    "styled-jsx": "^5.1.6"
+  },
+  "devDependencies": {
+    "@types/node": "^18",
+    "@types/webpack": "^5.28.0",
+    "styled-jsx": "^5.1.6",
+    "ts-node": "^10.9.2",
+    "webpack": "^5.0.0"
+  },
+  "oclif": {
+    "bin": "microapp",
+    "commands": {
+      "strategy": "explicit",
+      "target": "./dist/cli.cjs.js",
+      "identifier": "COMMANDS"
+    },
+    "dirname": "microapp",
+    "topicSeparator": " "
+  }
+}

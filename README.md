@@ -8,8 +8,10 @@ This is a collection of NPM packages that are used to build the micro apps using
 This repository is a monorepo containing the following packages:
 
 - [`auth`](/packages/auth)
-- [`build`](/packages/build)
+- [`cli`](/packages/cli)
+- [`create-microapp`](/packages/create-microapp)
 - [`react`](/packages/react)
+- [`scripts`](/packages/scripts)
 
 ## About
 

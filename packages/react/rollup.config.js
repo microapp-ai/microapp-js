@@ -20,6 +20,7 @@ module.exports = function rollup() {
     name,
     'react'
   );
+
   const banner = createBanner('Microapp React', version);
 
   // JS modules for bundlers
