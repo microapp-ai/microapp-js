@@ -81,25 +81,6 @@ describe('MicroappConfigValidator', () => {
     );
   });
 
-  it.skip('throws if the entryComponent does not have a default export', () => {
-    const configPath = path.join(
-      __dirname,
-      '../fixtures/projects/06-missing-component-default-export/microapp.json'
-    );
-
-    const config = require(configPath);
-
-    expect(() => {
-      MicroappConfigValidator.validate(config, {
-        rootPath: path.dirname(configPath),
-      });
-    }).toThrow(
-      new InvalidConfigError(
-        "The 'entryComponent' must export a default function."
-      )
-    );
-  });
-
   it('throws if the shared library is not a dependency', () => {
     const configPath = path.join(
       __dirname,

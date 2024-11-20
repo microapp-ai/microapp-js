@@ -7,7 +7,8 @@ import { builders } from 'ast-types';
 import type { MicroappFileTransformer } from '../file-transformer';
 import { CannotUpdateNextConfigFileError } from './errors';
 
-const TYPE_SCRIPT_FILE_EXTENSION = '.ts';
+const TS_FILE_EXTENSION = '.ts';
+const MJ_SCRIPT_FILE_EXTENSION = '.mjs';
 const PLUGIN_MODULE = '@microapp-io/scripts';
 const PLUGIN_CLASS_NAME = 'MicroappNextFederationPlugin';
 const PLUGIN_IMPORT_CODE_ESM = `import { ${PLUGIN_CLASS_NAME} } from '${PLUGIN_MODULE}';\n`;
@@ -23,37 +24,46 @@ export class MicroappNextConfigFileTransformer
   public static readonly DEFAULT_CONFIG_FILE_NAME = 'next.config.js';
 
   public static readonly DEFAULT_JS_CONFIG_CONTENT = `module.exports = {
-  ${CONFIG_WEBPACK_KEY}: (config) => {
+  ${CONFIG_WEBPACK_KEY}: (${CONFIG_KEY}) => {
     ${PLUGIN_USAGE_CODE}
-    return config;
+    return ${CONFIG_KEY};
   },
 };
 `;
 
   public static readonly DEFAULT_TS_CONFIG_CONTENT = `export default {
-  ${CONFIG_WEBPACK_KEY}: (config) => {
+  ${CONFIG_WEBPACK_KEY}: (${CONFIG_KEY}) => {
     ${PLUGIN_USAGE_CODE}
-    return config;
+    return ${CONFIG_KEY};
   },
 };
 `;
 
   buildSampleFileContent(): string {
-    return this.createNewConfigContent({ isTypeScript: false });
+    return this.createNewConfigContent({
+      isTypeScript: false,
+      isUsingImportStyle: false,
+    });
   }
 
   async transform(filePath: string): Promise<string> {
     const resolvedPath = path.resolve(process.cwd(), filePath);
-    const isTypeScript = filePath.endsWith(TYPE_SCRIPT_FILE_EXTENSION);
+    const isTypeScript = filePath.endsWith(TS_FILE_EXTENSION);
+    const isUsingImportStyle =
+      isTypeScript || filePath.endsWith(MJ_SCRIPT_FILE_EXTENSION);
 
     if (!fs.existsSync(resolvedPath)) {
-      return this.createNewConfigContent({ isTypeScript });
+      return this.createNewConfigContent({
+        isTypeScript,
+        isUsingImportStyle,
+      });
     }
 
     const fileContent = this.safeReadFileContentByPath(resolvedPath);
     return this.processExistingConfig({
       content: fileContent,
       isTypeScript,
+      isUsingImportStyle,
     });
   }
 
@@ -66,11 +76,13 @@ export class MicroappNextConfigFileTransformer
 
   private createNewConfigContent({
     isTypeScript,
+    isUsingImportStyle,
   }: {
     isTypeScript: boolean;
+    isUsingImportStyle: boolean;
   }): string {
     const pluginImportCode = this.getPluginImportCode({
-      isUsingImportStyle: isTypeScript,
+      isUsingImportStyle,
     });
 
     const configContent = isTypeScript
@@ -83,19 +95,20 @@ export class MicroappNextConfigFileTransformer
   private processExistingConfig({
     content,
     isTypeScript,
+    isUsingImportStyle,
   }: {
     content: string;
     isTypeScript: boolean;
+    isUsingImportStyle: boolean;
   }): string {
     try {
       const ast = this.parseConfig({ content, isTypeScript });
       const usedTypeOfRequireOrImport = this.getUsedTypeOfRequireOrImport(ast);
-      const isUsingImportStyle = usedTypeOfRequireOrImport
-        ? usedTypeOfRequireOrImport === 'import' ||
-          usedTypeOfRequireOrImport === 'require-and-import'
-        : isTypeScript;
 
-      const pluginImportCode = this.getPluginImportCode({ isUsingImportStyle });
+      const pluginImportCode = this.getPluginImportCode({
+        isUsingImportStyle:
+          isUsingImportStyle || usedTypeOfRequireOrImport === 'import',
+      });
 
       if (!this.doesAstImportPlugin(ast)) {
         this.addPluginImport({ ast, pluginImportCode });

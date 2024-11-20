@@ -4,14 +4,14 @@ import { MicroappConfigValidator } from './validator';
 import * as path from 'path';
 
 export interface MicroappConfigOptions {
-  rootPath: string;
+  rootPath?: string;
 }
 
 export class MicroappConfigManager {
   private readonly rootPath: string;
 
-  constructor({ rootPath }: MicroappConfigOptions) {
-    this.rootPath = rootPath;
+  constructor({ rootPath }: MicroappConfigOptions = {}) {
+    this.rootPath = rootPath || process.cwd();
   }
 
   read(): MicroappConfig | null {

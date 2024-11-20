@@ -54,21 +54,6 @@ describe('MicroappConfigReader', () => {
     );
   });
 
-  it.skip('throws if the entryComponent does not have a default export', () => {
-    const reader = new MicroappConfigManager({
-      rootPath: path.join(
-        __dirname,
-        '../fixtures/projects/06-missing-component-default-export'
-      ),
-    });
-
-    expect(() => reader.read()).toThrow(
-      new InvalidConfigError(
-        "The 'entryComponent' must export a default function."
-      )
-    );
-  });
-
   it('throws if the shared library is not a dependency', () => {
     const reader = new MicroappConfigManager({
       rootPath: path.join(
