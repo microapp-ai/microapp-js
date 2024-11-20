@@ -4,7 +4,7 @@ import { MicroappConfigManager } from '../config';
 
 export class MicroappNextFederationPlugin {
   static readonly DEFAULT_NAME = 'microapp';
-  static readonly DEFAULT_FILENAME = 'static/chunks/microapp-remote.js';
+  static readonly DEFAULT_FILENAME = 'static/chunks/remoteEntry.js';
   static readonly DEFAULT_EXPOSED_COMPONENT_ID = './Microapp';
   static readonly DEFAULT_SHARED = {};
   static readonly DEFAULT_EXTRA_OPTIONS = {

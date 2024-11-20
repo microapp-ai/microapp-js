@@ -35,7 +35,7 @@ describe('MicroappNextFederationPlugin', () => {
       require('@module-federation/nextjs-mf').NextFederationPlugin
     ).toHaveBeenCalledWith({
       name: '01-valid',
-      filename: 'static/chunks/microapp-remote.js',
+      filename: 'static/chunks/remoteEntry.js',
       exposes: {
         './Microapp': './index.js',
       },

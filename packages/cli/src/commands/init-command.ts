@@ -13,6 +13,7 @@ import { execSync } from 'child_process';
 import * as pc from 'picocolors';
 
 type SupportedPackageManager = 'yarn' | 'pnpm' | 'npm' | 'bun';
+const DEFAULT_PACKAGE_MANAGER: SupportedPackageManager = 'npm';
 
 export class InitCommand extends Command {
   static description = 'Initialize a microapp project';
@@ -79,7 +80,29 @@ export class InitCommand extends Command {
       return 'bun';
     }
 
-    return 'npm';
+    if (fs.existsSync(path.join(process.cwd(), 'package-lock.json'))) {
+      return 'npm';
+    }
+
+    const userAgent = process.env.npm_config_user_agent;
+
+    if (userAgent?.includes('yarn')) {
+      return 'yarn';
+    }
+
+    if (userAgent?.includes('pnpm')) {
+      return 'pnpm';
+    }
+
+    if (userAgent?.includes('npm')) {
+      return 'npm';
+    }
+
+    if (userAgent?.includes('bun')) {
+      return 'bun';
+    }
+
+    return DEFAULT_PACKAGE_MANAGER;
   }
 
   private async handleExistingFolder({
