@@ -1,4 +1,4 @@
-# `create-microapp-app`
+# `create-microapp`
 
 ## 0.1.0
 

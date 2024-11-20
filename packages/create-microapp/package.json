@@ -1,16 +1,16 @@
 {
-  "name": "@microapp-io/create-microapp-app",
+  "name": "@microapp-io/create-microapp",
   "version": "0.1.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/microapp-io/microapp-js",
-    "directory": "packages/create-microapp-app"
+    "directory": "packages/create-microapp"
   },
   "license": "MIT",
   "author": "Microapp <hi@microapp.io>",
   "sideEffects": false,
-  "main": "./dist/create-microapp-app.cjs.js",
-  "module": "./dist/create-microapp-app.js",
+  "main": "./dist/create-microapp.cjs.js",
+  "module": "./dist/create-microapp.js",
   "types": "./dist/index.d.ts",
   "files": [
     "dist/",
@@ -18,7 +18,7 @@
     "CHANGELOG.md"
   ],
   "bin": {
-    "create-microapp-app": "./bin/run.js"
+    "create-microapp": "./bin/run.js"
   },
   "engines": {
     "node": ">=14.0.0"
@@ -35,13 +35,13 @@
     "ts-node": "^10.9.2"
   },
   "oclif": {
-    "bin": "create-microapp-app",
+    "bin": "create-microapp",
     "commands": {
       "strategy": "explicit",
-      "target": "./dist/create-microapp-app.cjs.js",
+      "target": "./dist/create-microapp.cjs.js",
       "identifier": "COMMANDS"
     },
-    "dirname": "create-microapp-app",
+    "dirname": "create-microapp",
     "topicSeparator": " "
   }
 }

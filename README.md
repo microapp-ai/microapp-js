@@ -9,7 +9,7 @@ This repository is a monorepo containing the following packages:
 
 - [`auth`](/packages/auth)
 - [`cli`](/packages/cli)
-- [`create-microapp-app`](/packages/create-microapp-app)
+- [`create-microapp`](/packages/create-microapp)
 - [`react`](/packages/react)
 - [`scripts`](/packages/scripts)
 

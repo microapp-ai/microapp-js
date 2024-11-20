@@ -3,7 +3,7 @@
   "references": [
     { "path": "packages/auth" },
     { "path": "packages/cli" },
-    { "path": "packages/create-microapp-app" },
+    { "path": "packages/create-microapp" },
     { "path": "packages/react" },
     { "path": "packages/scripts" }
   ]

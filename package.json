@@ -6,7 +6,7 @@
     "packages": [
       "packages/auth",
       "packages/cli",
-      "packages/create-microapp-app",
+      "packages/create-microapp",
       "packages/react",
       "packages/scripts"
     ]
