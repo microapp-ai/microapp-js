@@ -10,8 +10,8 @@ export class MicroappSupportedFramework {
   static readonly NEXT = new MicroappSupportedFramework(
     'next',
     'Next.js',
-    '^15',
-    ['^15', '^14', '^13', '^12']
+    '^14',
+    ['^14', '^13', '^12']
   );
 
   static getById(id: string): MicroappSupportedFramework {
