@@ -21,7 +21,7 @@ describe('MicroappNextConfigFileTransformer', () => {
       const transformedFileContent = await transformer.transform(filePath);
 
       expect(transformedFileContent).not.toBe(fileContent);
-      expect(transformedFileContent).toContain('webpack: (config) =>');
+      expect(transformedFileContent).toContain('webpack: (config, options) =>');
       expect(transformedFileContent).toContain(
         'config.plugins.push(new MicroappNextFederationPlugin());'
       );
@@ -35,7 +35,7 @@ describe('MicroappNextConfigFileTransformer', () => {
       const transformedFileContent = await transformer.transform(filePath);
 
       expect(transformedFileContent).not.toBe(fileContent);
-      expect(transformedFileContent).toContain('webpack: config =>');
+      expect(transformedFileContent).toContain('webpack: (config, options) =>');
       expect(transformedFileContent).toContain(
         'config.plugins.push(new MicroappNextFederationPlugin());'
       );
@@ -49,7 +49,7 @@ describe('MicroappNextConfigFileTransformer', () => {
       const transformedFileContent = await transformer.transform(filePath);
 
       expect(transformedFileContent).not.toBe(fileContent);
-      expect(transformedFileContent).toContain('webpack: (config) =>');
+      expect(transformedFileContent).toContain('webpack: (config, options) =>');
       expect(transformedFileContent).toContain(
         'config.plugins.push(new MicroappNextFederationPlugin());'
       );
@@ -63,7 +63,7 @@ describe('MicroappNextConfigFileTransformer', () => {
       const transformedFileContent = await transformer.transform(filePath);
 
       expect(transformedFileContent).not.toBe(fileContent);
-      expect(transformedFileContent).toContain('webpack: (config) =>');
+      expect(transformedFileContent).toContain('webpack: (config, options) =>');
       expect(transformedFileContent).toContain(
         'config.plugins.push(new MicroappNextFederationPlugin());'
       );
@@ -77,7 +77,7 @@ describe('MicroappNextConfigFileTransformer', () => {
       const transformedFileContent = await transformer.transform(filePath);
 
       expect(transformedFileContent).not.toBe(fileContent);
-      expect(transformedFileContent).toContain('webpack: (config) =>');
+      expect(transformedFileContent).toContain('webpack: (config, options) =>');
       expect(transformedFileContent).toContain(
         'config.plugins.push(new MicroappNextFederationPlugin());'
       );
@@ -91,7 +91,7 @@ describe('MicroappNextConfigFileTransformer', () => {
       const transformedFileContent = await transformer.transform(filePath);
 
       expect(transformedFileContent).not.toBe(fileContent);
-      expect(transformedFileContent).toContain('webpack: (config) =>');
+      expect(transformedFileContent).toContain('webpack: (config, options) =>');
       expect(transformedFileContent).toContain(
         'config.plugins.push(new MicroappNextFederationPlugin());'
       );
@@ -105,7 +105,7 @@ describe('MicroappNextConfigFileTransformer', () => {
       const transformedFileContent = await transformer.transform(filePath);
 
       expect(transformedFileContent).not.toBe(fileContent);
-      expect(transformedFileContent).toContain('webpack: (config) =>');
+      expect(transformedFileContent).toContain('webpack: (config, options) =>');
       expect(transformedFileContent).toContain(
         'config.plugins.push(new MicroappNextFederationPlugin());'
       );
@@ -124,7 +124,7 @@ describe('MicroappNextConfigFileTransformer', () => {
       expect(transformedFileContent).toContain(
         "import { MicroappNextFederationPlugin } from '@microapp-io/scripts';"
       );
-      expect(transformedFileContent).toContain('webpack: (config) =>');
+      expect(transformedFileContent).toContain('webpack: (config, options) =>');
       expect(transformedFileContent).toContain(
         'config.plugins.push(new MicroappNextFederationPlugin());'
       );
@@ -141,7 +141,7 @@ describe('MicroappNextConfigFileTransformer', () => {
       expect(transformedFileContent).toContain(
         "import { MicroappNextFederationPlugin } from '@microapp-io/scripts';"
       );
-      expect(transformedFileContent).toContain('webpack: config =>');
+      expect(transformedFileContent).toContain('webpack: (config, options) =>');
       expect(transformedFileContent).toContain(
         'config.plugins.push(new MicroappNextFederationPlugin());'
       );
@@ -158,7 +158,7 @@ describe('MicroappNextConfigFileTransformer', () => {
       expect(transformedFileContent).toContain(
         "import { MicroappNextFederationPlugin } from '@microapp-io/scripts';"
       );
-      expect(transformedFileContent).toContain('webpack: (config) =>');
+      expect(transformedFileContent).toContain('webpack: (config, options) =>');
       expect(transformedFileContent).toContain(
         'config.plugins.push(new MicroappNextFederationPlugin());'
       );
@@ -175,7 +175,7 @@ describe('MicroappNextConfigFileTransformer', () => {
       expect(transformedFileContent).toContain(
         "import { MicroappNextFederationPlugin } from '@microapp-io/scripts';"
       );
-      expect(transformedFileContent).toContain('webpack: (config) =>');
+      expect(transformedFileContent).toContain('webpack: (config, options) =>');
       expect(transformedFileContent).toContain(
         'config.plugins.push(new MicroappNextFederationPlugin());'
       );
@@ -192,7 +192,7 @@ describe('MicroappNextConfigFileTransformer', () => {
       expect(transformedFileContent).toContain(
         "import { MicroappNextFederationPlugin } from '@microapp-io/scripts';"
       );
-      expect(transformedFileContent).toContain('webpack: (config) =>');
+      expect(transformedFileContent).toContain('webpack: (config, options) =>');
       expect(transformedFileContent).toContain(
         'config.plugins.push(new MicroappNextFederationPlugin());'
       );
@@ -209,7 +209,7 @@ describe('MicroappNextConfigFileTransformer', () => {
       expect(transformedFileContent).toContain(
         "import { MicroappNextFederationPlugin } from '@microapp-io/scripts';"
       );
-      expect(transformedFileContent).toContain('webpack: (config) =>');
+      expect(transformedFileContent).toContain('webpack: (config, options) =>');
       expect(transformedFileContent).toContain(
         'config.plugins.push(new MicroappNextFederationPlugin());'
       );
@@ -226,7 +226,7 @@ describe('MicroappNextConfigFileTransformer', () => {
       expect(transformedFileContent).toContain(
         "import { MicroappNextFederationPlugin } from '@microapp-io/scripts';"
       );
-      expect(transformedFileContent).toContain('webpack: (config) =>');
+      expect(transformedFileContent).toContain('webpack: (config, options) =>');
       expect(transformedFileContent).toContain(
         'config.plugins.push(new MicroappNextFederationPlugin());'
       );

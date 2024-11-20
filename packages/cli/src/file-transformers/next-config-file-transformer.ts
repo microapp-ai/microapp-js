@@ -14,8 +14,11 @@ const PLUGIN_CLASS_NAME = 'MicroappNextFederationPlugin';
 const PLUGIN_IMPORT_CODE_ESM = `import { ${PLUGIN_CLASS_NAME} } from '${PLUGIN_MODULE}';\n`;
 const PLUGIN_IMPORT_CODE_CJS = `const { ${PLUGIN_CLASS_NAME} } = require('${PLUGIN_MODULE}');\n`;
 const CONFIG_KEY = 'config';
+const OPTIONS_KEY = 'options';
 const CONFIG_PLUGINS_KEY = `${CONFIG_KEY}.plugins`;
-const PLUGIN_USAGE_CODE = `${CONFIG_PLUGINS_KEY}.push(new ${PLUGIN_CLASS_NAME}());\n`;
+const PLUGIN_USAGE_CODE = `if (!${OPTIONS_KEY}.isServer) {
+  ${CONFIG_PLUGINS_KEY}.push(new ${PLUGIN_CLASS_NAME}());
+}\n`;
 const CONFIG_WEBPACK_KEY = 'webpack';
 
 export class MicroappNextConfigFileTransformer
@@ -24,7 +27,7 @@ export class MicroappNextConfigFileTransformer
   public static readonly DEFAULT_CONFIG_FILE_NAME = 'next.config.js';
 
   public static readonly DEFAULT_JS_CONFIG_CONTENT = `module.exports = {
-  ${CONFIG_WEBPACK_KEY}: (${CONFIG_KEY}) => {
+  ${CONFIG_WEBPACK_KEY}: (${CONFIG_KEY}, ${OPTIONS_KEY}) => {
     ${PLUGIN_USAGE_CODE}
     return ${CONFIG_KEY};
   },
@@ -32,7 +35,7 @@ export class MicroappNextConfigFileTransformer
 `;
 
   public static readonly DEFAULT_TS_CONFIG_CONTENT = `export default {
-  ${CONFIG_WEBPACK_KEY}: (${CONFIG_KEY}) => {
+  ${CONFIG_WEBPACK_KEY}: (${CONFIG_KEY}, ${OPTIONS_KEY}) => {
     ${PLUGIN_USAGE_CODE}
     return ${CONFIG_KEY};
   },
@@ -315,6 +318,15 @@ export class MicroappNextConfigFileTransformer
       return;
     }
 
+    const functionParams = (webpackValue as namedTypes.Function).params;
+    const doesFunctionIncludesOptionsParam = functionParams.some(
+      (param) => param.type === 'Identifier' && param.name === OPTIONS_KEY
+    );
+
+    if (!doesFunctionIncludesOptionsParam) {
+      functionParams.push(builders.identifier(OPTIONS_KEY));
+    }
+
     const functionBody = (webpackValue as namedTypes.Function).body;
     const isBlockStatement = functionBody.type === 'BlockStatement';
 
@@ -332,7 +344,7 @@ export class MicroappNextConfigFileTransformer
       builders.objectProperty(
         builders.identifier(CONFIG_WEBPACK_KEY),
         builders.arrowFunctionExpression(
-          [builders.identifier(CONFIG_KEY)],
+          [builders.identifier(CONFIG_KEY), builders.identifier(OPTIONS_KEY)],
           builders.blockStatement([
             recast.parse(PLUGIN_USAGE_CODE).program.body[0],
             builders.returnStatement(builders.identifier(CONFIG_KEY)),
