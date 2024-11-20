@@ -190,18 +190,17 @@ export class InitCommand extends Command {
       )
     );
 
-    // TODO: Uncomment this after publishing @microapp-io/scripts
-    // execSync(
-    //   this.getInstallScriptCommand({
-    //     packageManager,
-    //     packageNames: ['@microapp-io/scripts'],
-    //     dev: true,
-    //   }),
-    //   {
-    //     cwd: folderPath,
-    //     stdio: 'inherit',
-    //   }
-    // );
+    execSync(
+      this.getInstallScriptCommand({
+        packageManager,
+        packageNames: ['@microapp-io/scripts'],
+        dev: true,
+      }),
+      {
+        cwd: folderPath,
+        stdio: 'inherit',
+      }
+    );
 
     this.log(
       pc.cyan(`Installing @microapp-io/ui using ${pc.bold(packageManager)}\n`)
