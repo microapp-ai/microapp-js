@@ -76,7 +76,7 @@ export class InitCommand extends Command {
       return 'pnpm';
     }
 
-    if (fs.existsSync(path.join(process.cwd(), 'bun.lock'))) {
+    if (fs.existsSync(path.join(process.cwd(), 'bun.lockb'))) {
       return 'bun';
     }
 
