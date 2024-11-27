@@ -20,6 +20,13 @@ export class MicroappNextFederationPlugin {
   }
 
   apply(compiler: Compiler) {
+    if (process.env.NODE_ENV !== 'production') {
+      console.info(
+        'Skipping MicroappNextFederationPlugin in development environment'
+      );
+      return;
+    }
+
     const configReader = new MicroappConfigManager(this.options);
     const config = configReader.read();
 
