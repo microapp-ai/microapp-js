@@ -84,25 +84,35 @@ export class InitCommand extends Command {
       return 'npm';
     }
 
-    const userAgent = process.env.npm_config_user_agent;
-
-    if (userAgent?.includes('yarn')) {
+    if (this.isProcessUsingPackageManager('yarn')) {
       return 'yarn';
     }
 
-    if (userAgent?.includes('pnpm')) {
+    if (this.isProcessUsingPackageManager('pnpm')) {
       return 'pnpm';
     }
 
-    if (userAgent?.includes('npm')) {
+    if (this.isProcessUsingPackageManager('npm')) {
       return 'npm';
     }
 
-    if (userAgent?.includes('bun')) {
+    if (this.isProcessUsingPackageManager('bun')) {
       return 'bun';
     }
 
     return DEFAULT_PACKAGE_MANAGER;
+  }
+
+  private isProcessUsingPackageManager(packageManager: string): boolean {
+    const userAgent = process.env.npm_config_user_agent || '';
+    const execPath = process.env.npm_execpath || '';
+
+    const normalizedPackageManager = packageManager.toLowerCase();
+
+    return (
+      userAgent.toLowerCase().includes(normalizedPackageManager) ||
+      execPath.toLowerCase().includes(normalizedPackageManager)
+    );
   }
 
   private async handleExistingFolder({
@@ -374,18 +384,18 @@ export class InitCommand extends Command {
     version?: string;
   }) {
     const createCommand = {
-      yarn: `yarn create ${packageName}${
+      yarn: `npx create-${packageName}${
         version ? `@${version}` : ''
-      } ${folderPath}`,
-      pnpm: `pnpm create ${packageName}${
+      } ${folderPath} --use-npm`,
+      pnpm: `npx create-${packageName}${
         version ? `@${version}` : ''
-      } ${folderPath}`,
+      } ${folderPath} --use-pnpm`,
       npm: `npx create-${packageName}${
         version ? `@${version}` : ''
       } ${folderPath}`,
-      bun: `bun create ${packageName}${
+      bun: `npx create-${packageName}${
         version ? `@${version}` : ''
-      } ${folderPath}`,
+      } ${folderPath} --use-bun`,
     };
 
     if (!createCommand[packageManager]) {
