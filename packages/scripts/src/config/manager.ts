@@ -25,12 +25,12 @@ export class MicroappConfigManager {
       fs.readFileSync(configPath, 'utf8')
     );
 
-    MicroappConfigValidator.validate(config, { rootPath: this.rootPath });
+    MicroappConfigValidator.validate({ config, rootPath: this.rootPath });
     return config;
   }
 
   write(config: MicroappConfig): void {
-    MicroappConfigValidator.validate(config, { rootPath: this.rootPath });
+    MicroappConfigValidator.validate({ config, rootPath: this.rootPath });
     const configPath = path.join(this.rootPath, 'microapp.json');
 
     fs.writeFileSync(configPath, JSON.stringify(config, null, 2));

@@ -1,20 +1,68 @@
 import type { MicroappConfig } from './types';
 import { InvalidConfigError } from './errors';
-import * as fs from 'fs';
 import * as path from 'path';
 import * as semver from 'semver';
+import * as fs from 'fs';
+import { MicroappSupportedFramework } from './supported-framework';
 
 export class MicroappConfigValidator {
   private constructor() {}
 
-  public static validate(
-    config: MicroappConfig,
-    {
-      rootPath,
-    }: {
-      rootPath?: string;
-    } = {}
-  ): void {
+  public static validate({
+    config,
+    packageJson,
+    rootPath,
+  }: {
+    config?: MicroappConfig;
+    packageJson?: any;
+    rootPath?: string;
+  }): void {
+    packageJson = this.resolvePackageJson(packageJson, rootPath);
+
+    if (config) {
+      MicroappConfigValidator.validateConfig({ config, packageJson, rootPath });
+    }
+
+    if (rootPath) {
+      MicroappSupportedFramework.determineByFolderPath(rootPath);
+    }
+  }
+
+  private static resolvePackageJson(
+    packageJson: any,
+    rootPath?: string
+  ): object {
+    if (packageJson) {
+      return packageJson;
+    }
+
+    if (!rootPath) {
+      throw new InvalidConfigError(
+        "The 'packageJson' field is required when 'rootPath' is not provided."
+      );
+    }
+
+    const packageJsonPath = path.resolve(rootPath, 'package.json');
+    const doesPackageJsonExist = fs.existsSync(packageJsonPath);
+
+    if (!doesPackageJsonExist) {
+      throw new InvalidConfigError(
+        "The 'packageJson' field is required when 'rootPath' is provided."
+      );
+    }
+
+    return require(packageJsonPath);
+  }
+
+  private static validateConfig({
+    config,
+    packageJson,
+    rootPath,
+  }: {
+    config: MicroappConfig;
+    packageJson: any;
+    rootPath?: string;
+  }): void {
     if (!config.name) {
       throw new InvalidConfigError(
         "The 'name' field is required in microapp.json."
@@ -51,12 +99,10 @@ export class MicroappConfigValidator {
       return;
     }
 
-    const rootPackageJson = require(path.resolve(rootPath, 'package.json'));
-
     for (const [sharedPackageName, sharedPackageVersion] of Object.entries(
       config.shared
     )) {
-      const versionInRootPackageJson = (rootPackageJson.dependencies || {})[
+      const versionInRootPackageJson = (packageJson.dependencies || {})[
         sharedPackageName
       ];
 

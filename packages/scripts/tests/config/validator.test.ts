@@ -18,7 +18,8 @@ describe('MicroappConfigValidator', () => {
 
       const config = require(configPath);
 
-      MicroappConfigValidator.validate(config, {
+      MicroappConfigValidator.validate({
+        config,
         rootPath: path.dirname(configPath),
       });
     }).toThrow(
@@ -37,7 +38,8 @@ describe('MicroappConfigValidator', () => {
     const config = require(configPath);
 
     expect(() => {
-      MicroappConfigValidator.validate(config, {
+      MicroappConfigValidator.validate({
+        config,
         rootPath: path.dirname(configPath),
       });
     }).toThrow(
@@ -54,7 +56,8 @@ describe('MicroappConfigValidator', () => {
     const config = require(configPath);
 
     expect(() => {
-      MicroappConfigValidator.validate(config, {
+      MicroappConfigValidator.validate({
+        config,
         rootPath: path.dirname(configPath),
       });
     }).toThrow(
@@ -73,7 +76,8 @@ describe('MicroappConfigValidator', () => {
     const config = require(configPath);
 
     expect(() => {
-      MicroappConfigValidator.validate(config, {
+      MicroappConfigValidator.validate({
+        config,
         rootPath: path.dirname(configPath),
       });
     }).toThrow(
@@ -90,7 +94,8 @@ describe('MicroappConfigValidator', () => {
     const config = require(configPath);
 
     expect(() => {
-      MicroappConfigValidator.validate(config, {
+      MicroappConfigValidator.validate({
+        config,
         rootPath: path.dirname(configPath),
       });
     }).toThrow(
@@ -109,7 +114,8 @@ describe('MicroappConfigValidator', () => {
     const config = require(configPath);
 
     expect(() => {
-      MicroappConfigValidator.validate(config, {
+      MicroappConfigValidator.validate({
+        config,
         rootPath: path.dirname(configPath),
       });
     }).toThrow(
@@ -128,7 +134,8 @@ describe('MicroappConfigValidator', () => {
     const config = require(configPath);
 
     expect(() => {
-      MicroappConfigValidator.validate(config, {
+      MicroappConfigValidator.validate({
+        config,
         rootPath: path.dirname(configPath),
       });
     }).not.toThrow();

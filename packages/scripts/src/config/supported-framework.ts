@@ -98,8 +98,17 @@ export class MicroappSupportedFramework {
   }
 
   isVersionSupported(version: string): boolean {
-    return this.versions.some((supportedVersion) =>
-      semver.satisfies(version, supportedVersion)
-    );
+    return this.versions.some((supportedVersion) => {
+      const coercedVersion = semver.coerce(version);
+      const validRange = semver.validRange(supportedVersion);
+
+      if (!coercedVersion || !validRange) {
+        return false;
+      }
+
+      return semver.satisfies(coercedVersion, validRange, {
+        includePrerelease: true,
+      });
+    });
   }
 }
