@@ -37,18 +37,14 @@ export class MicroappConfigValidator {
     }
 
     if (!rootPath) {
-      throw new InvalidConfigError(
-        "The 'packageJson' field is required when 'rootPath' is not provided."
-      );
+      throw new InvalidConfigError('The package.json file is missing.');
     }
 
     const packageJsonPath = path.resolve(rootPath, 'package.json');
     const doesPackageJsonExist = fs.existsSync(packageJsonPath);
 
     if (!doesPackageJsonExist) {
-      throw new InvalidConfigError(
-        "The 'packageJson' field is required when 'rootPath' is provided."
-      );
+      throw new InvalidConfigError('The package.json file is missing.');
     }
 
     return require(packageJsonPath);
