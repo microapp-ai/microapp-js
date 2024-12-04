@@ -14,6 +14,8 @@ jest.mock('@module-federation/nextjs-mf', () => {
 
 describe('MicroappNextFederationPlugin', () => {
   it('passes the correct config to the plugin', () => {
+    process.env.NODE_ENV = 'production';
+
     const mockedCompiler = {
       hooks: {
         done: {

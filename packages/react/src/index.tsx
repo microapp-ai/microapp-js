@@ -40,12 +40,18 @@ export const AuthContext = React.createContext<AuthContextType | undefined>(
 
 export function AuthProvider({
   config,
+  sandbox,
   children,
 }: {
   config?: AuthConfigParams;
+  sandbox?: boolean;
   children: React.ReactNode;
 }) {
-  const auth = React.useMemo(() => new Auth({ config }), [config]);
+  const auth = React.useMemo(
+    () => new Auth({ config, sandbox }),
+    [config, sandbox]
+  );
+
   const [state, setState] = React.useState<AuthContextType>(() => {
     return Object.assign({}, INITIAL_AUTH_CONTEXT);
   });

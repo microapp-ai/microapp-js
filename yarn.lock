@@ -1885,6 +1885,15 @@
     globby "^11.0.0"
     read-yaml-file "^1.1.0"
 
+"@microapp-io/scripts@^0.1.0":
+  version "0.1.5"
+  resolved "https://registry.yarnpkg.com/@microapp-io/scripts/-/scripts-0.1.5.tgz#c96e22e19124557287643ed70fdc7def9a1427f8"
+  integrity sha512-Vg6ueciYDwBMs1bxmW2prq4Y1NDRdvE2re1/NsX6LhG3Wq/tv+1T2bNezgFn9BZsV5pH+BatIwBhLoLz8spWhQ==
+  dependencies:
+    "@module-federation/nextjs-mf" "^7.0.8"
+    semver "^7.5.4"
+    webpack "^5.0.0"
+
 "@module-federation/nextjs-mf@^7.0.8":
   version "7.0.8"
   resolved "https://registry.yarnpkg.com/@module-federation/nextjs-mf/-/nextjs-mf-7.0.8.tgz#1639f820d2b2ff9427b6b571d6a769b991f31fc1"

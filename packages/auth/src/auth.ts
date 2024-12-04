@@ -4,21 +4,26 @@ import { AuthConfig } from './auth-config';
 import type { AuthRepo } from './auth-repo';
 import type { User } from './user';
 import { HttpAuthRepo } from './http-auth-repo';
+import { SandboxAuthRepo } from './sandbox-auth-repo';
 
 export class Auth {
   readonly config: AuthConfig;
-  private readonly authRepo: AuthRepo;
+  private readonly repo: AuthRepo;
   private user?: User;
 
   constructor({
     config,
-    authRepo,
+    sandbox,
   }: {
     config?: Partial<AuthConfigParams>;
-    authRepo?: AuthRepo;
+    sandbox?: boolean;
   } = {}) {
     this.config = new AuthConfig(config);
-    this.authRepo = authRepo || new HttpAuthRepo(this.config);
+    this.repo = new HttpAuthRepo(this.config);
+
+    if (sandbox) {
+      this.repo = new SandboxAuthRepo();
+    }
   }
 
   buildLoginUrl(params?: { returnTo?: string }): string {
@@ -49,7 +54,7 @@ export class Auth {
   }
 
   isAuthenticated(): Promise<boolean> {
-    return this.authRepo.isAuthenticated();
+    return this.repo.isAuthenticated();
   }
 
   async getCachedUser(): Promise<User> {
@@ -60,7 +65,7 @@ export class Auth {
   }
 
   async getUser(): Promise<User> {
-    this.user = await this.authRepo.getUser();
+    this.user = await this.repo.getUser();
     return this.user;
   }
 }

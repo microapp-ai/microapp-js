@@ -1,4 +1,4 @@
-import { MicroappAuthError } from './error';
+import { InvariantError } from './errors';
 
 export function invariant(condition: any, message: string) {
   if (!condition) {
@@ -6,9 +6,12 @@ export function invariant(condition: any, message: string) {
   }
 }
 
-export class InvariantError extends MicroappAuthError {
-  constructor(message: string) {
-    super(message);
-    this.name = 'InvariantError';
+export function warning(condition: any, message: string) {
+  if (!condition) {
+    console.warn(message);
   }
+}
+
+export function isProduction() {
+  return process.env.NODE_ENV === 'production';
 }

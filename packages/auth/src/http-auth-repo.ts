@@ -2,6 +2,7 @@ import type { AuthRepo } from './auth-repo';
 import type { User } from './user';
 import type { AuthConfig } from './auth-config';
 import { invariant } from './utils';
+import { NoAuthenticatedUserError } from './errors';
 
 export class HttpAuthRepo implements AuthRepo {
   constructor(private config: AuthConfig) {}
@@ -27,8 +28,7 @@ export class HttpAuthRepo implements AuthRepo {
       await this.getUser();
       return true;
     } catch (error) {
-      const isGetUserError =
-        error instanceof Error && error.message === 'Could not get auth user';
+      const isGetUserError = error instanceof NoAuthenticatedUserError;
 
       if (isGetUserError) {
         return false;
