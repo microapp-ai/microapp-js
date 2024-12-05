@@ -1,46 +1,37 @@
-import { invariant } from './utils';
 import type { AuthConfigParams } from './auth-config';
 import { AuthConfig } from './auth-config';
-import type { AuthRepo } from './auth-repo';
+import type { AuthRepo, AuthRepoBuildLoginUrlParams } from './auth-repo';
 import type { User } from './user';
 import { HttpAuthRepo } from './http-auth-repo';
+import type { SandboxAuthOptions } from './sandbox-auth-repo';
 import { SandboxAuthRepo } from './sandbox-auth-repo';
+import { invariant } from './utils';
+
+export type AuthOptions = {
+  config?: Partial<AuthConfigParams>;
+  sandbox?: SandboxAuthOptions;
+};
 
 export class Auth {
   readonly config: AuthConfig;
   private readonly repo: AuthRepo;
   private user?: User;
 
-  constructor({
-    config,
-    sandbox,
-  }: {
-    config?: Partial<AuthConfigParams>;
-    sandbox?: boolean;
-  } = {}) {
+  constructor({ config, sandbox }: AuthOptions = {}) {
     this.config = new AuthConfig(config);
     this.repo = new HttpAuthRepo(this.config);
 
-    if (sandbox) {
-      this.repo = new SandboxAuthRepo();
+    const isSandboxEnabled = sandbox
+      ? SandboxAuthRepo.isEnabled(sandbox)
+      : false;
+
+    if (isSandboxEnabled) {
+      this.repo = new SandboxAuthRepo(sandbox!);
     }
   }
 
-  buildLoginUrl(params?: { returnTo?: string }): string {
-    const returnTo = params?.returnTo || this.buildDefaultReturnTo();
-
-    return this.config.buildUrl({
-      path: '/api/auth/login',
-      query: {
-        returnTo,
-      },
-    });
-  }
-
-  private buildDefaultReturnTo(): string | undefined {
-    if (typeof window !== 'undefined') {
-      return window.location.href;
-    }
+  buildLoginUrl(params?: AuthRepoBuildLoginUrlParams): string {
+    return this.repo.buildLoginUrl(params);
   }
 
   requestLogin(): void {
@@ -61,6 +52,7 @@ export class Auth {
     if (!this.user) {
       return this.getUser();
     }
+
     return this.user;
   }
 

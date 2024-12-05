@@ -1,5 +1,9 @@
 import * as React from 'react';
-import type { AuthConfigParams, User } from '@microapp-io/auth';
+import type {
+  AuthOptions,
+  AuthRepoBuildLoginUrlParams,
+  User,
+} from '@microapp-io/auth';
 import { Auth } from '@microapp-io/auth';
 
 export type AuthContextType =
@@ -39,17 +43,16 @@ export const AuthContext = React.createContext<AuthContextType | undefined>(
 );
 
 export function AuthProvider({
-  config,
-  sandbox,
   children,
-}: {
-  config?: AuthConfigParams;
-  sandbox?: boolean;
+  ...options
+}: AuthOptions & {
   children: React.ReactNode;
 }) {
   const auth = React.useMemo(
-    () => new Auth({ config, sandbox }),
-    [config, sandbox]
+    () => new Auth(options),
+    // NB: We instantiate a new `Auth` instance only once
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
   );
 
   const [state, setState] = React.useState<AuthContextType>(() => {
@@ -67,15 +70,20 @@ export function AuthProvider({
       try {
         const isAuthenticated = await auth.isAuthenticated();
         const user = isAuthenticated
-          ? await auth.getUser()
-          : await auth.getCachedUser();
+          ? shouldForceRefresh
+            ? await auth.getUser()
+            : await auth.getCachedUser()
+          : undefined;
 
-        setState((previousState) => ({
-          ...previousState,
-          isAuthenticated: true,
-          isLoading: false,
-          user,
-        }));
+        setState(
+          (previousState) =>
+            ({
+              ...previousState,
+              isAuthenticated,
+              isLoading: false,
+              user,
+            } as AuthContextType)
+        );
       } catch (causeError) {
         const error =
           causeError instanceof Error
@@ -99,7 +107,7 @@ export function AuthProvider({
       ...previousState,
       refresh: () => load({ shouldForceRefresh: true }),
       requestLogin: () => auth.requestLogin(),
-      buildLoginUrl: (params?: { returnTo?: string }) =>
+      buildLoginUrl: (params?: AuthRepoBuildLoginUrlParams) =>
         auth.buildLoginUrl(params),
     }));
 

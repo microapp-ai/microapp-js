@@ -1,4 +1,4 @@
-import type { AuthRepo } from './auth-repo';
+import type { AuthRepo, AuthRepoBuildLoginUrlParams } from './auth-repo';
 import type { User } from './user';
 import type { AuthConfig } from './auth-config';
 import { invariant } from './utils';
@@ -6,6 +6,28 @@ import { NoAuthenticatedUserError } from './errors';
 
 export class HttpAuthRepo implements AuthRepo {
   constructor(private config: AuthConfig) {}
+
+  buildLoginUrl(params?: AuthRepoBuildLoginUrlParams): string {
+    invariant(
+      typeof window !== 'undefined',
+      'requestLogin can only be used in the browser'
+    );
+
+    const returnTo = params?.returnTo || this.buildDefaultReturnTo();
+
+    return this.config.buildUrl({
+      path: '/api/auth/login',
+      query: {
+        returnTo,
+      },
+    });
+  }
+
+  private buildDefaultReturnTo(): string | undefined {
+    if (typeof window !== 'undefined') {
+      return window.location.href;
+    }
+  }
 
   async getUser(): Promise<User> {
     const getUserUrl = this.config.buildUrl({

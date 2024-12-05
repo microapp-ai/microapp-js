@@ -7,7 +7,7 @@ export function invariant(condition: any, message: string) {
 }
 
 export function warning(condition: any, message: string) {
-  if (!condition) {
+  if (condition) {
     console.warn(message);
   }
 }

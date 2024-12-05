@@ -1,40 +1,75 @@
 import type { AuthRepo } from './auth-repo';
 import type { User } from './user';
-import type { AuthRepoStorage } from './auth-repo-storage';
-import { SandboxAuthRepoStorage } from './sandbox-auth-repo-storage';
-import { NoAuthenticatedUserError } from './errors';
+import { InvariantError, NoAuthenticatedUserError } from './errors';
+import { invariant, isProduction, warning } from './utils';
+
+export type SandboxAuthOptions =
+  | boolean
+  | {
+      enabled?: boolean;
+      user: User | null | (() => User | null) | (() => Promise<User | null>);
+    };
 
 export class SandboxAuthRepo implements AuthRepo {
-  private storage: AuthRepoStorage | null = null;
+  private readonly enabled: boolean;
+  private readonly _getUser: () => Promise<User | null>;
+
+  static parseOptions(options: SandboxAuthOptions): {
+    enabled: boolean;
+    getUser: () => Promise<User | null>;
+  } {
+    if (typeof options === 'boolean') {
+      return { enabled: options, getUser: async () => null };
+    }
+
+    const { enabled = true, user } = options;
+    return {
+      enabled,
+      getUser:
+        typeof user === 'function' ? async () => user() : async () => user,
+    };
+  }
+
+  static isEnabled(options?: SandboxAuthOptions): boolean {
+    if (!options) {
+      return false;
+    }
+
+    const { enabled } = SandboxAuthRepo.parseOptions(options);
+    return enabled;
+  }
+
+  constructor(options: SandboxAuthOptions) {
+    const { enabled, getUser } = SandboxAuthRepo.parseOptions(options);
+    this.enabled = enabled;
+    this._getUser = getUser;
+
+    warning(
+      isProduction() && enabled,
+      '[@microapp-io/auth] Sandbox auth should not be used in production.\nCheck the documentation for more information: https://docs.microapp.io/authentication/introduction'
+    );
+  }
+
+  buildLoginUrl(): string {
+    throw new InvariantError('Sandbox auth does not support login');
+  }
 
   async getUser(): Promise<User> {
-    const storage = this.getOrInitiateStorage();
-    const user = storage.getUser();
+    this.throwIfNotEnabled();
+    const user = await this._getUser();
     if (!user) {
-      throw new NoAuthenticatedUserError('Could not get auth user');
+      throw new NoAuthenticatedUserError('Could not get sandbox user');
     }
     return user;
   }
 
-  private getOrInitiateStorage(): AuthRepoStorage {
-    if (!this.storage) {
-      this.storage = SandboxAuthRepoStorage.getInstance();
-    }
-    return this.storage;
+  private throwIfNotEnabled(): void {
+    invariant(this.enabled, 'Sandbox auth is not enabled');
   }
 
   async isAuthenticated(): Promise<boolean> {
-    const storage = this.getOrInitiateStorage();
-    return storage.getUser() !== null;
-  }
-
-  setUser(user: User): void {
-    const storage = this.getOrInitiateStorage();
-    storage.setUser(user);
-  }
-
-  clearUser(): void {
-    const storage = this.getOrInitiateStorage();
-    storage.clearUser();
+    this.throwIfNotEnabled();
+    const user = await this.getUser();
+    return user !== null;
   }
 }
