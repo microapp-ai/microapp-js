@@ -60,8 +60,9 @@ export class InitCommand extends Command {
       packageManager,
     });
 
-    this.enterFolderInCurrentShell(folderPath);
-    this.log(pc.green('\nMicroapp initialized successfully\n'));
+    this.log(pc.green('\nMicroapp initialized successfully in the folder:'));
+    this.log(pc.bold(folderPath));
+    this.log('\n');
   }
 
   private getOrDetectPackageManager(
@@ -404,10 +405,5 @@ export class InitCommand extends Command {
     }
 
     return createCommand[packageManager];
-  }
-
-  private enterFolderInCurrentShell(folderPath: string): void {
-    this.log(pc.green(`Entering folder: ${pc.bold(folderPath)}\n`));
-    process.chdir(folderPath);
   }
 }
