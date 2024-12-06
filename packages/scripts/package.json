@@ -1,6 +1,6 @@
 {
   "name": "@microapp-io/scripts",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "repository": {
     "type": "git",
     "url": "https://github.com/microapp-io/microapp-js",
@@ -28,11 +28,7 @@
     "semver": "^7.5.4",
     "webpack": "^5.0.0"
   },
-  "peerDependencies": {
-    "styled-jsx": "^5.1.6"
-  },
   "devDependencies": {
-    "@types/webpack": "^5.28.0",
-    "styled-jsx": "^5.1.6"
+    "@types/webpack": "^5.28.0"
   }
 }
