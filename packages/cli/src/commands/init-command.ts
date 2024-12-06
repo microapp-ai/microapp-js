@@ -221,14 +221,16 @@ export class InitCommand extends Command {
   }): void {
     this.log(
       pc.cyan(
-        `\nInstalling @microapp-io/scripts using ${pc.bold(packageManager)}`
+        `\nInstalling @microapp-io/scripts webpack using ${pc.bold(
+          packageManager
+        )}`
       )
     );
 
     execSync(
       this.getInstallScriptCommand({
         packageManager,
-        packageNames: ['@microapp-io/scripts'],
+        packageNames: ['@microapp-io/scripts', 'webpack'],
         dev: true,
       }),
       {

@@ -1,6 +1,6 @@
 {
   "name": "@microapp-io/scripts",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "repository": {
     "type": "git",
     "url": "https://github.com/microapp-io/microapp-js",
@@ -27,11 +27,20 @@
     "@module-federation/nextjs-mf": "^7.0.8",
     "semver": "^7.5.4"
   },
-  "peerDependencies": {
-    "webpack": "^5.0.0"
-  },
   "devDependencies": {
     "@types/webpack": "^5.28.0",
     "webpack": "^5.0.0"
+  },
+  "peerDependencies": {
+    "next": "^12 || ^13 || ^14",
+    "react": "^17 || ^18",
+    "react-dom": "^17 || ^18",
+    "styled-jsx": "*",
+    "webpack": "^5.40.0"
+  },
+  "peerDependenciesMeta": {
+    "styled-jsx": {
+      "optional": true
+    }
   }
 }
