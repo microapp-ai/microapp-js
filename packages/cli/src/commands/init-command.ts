@@ -4,8 +4,10 @@ import * as path from 'path';
 import inquirer from 'inquirer';
 import { MicroappNextConfigFileTransformer } from '../file-transformers';
 import {
+  InvalidConfigError,
   MicroappConfigError,
   MicroappConfigManager,
+  MicroappConfigValidator,
   MicroappSupportedFramework,
 } from '@microapp-io/scripts';
 import { MicroappNextConfigFileDetector } from '../file-detectors';
@@ -132,10 +134,11 @@ export class InitCommand extends Command {
       await this.configureNextApp({ folderPath });
     }
 
-    const configReader = new MicroappConfigManager({ rootPath: folderPath });
-    const config = configReader.read();
+    const configManager = new MicroappConfigManager({ rootPath: folderPath });
+    const config = configManager.read();
 
-    const defaultName = config?.name || path.basename(folderPath);
+    const defaultName =
+      config?.name || this.generateDefaultNameByPath(folderPath);
     const defaultEntryComponent =
       config?.entryComponent ||
       this.getDefaultEntryComponent({
@@ -149,18 +152,36 @@ export class InitCommand extends Command {
         name: 'name',
         message: 'Enter the name of the microapp:',
         default: defaultName,
+        validate: (name: string) =>
+          this.validateConfig(() =>
+            MicroappConfigValidator.validateConfigName(name)
+          ),
       },
       {
         type: 'input',
         name: 'entryComponent',
         message: 'Enter the name of the entry component:',
         default: defaultEntryComponent,
+        validate: (entryComponent: string) =>
+          this.validateConfig(() =>
+            MicroappConfigValidator.validateConfigEntryComponent(
+              entryComponent,
+              folderPath
+            )
+          ),
       },
     ]);
 
-    configReader.write({ name, entryComponent });
+    configManager.write({ name, entryComponent });
 
     this.installScripts({ folderPath, packageManager });
+  }
+
+  private generateDefaultNameByPath(folderPath: string): string {
+    return path
+      .basename(folderPath)
+      .toLowerCase()
+      .replace(/[^a-z0-9-_]/g, '-');
   }
 
   private getDefaultEntryComponent({
@@ -174,15 +195,22 @@ export class InitCommand extends Command {
       return this.getFirstRelativeFilePathThatExists({
         folderPath,
         fileNames: [
-          'pages/index.tsx',
-          'pages/index.ts',
-          'pages/index.js',
+          // App router
+          'app/page.tsx',
+          'app/page.ts',
+          'app/page.js',
+
+          // App router within src/
           'src/app/page.tsx',
           'src/app/page.ts',
           'src/app/page.js',
-          'app/index.tsx',
-          'app/index.ts',
-          'app/index.js',
+
+          // Pages router
+          'pages/index.tsx',
+          'pages/index.ts',
+          'pages/index.js',
+
+          // Pages router within src/
           'src/pages/index.tsx',
           'src/pages/index.ts',
           'src/pages/index.js',
@@ -210,6 +238,19 @@ export class InitCommand extends Command {
 
     const relativePath = path.relative(folderPath, absolutePath);
     return `./${relativePath}`;
+  }
+
+  private validateConfig(validate: () => void): string | boolean {
+    try {
+      validate();
+      return true;
+    } catch (error) {
+      const isInvalidConfigError = error instanceof InvalidConfigError;
+      if (!isInvalidConfigError) {
+        throw error;
+      }
+      return error.message;
+    }
   }
 
   private installScripts({

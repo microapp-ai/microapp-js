@@ -1,6 +1,6 @@
 {
   "name": "@microapp-io/cli",
-  "version": "0.1.7",
+  "version": "0.2.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/microapp-io/microapp-js",
@@ -28,7 +28,7 @@
   },
   "dependencies": {
     "@babel/parser": "^7.26.2",
-    "@microapp-io/scripts": "^0.1.0",
+    "@microapp-io/scripts": "^0.3.0",
     "@oclif/core": "^4.0.32",
     "ast-types": "^0.14.2",
     "inquirer": "^12.1.0",

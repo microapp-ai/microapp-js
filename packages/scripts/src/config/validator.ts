@@ -59,22 +59,48 @@ export class MicroappConfigValidator {
     packageJson: any;
     rootPath?: string;
   }): void {
-    if (!config.name) {
-      throw new InvalidConfigError(
-        "The 'name' field is required in microapp.json."
-      );
+    MicroappConfigValidator.validateConfigName(config.name);
+    MicroappConfigValidator.validateConfigEntryComponent(
+      config.entryComponent,
+      rootPath
+    );
+
+    MicroappConfigValidator.validateConfigDependencies(
+      config.shared,
+      packageJson
+    );
+  }
+
+  public static validateConfigName(name: any): void {
+    if (!name) {
+      throw new InvalidConfigError("The 'name' field is required.");
     }
 
-    if (!config.entryComponent) {
-      throw new InvalidConfigError(
-        "The 'entryComponent' field is required in microapp.json."
-      );
+    if (typeof name !== 'string') {
+      throw new InvalidConfigError("The 'name' field must be a string.");
     }
 
-    const isNameSlug = /^[a-z0-9-]+$/.test(config.name);
+    const isNameSlug = /^[a-z0-9-_]+$/.test(name);
 
     if (!isNameSlug) {
-      throw new InvalidConfigError("The 'name' field must be a slug.");
+      throw new InvalidConfigError(
+        "The 'name' field must be a slug with lowercase letters, numbers, hyphens, and underscores. Example: 'my-microapp' or 'my_microapp'."
+      );
+    }
+  }
+
+  public static validateConfigEntryComponent(
+    entryComponent: any,
+    rootPath?: string
+  ): void {
+    if (!entryComponent) {
+      throw new InvalidConfigError("The 'entryComponent' field is required.");
+    }
+
+    if (typeof entryComponent !== 'string') {
+      throw new InvalidConfigError(
+        "The 'entryComponent' field must be a string."
+      );
     }
 
     if (!rootPath) {
@@ -82,21 +108,30 @@ export class MicroappConfigValidator {
     }
 
     const doesEntryComponentExist = fs.existsSync(
-      path.resolve(rootPath, config.entryComponent)
+      path.resolve(rootPath, entryComponent)
     );
 
     if (!doesEntryComponentExist) {
       throw new InvalidConfigError(
-        "The 'entryComponent' field must be a valid path."
+        `The 'entryComponent' field must be a valid path of a React component file. Check the file path in the folder: ${rootPath}.`
       );
     }
+  }
 
-    if (!config.shared) {
+  public static validateConfigDependencies(
+    sharedConfig: any,
+    packageJson: any
+  ): void {
+    if (!sharedConfig) {
       return;
     }
 
+    if (typeof sharedConfig !== 'object') {
+      throw new InvalidConfigError("The 'shared' field must be an object.");
+    }
+
     for (const [sharedPackageName, sharedPackageVersion] of Object.entries(
-      config.shared
+      sharedConfig
     )) {
       const versionInRootPackageJson = (packageJson.dependencies || {})[
         sharedPackageName
@@ -110,7 +145,7 @@ export class MicroappConfigValidator {
 
       const isVersionSatisfied = semver.satisfies(
         versionInRootPackageJson,
-        sharedPackageVersion
+        sharedPackageVersion as string
       );
 
       if (!isVersionSatisfied) {

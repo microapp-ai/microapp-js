@@ -42,9 +42,7 @@ describe('MicroappConfigValidator', () => {
         config,
         rootPath: path.dirname(configPath),
       });
-    }).toThrow(
-      new InvalidConfigError("The 'name' field is required in microapp.json.")
-    );
+    }).toThrow(new InvalidConfigError("The 'name' field is required."));
   });
 
   it('throws if the config file is missing the entryComponent field', () => {
@@ -61,9 +59,7 @@ describe('MicroappConfigValidator', () => {
         rootPath: path.dirname(configPath),
       });
     }).toThrow(
-      new InvalidConfigError(
-        "The 'entryComponent' field is required in microapp.json."
-      )
+      new InvalidConfigError("The 'entryComponent' field is required.")
     );
   });
 
@@ -81,7 +77,11 @@ describe('MicroappConfigValidator', () => {
         rootPath: path.dirname(configPath),
       });
     }).toThrow(
-      new InvalidConfigError("The 'entryComponent' field must be a valid path.")
+      new InvalidConfigError(
+        `The 'entryComponent' field must be a valid path of a React component file. Check the file path in the folder: ${path.dirname(
+          configPath
+        )}.`
+      )
     );
   });
 
