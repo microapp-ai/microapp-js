@@ -35,7 +35,7 @@ export class InitCommand extends Command {
 
   async run(): Promise<void> {
     const { args, flags } = await this.parse(InitCommand);
-    const packageManager = this.getOrDetectPackageManager(
+    const packageManager = await this.getOrPromptPackageManager(
       flags.packageManager as SupportedPackageManager | undefined
     );
 
@@ -67,58 +67,89 @@ export class InitCommand extends Command {
     this.log('\n');
   }
 
-  private getOrDetectPackageManager(
+  private async getOrPromptPackageManager(
     flagPackageManager?: SupportedPackageManager | undefined
-  ): SupportedPackageManager {
+  ): Promise<SupportedPackageManager> {
     if (flagPackageManager) {
       return flagPackageManager as SupportedPackageManager;
     }
 
-    if (fs.existsSync(path.join(process.cwd(), 'yarn.lock'))) {
+    const { packageManager } = await inquirer.prompt([
+      {
+        type: 'list',
+        name: 'packageManager',
+        message: 'Select a package manager to use:',
+        choices: () => {
+          const packageManagers: SupportedPackageManager[] = [
+            'npm',
+            'yarn',
+            'pnpm',
+            'bun',
+          ];
+
+          return packageManagers
+            .filter((packageManager) =>
+              this.doesPackageManagerExist(packageManager)
+            )
+            .map((packageManager) => ({
+              name: packageManager,
+              value: packageManager,
+            }));
+        },
+        default: this.detectPackageManager(),
+      },
+    ]);
+
+    return packageManager as SupportedPackageManager;
+  }
+
+  private doesPackageManagerExist(
+    packageManager: SupportedPackageManager
+  ): boolean {
+    try {
+      execSync(`${packageManager} --version`, { stdio: 'ignore' });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  private detectPackageManager(): SupportedPackageManager {
+    const userAgent = process.env.npm_config_user_agent || '';
+
+    if (userAgent.includes('npm')) {
+      return 'npm';
+    }
+    if (userAgent.includes('yarn')) {
       return 'yarn';
     }
-
-    if (fs.existsSync(path.join(process.cwd(), 'pnpm-lock.yaml'))) {
+    if (userAgent.includes('pnpm')) {
       return 'pnpm';
     }
-
-    if (fs.existsSync(path.join(process.cwd(), 'bun.lockb'))) {
+    if (userAgent.includes('bun')) {
       return 'bun';
     }
 
-    if (fs.existsSync(path.join(process.cwd(), 'package-lock.json'))) {
+    // Fallback: check process.env._ (command used to run the script)
+    const execPath = process.env._ || process.argv[0];
+
+    if (execPath.includes('npm')) {
       return 'npm';
     }
 
-    if (this.isProcessUsingPackageManager('yarn')) {
+    if (execPath.includes('yarn')) {
       return 'yarn';
     }
 
-    if (this.isProcessUsingPackageManager('pnpm')) {
+    if (execPath.includes('pnpm')) {
       return 'pnpm';
     }
 
-    if (this.isProcessUsingPackageManager('npm')) {
-      return 'npm';
-    }
-
-    if (this.isProcessUsingPackageManager('bun')) {
+    if (execPath.includes('bun')) {
       return 'bun';
     }
 
     return DEFAULT_PACKAGE_MANAGER;
-  }
-
-  private isProcessUsingPackageManager(packageManager: string): boolean {
-    const userAgent = process.env.npm_config_user_agent || '';
-    const execPath = process.env.npm_execpath || '';
-
-    const normalizedPackageManager = packageManager.toLowerCase();
-
-    return (
-      userAgent.toLowerCase().includes(normalizedPackageManager) ||
-      execPath.toLowerCase().includes(normalizedPackageManager)
-    );
   }
 
   private async handleExistingFolder({
