@@ -1,6 +1,6 @@
 {
   "name": "@microapp-io/create-microapp",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/microapp-io/microapp-js",
@@ -27,7 +27,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@microapp-io/cli": "^0.1.0",
+    "@microapp-io/cli": "^0.2.0",
     "@oclif/core": "^4.0.32"
   },
   "devDependencies": {

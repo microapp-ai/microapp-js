@@ -1885,28 +1885,6 @@
     globby "^11.0.0"
     read-yaml-file "^1.1.0"
 
-"@microapp-io/cli@^0.1.0":
-  version "0.1.7"
-  resolved "https://registry.yarnpkg.com/@microapp-io/cli/-/cli-0.1.7.tgz#9dcd3761786d64601526e1e458b5e5c4939d88a4"
-  integrity sha512-K1QTrU6nO5EjiRkd9AuFzWSmYV4ZVRvQz4JPSLH5v3PHKc25sh9Z1+kBsCgLLbaZLn+fUnnR5UxD7CEXnGzfFg==
-  dependencies:
-    "@babel/parser" "^7.26.2"
-    "@microapp-io/scripts" "^0.1.0"
-    "@oclif/core" "^4.0.32"
-    ast-types "^0.14.2"
-    inquirer "^12.1.0"
-    picocolors "^1.1.1"
-    recast "^0.23.9"
-
-"@microapp-io/scripts@^0.1.0":
-  version "0.1.5"
-  resolved "https://registry.yarnpkg.com/@microapp-io/scripts/-/scripts-0.1.5.tgz#c96e22e19124557287643ed70fdc7def9a1427f8"
-  integrity sha512-Vg6ueciYDwBMs1bxmW2prq4Y1NDRdvE2re1/NsX6LhG3Wq/tv+1T2bNezgFn9BZsV5pH+BatIwBhLoLz8spWhQ==
-  dependencies:
-    "@module-federation/nextjs-mf" "^7.0.8"
-    semver "^7.5.4"
-    webpack "^5.0.0"
-
 "@module-federation/nextjs-mf@^7.0.8":
   version "7.0.8"
   resolved "https://registry.yarnpkg.com/@module-federation/nextjs-mf/-/nextjs-mf-7.0.8.tgz#1639f820d2b2ff9427b6b571d6a769b991f31fc1"
