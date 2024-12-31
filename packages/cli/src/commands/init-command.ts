@@ -120,12 +120,15 @@ export class InitCommand extends Command {
     if (userAgent.includes('npm')) {
       return 'npm';
     }
+
     if (userAgent.includes('yarn')) {
       return 'yarn';
     }
+
     if (userAgent.includes('pnpm')) {
       return 'pnpm';
     }
+
     if (userAgent.includes('bun')) {
       return 'bun';
     }
