@@ -3,11 +3,12 @@ import { MicroappRuntime } from './microapp-runtime';
 
 type MicroappProps = {
   url: string;
-  theme?: 'light' | 'dark';
+  theme?: string;
   lang?: 'pt' | 'en' | 'es';
   height?: number | string;
   onLoad?: () => void;
   onError?: (error: Error) => void;
+  onRouteChange?: (route: string) => void;
 } & Omit<React.IframeHTMLAttributes<HTMLIFrameElement>, 'src'>;
 
 export const Microapp: React.FC<MicroappProps> = ({
@@ -17,6 +18,7 @@ export const Microapp: React.FC<MicroappProps> = ({
   lang = 'en',
   onLoad,
   onError,
+  onRouteChange,
   ...rest
 }) => {
   const iframeRef = React.useRef<HTMLIFrameElement>(null);
@@ -28,12 +30,14 @@ export const Microapp: React.FC<MicroappProps> = ({
         runtimeRef.current = new MicroappRuntime({
           iframeElement: iframeRef.current,
           url,
-          // theme,
-          // lang,
+          theme,
+          lang,
         });
+
         onLoad?.();
         setTimeout(() => {
           runtimeRef.current?.setIframeDimensions();
+          runtimeRef.current?.setIframeTheme(theme);
         }, 1000);
       } catch (error) {
         onError?.(
@@ -48,7 +52,14 @@ export const Microapp: React.FC<MicroappProps> = ({
       runtimeRef.current?.destroy();
       runtimeRef.current = null;
     };
-  }, [theme, lang, url, onLoad, onError]);
+  }, [url, onLoad, onError]);
+
+  // Handle prop changes
+  React.useEffect(() => {
+    if (runtimeRef.current) {
+      runtimeRef.current.setIframeTheme(theme);
+    }
+  }, [theme]);
 
   return (
     <iframe
@@ -56,9 +67,9 @@ export const Microapp: React.FC<MicroappProps> = ({
       title={title}
       style={{
         border: 'none',
-        minHeight: '100%',
+        width: '100%',
+        height: '100%',
       }}
-      width={'100%'}
       {...rest}
     />
   );
