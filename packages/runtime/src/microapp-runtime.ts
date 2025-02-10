@@ -1,4 +1,4 @@
-// import { PRODUCTION_MARKETPLACE_HOST_URL } from './constants';
+import { PRODUCTION_MARKETPLACE_HOST_URL } from './constants';
 
 type MicroappRuntimeOptions = {
   iframeElement: HTMLIFrameElement;
@@ -12,8 +12,9 @@ type MicroappRuntimeOptions = {
 export class MicroappRuntime {
   #iframe: HTMLIFrameElement;
   #theme: string = 'light';
-  #lang: string = 'en';
+  #lang: string = 'en-us';
   #onRouteChange?: (route: string) => void;
+  #resizeObserver?: ResizeObserver;
 
   #baseRoute: string;
 
@@ -32,7 +33,18 @@ export class MicroappRuntime {
     this.#baseRoute = window.location.pathname;
 
     window.addEventListener('message', this.#onMessageEvent);
-    window.addEventListener('resize', this.setIframeDimensions);
+
+    const parentElement = this.#iframe.parentElement;
+    if (parentElement) {
+      this.#resizeObserver = new ResizeObserver((entries) => {
+        for (const entry of entries) {
+          const { width, height } = entry.contentRect;
+          this.#iframe.style.width = `${width}px`;
+          this.#iframe.style.height = `${height}px`;
+        }
+      });
+      this.#resizeObserver.observe(parentElement);
+    }
 
     this.#iframe.addEventListener('load', () => {
       this.#updateUserPreferences();
@@ -41,20 +53,24 @@ export class MicroappRuntime {
     this.#iframe.src = src;
   }
 
-  destroy() {
+  destroy = () => {
     window.removeEventListener('message', this.#onMessageEvent);
-    window.removeEventListener('resize', this.setIframeDimensions);
 
-    this.#iframe.removeEventListener('load', this.#updateUserPreferences);
-  }
+    if (this.#resizeObserver) {
+      this.#resizeObserver.disconnect();
+    }
+    this.#iframe.remove();
+  };
 
   setIframeDimensions = () => {
-    const parentElement = this.#iframe.parentElement;
-    if (parentElement) {
-      const { width, height } = parentElement.getBoundingClientRect();
-      this.#iframe.style.width = `${width}px`;
-      this.#iframe.style.height = `${height}px`;
-    }
+    setTimeout(() => {
+      const parentElement = this.#iframe.parentElement;
+      if (parentElement) {
+        const { width, height } = parentElement.getBoundingClientRect();
+        this.#iframe.style.width = `${width}px`;
+        this.#iframe.style.height = `${height}px`;
+      }
+    }, 100);
   };
 
   setIframeTheme = (theme: string) => {
@@ -98,17 +114,13 @@ export class MicroappRuntime {
       payload: {
         theme: this.#theme,
         lang: this.#lang,
-        timestamp: Date.now(),
       },
     };
 
     this.#iframe.contentWindow?.postMessage(
       message,
-      // PRODUCTION_MARKETPLACE_HOST_URL
-      '*'
+      PRODUCTION_MARKETPLACE_HOST_URL
     );
-
-    // this.#injectLangChangeScript();
   };
 
   #injectRoutingScript = () => {
@@ -125,7 +137,7 @@ export class MicroappRuntime {
 
         function notifyRouteChange(method) {
           const currentRoute = window.location.pathname;
-          window.parent.postMessage({ type: '@microapp:routeChange', payload: { route: currentRoute }}, '*');
+          window.parent.postMessage({ type: '@microapp:routeChange', payload: { route: currentRoute }}, PRODUCTION_MARKETPLACE_HOST_URL);
         }
 
         window.addEventListener('popstate', () => {
@@ -144,26 +156,6 @@ export class MicroappRuntime {
           notifyRouteChange();
         };
       }
-    `;
-    iframeDoc.head.appendChild(script);
-  };
-
-  #injectLangChangeScript = () => {
-    const iframeDoc = this.#iframe.contentDocument;
-    if (!iframeDoc || iframeDoc.getElementById('microapp-lang-script')) return;
-
-    const script = iframeDoc.createElement('script');
-    script.id = 'microapp-lang-script';
-    script.textContent = `
-      window.addEventListener('message', (event) => {
-        if (event.data.type === '@microapp:userPreferences' && event.data.payload.lang) {
-          if (window.next && window.next.router) {
-            const currentPath = window.location.pathname;
-            const newLocale = event.data.payload.lang;
-            window.next.router.push(currentPath, currentPath, { locale: newLocale });
-          }
-        }
-      });
     `;
     iframeDoc.head.appendChild(script);
   };

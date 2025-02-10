@@ -148,8 +148,6 @@ export class LoadUserError extends MicroappReactError {
   }
 }
 
-export * from './user-preferences';
-
 // HEY YOU! DON'T TOUCH THIS VARIABLE!
 //
 // It is replaced with the proper version at build time via a babel plugin in

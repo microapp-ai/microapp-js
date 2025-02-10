@@ -7,10 +7,8 @@ const replace = require('@rollup/plugin-replace');
 const { terser } = require('rollup-plugin-terser');
 const typescript = require('@rollup/plugin-typescript');
 const {
-  babelPluginReplaceVersionPlaceholder,
   createBanner,
   getBuildDirectories,
-  validateReplacedVersion,
   PRETTY,
 } = require('../../rollup.utils');
 const { name, version } = require('./package.json');
@@ -18,10 +16,10 @@ const { name, version } = require('./package.json');
 module.exports = function rollup() {
   const { ROOT_DIR, PKG_DIR, SOURCE_DIR, OUTPUT_DIR } = getBuildDirectories(
     name,
-    'react'
+    'runtime'
   );
 
-  const banner = createBanner('Microapp React', version);
+  const banner = createBanner('Microapp Runtime', version);
 
   // JS modules for bundlers
   const modules = [
@@ -33,7 +31,7 @@ module.exports = function rollup() {
         sourcemap: !PRETTY,
         banner,
       },
-      external: ['react', 'react-dom', '@microapp-io/auth'],
+      external: ['react'],
       plugins: [
         extensions({ extensions: ['.ts', '.tsx'] }),
         babel({
@@ -44,10 +42,7 @@ module.exports = function rollup() {
             '@babel/preset-react',
             '@babel/preset-typescript',
           ],
-          plugins: [
-            'babel-plugin-dev-expression',
-            babelPluginReplaceVersionPlaceholder(),
-          ],
+          plugins: ['babel-plugin-dev-expression'],
           extensions: ['.ts', '.tsx'],
         }),
         typescript({
@@ -59,24 +54,27 @@ module.exports = function rollup() {
           targets: [{ src: path.join(ROOT_DIR, 'LICENSE.md'), dest: PKG_DIR }],
           verbose: true,
         }),
-        validateReplacedVersion(),
+        replace({
+          preventAssignment: true,
+          values: {
+            'process.env.NODE_ENV': JSON.stringify('production'),
+          },
+        }),
       ].concat(PRETTY ? prettier({ parser: 'babel' }) : []),
     },
   ];
 
   // JS modules for <script type=module>
-  // Note: These are experimental. You may not even get them to work
-  // unless you are using a React build with JS modules like es-react.
   const webModules = [
     {
       input: `${SOURCE_DIR}/index.ts`,
       output: {
-        file: `${OUTPUT_DIR}/react.development.js`,
+        file: `${OUTPUT_DIR}/runtime.development.js`,
         format: 'esm',
         sourcemap: !PRETTY,
         banner,
       },
-      external: ['react', '@microapp-io/auth'],
+      external: ['react'],
       plugins: [
         extensions({ extensions: ['.ts', '.tsx'] }),
         babel({
@@ -87,61 +85,45 @@ module.exports = function rollup() {
             '@babel/preset-react',
             '@babel/preset-typescript',
           ],
-          plugins: [
-            'babel-plugin-dev-expression',
-            babelPluginReplaceVersionPlaceholder(),
-          ],
+          plugins: ['babel-plugin-dev-expression'],
           extensions: ['.ts', '.tsx'],
         }),
         replace({
           preventAssignment: true,
-          values: { 'process.env.NODE_ENV': JSON.stringify('development') },
+          values: {
+            'process.env.NODE_ENV': JSON.stringify('development'),
+          },
         }),
-        validateReplacedVersion(),
       ].concat(PRETTY ? prettier({ parser: 'babel' }) : []),
     },
     {
       input: `${SOURCE_DIR}/index.ts`,
       output: {
-        file: `${OUTPUT_DIR}/react.production.min.js`,
+        file: `${OUTPUT_DIR}/runtime.production.min.js`,
         format: 'esm',
         sourcemap: !PRETTY,
         banner,
       },
-      external: ['react', '@microapp-io/auth'],
+      external: ['react'],
       plugins: [
         extensions({ extensions: ['.ts', '.tsx'] }),
         babel({
           babelHelpers: 'bundled',
           exclude: /node_modules/,
           presets: [
-            [
-              '@babel/preset-modules',
-              {
-                // Don't spoof `.name` for Arrow Functions, which breaks when minified anyway.
-                loose: true,
-              },
-            ],
-            [
-              '@babel/preset-react',
-              {
-                // Compile JSX Spread to Object.assign(), which is reliable in ESM browsers.
-                useBuiltIns: true,
-              },
-            ],
+            ['@babel/preset-modules', { loose: true }],
+            ['@babel/preset-react', { useBuiltIns: true }],
             '@babel/preset-typescript',
           ],
-          plugins: [
-            'babel-plugin-dev-expression',
-            babelPluginReplaceVersionPlaceholder(),
-          ],
+          plugins: ['babel-plugin-dev-expression'],
           extensions: ['.ts', '.tsx'],
         }),
         replace({
           preventAssignment: true,
-          values: { 'process.env.NODE_ENV': JSON.stringify('production') },
+          values: {
+            'process.env.NODE_ENV': JSON.stringify('production'),
+          },
         }),
-        validateReplacedVersion(),
         terser({ ecma: 8, safari10: true }),
       ].concat(PRETTY ? prettier({ parser: 'babel' }) : []),
     },
@@ -152,17 +134,16 @@ module.exports = function rollup() {
     {
       input: `${SOURCE_DIR}/index.ts`,
       output: {
-        file: `${OUTPUT_DIR}/umd/react.development.js`,
+        file: `${OUTPUT_DIR}/umd/runtime.development.js`,
         format: 'umd',
         sourcemap: !PRETTY,
         banner,
         globals: {
-          '@microapp-io/auth': 'MicroappAuth',
           react: 'React',
         },
-        name: 'MicroappReact',
+        name: 'MicroappRuntime',
       },
-      external: ['react', '@microapp-io/auth'],
+      external: ['react'],
       plugins: [
         extensions({ extensions: ['.ts', '.tsx'] }),
         babel({
@@ -173,33 +154,30 @@ module.exports = function rollup() {
             '@babel/preset-react',
             '@babel/preset-typescript',
           ],
-          plugins: [
-            'babel-plugin-dev-expression',
-            babelPluginReplaceVersionPlaceholder(),
-          ],
+          plugins: ['babel-plugin-dev-expression'],
           extensions: ['.ts', '.tsx'],
         }),
         replace({
           preventAssignment: true,
-          values: { 'process.env.NODE_ENV': JSON.stringify('development') },
+          values: {
+            'process.env.NODE_ENV': JSON.stringify('development'),
+          },
         }),
-        validateReplacedVersion(),
       ].concat(PRETTY ? prettier({ parser: 'babel' }) : []),
     },
     {
       input: `${SOURCE_DIR}/index.ts`,
       output: {
-        file: `${OUTPUT_DIR}/umd/react.production.min.js`,
+        file: `${OUTPUT_DIR}/umd/runtime.production.min.js`,
         format: 'umd',
         sourcemap: !PRETTY,
         banner,
         globals: {
-          '@microapp-io/auth': 'MicroappAuth',
           react: 'React',
         },
-        name: 'MicroappReact',
+        name: 'MicroappRuntime',
       },
-      external: ['react', '@microapp-io/auth'],
+      external: ['react'],
       plugins: [
         extensions({ extensions: ['.ts', '.tsx'] }),
         babel({
@@ -210,41 +188,19 @@ module.exports = function rollup() {
             '@babel/preset-react',
             '@babel/preset-typescript',
           ],
-          plugins: [
-            'babel-plugin-dev-expression',
-            babelPluginReplaceVersionPlaceholder(),
-          ],
+          plugins: ['babel-plugin-dev-expression'],
           extensions: ['.ts', '.tsx'],
         }),
         replace({
           preventAssignment: true,
-          values: { 'process.env.NODE_ENV': JSON.stringify('production') },
+          values: {
+            'process.env.NODE_ENV': JSON.stringify('production'),
+          },
         }),
         terser(),
-        validateReplacedVersion(),
       ].concat(PRETTY ? prettier({ parser: 'babel' }) : []),
     },
   ];
 
-  // Node entry points
-  const node = [
-    {
-      input: `${SOURCE_DIR}/node-main.js`,
-      output: {
-        file: `${OUTPUT_DIR}/main.js`,
-        format: 'cjs',
-        banner,
-      },
-      plugins: [].concat(PRETTY ? prettier({ parser: 'babel' }) : []),
-    },
-  ];
-
-  return [...modules, ...webModules, ...globals, ...node];
+  return [...modules, ...webModules, ...globals];
 };
-
-/**
- * @typedef {import('rollup').InputOptions} RollupInputOptions
- * @typedef {import('rollup').OutputOptions} RollupOutputOptions
- * @typedef {import('rollup').RollupOptions} RollupOptions
- * @typedef {import('rollup').Plugin} RollupPlugin
- */
