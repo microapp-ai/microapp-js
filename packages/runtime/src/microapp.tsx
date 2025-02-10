@@ -4,7 +4,7 @@ import { MicroappRuntime } from './microapp-runtime';
 type MicroappProps = {
   url: string;
   theme?: string;
-  lang?: 'pt' | 'en' | 'es';
+  lang?: string;
   height?: number | string;
   onLoad?: () => void;
   onError?: (error: Error) => void;
@@ -27,18 +27,21 @@ export const Microapp: React.FC<MicroappProps> = ({
   React.useEffect(() => {
     if (iframeRef.current) {
       try {
+        if (runtimeRef.current) {
+          runtimeRef.current.destroy();
+        }
+
         runtimeRef.current = new MicroappRuntime({
           iframeElement: iframeRef.current,
           url,
           theme,
           lang,
+          onRouteChange,
         });
 
         onLoad?.();
-        setTimeout(() => {
-          runtimeRef.current?.setIframeDimensions();
-          runtimeRef.current?.setIframeTheme(theme);
-        }, 1000);
+        runtimeRef.current.setIframeDimensions();
+        runtimeRef.current.setIframeTheme(theme);
       } catch (error) {
         onError?.(
           error instanceof Error
@@ -52,14 +55,19 @@ export const Microapp: React.FC<MicroappProps> = ({
       runtimeRef.current?.destroy();
       runtimeRef.current = null;
     };
-  }, [url, onLoad, onError]);
+  }, [url, onLoad, onError, onRouteChange]);
 
-  // Handle prop changes
   React.useEffect(() => {
     if (runtimeRef.current) {
       runtimeRef.current.setIframeTheme(theme);
     }
   }, [theme]);
+
+  React.useEffect(() => {
+    if (runtimeRef.current) {
+      runtimeRef.current.setIframeLang(lang);
+    }
+  }, [lang]);
 
   return (
     <iframe

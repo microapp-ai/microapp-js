@@ -14,7 +14,9 @@
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "dependencies": {
-    "@microapp-io/auth": "2.0.0"
+    "@microapp-io/auth": "2.0.0",
+    "@types/react": "^19.0.8",
+    "@types/react-dom": "^19.0.3"
   },
   "devDependencies": {
     "react": "^18.2.0",

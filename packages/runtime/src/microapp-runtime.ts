@@ -11,8 +11,8 @@ type MicroappRuntimeOptions = {
 
 export class MicroappRuntime {
   #iframe: HTMLIFrameElement;
-  #theme?: string;
-  #lang?: string;
+  #theme: string = 'light';
+  #lang: string = 'en';
   #onRouteChange?: (route: string) => void;
 
   #baseRoute: string;
@@ -25,8 +25,8 @@ export class MicroappRuntime {
     onRouteChange,
   }: MicroappRuntimeOptions) {
     this.#iframe = iframe;
-    this.#theme = theme;
-    this.#lang = lang;
+    this.#theme = theme ?? this.#theme;
+    this.#lang = lang ?? this.#lang;
     this.#onRouteChange = onRouteChange;
 
     this.#baseRoute = window.location.pathname;
@@ -48,19 +48,6 @@ export class MicroappRuntime {
     this.#iframe.removeEventListener('load', this.#updateUserPreferences);
   }
 
-  #onMessageEvent = (event: MessageEvent) => {
-    const { type, payload } = event.data;
-
-    switch (type) {
-      case '@microapp:updateUserPreferences':
-        return this.#updateUserPreferences();
-      case '@microapp:routeChange':
-        return this.#handleRouteChange(payload);
-      default:
-        return;
-    }
-  };
-
   setIframeDimensions = () => {
     const parentElement = this.#iframe.parentElement;
     if (parentElement) {
@@ -75,20 +62,25 @@ export class MicroappRuntime {
     this.#updateUserPreferences();
   };
 
-  #updateUserPreferences = () => {
-    const message = {
-      type: '@microapp:userpreferences',
-      payload: {
-        theme: this.#theme,
-        lang: this.#lang,
-      },
-    };
-
-    const targetOrigin = new URL(this.#iframe.src).origin;
-    this.#iframe.contentWindow?.postMessage(message, targetOrigin);
+  setIframeLang = (lang: string) => {
+    this.#lang = lang;
+    this.#updateUserPreferences();
   };
 
-  #handleRouteChange = ({ route, method }: { route: string; method: any }) => {
+  #onMessageEvent = (event: MessageEvent) => {
+    const { type, payload } = event.data;
+
+    switch (type) {
+      case '@microapp:userPreferences':
+        return this.#updateUserPreferences();
+      case '@microapp:routeChange':
+        return this.#handleRouteChange(payload);
+      default:
+        return;
+    }
+  };
+
+  #handleRouteChange = ({ route }: { route: string }) => {
     if (typeof window !== 'undefined') {
       const newRoute =
         route === '/'
@@ -100,11 +92,29 @@ export class MicroappRuntime {
     }
   };
 
+  #updateUserPreferences = () => {
+    const message = {
+      type: '@microapp:userPreferences',
+      payload: {
+        theme: this.#theme,
+        lang: this.#lang,
+        timestamp: Date.now(),
+      },
+    };
+
+    this.#iframe.contentWindow?.postMessage(
+      message,
+      // PRODUCTION_MARKETPLACE_HOST_URL
+      '*'
+    );
+
+    // this.#injectLangChangeScript();
+  };
+
   #injectRoutingScript = () => {
     const iframeDoc = this.#iframe.contentDocument;
     if (!iframeDoc) return;
 
-    // Check if script was already injected
     if (iframeDoc.getElementById('microapp-routing-script')) return;
 
     const script = iframeDoc.createElement('script');
@@ -115,27 +125,45 @@ export class MicroappRuntime {
 
         function notifyRouteChange(method) {
           const currentRoute = window.location.pathname;
-          window.parent.postMessage({ type: '@microapp:routeChange', payload: { route: currentRoute, method }}, '*');
+          window.parent.postMessage({ type: '@microapp:routeChange', payload: { route: currentRoute }}, '*');
         }
 
         window.addEventListener('popstate', () => {
-          notifyRouteChange('popstate');
+          notifyRouteChange();
         });
 
         const originalPushState = history.pushState;
         history.pushState = function(...args) {
           originalPushState.apply(this, args);
-          notifyRouteChange('pushState');
+          notifyRouteChange();
         };
 
         const originalReplaceState = history.replaceState;
         history.replaceState = function(...args) {
           originalReplaceState.apply(this, args);
-          notifyRouteChange('replaceState');
+          notifyRouteChange();
         };
-
-        notifyRouteChange('init');
       }
+    `;
+    iframeDoc.head.appendChild(script);
+  };
+
+  #injectLangChangeScript = () => {
+    const iframeDoc = this.#iframe.contentDocument;
+    if (!iframeDoc || iframeDoc.getElementById('microapp-lang-script')) return;
+
+    const script = iframeDoc.createElement('script');
+    script.id = 'microapp-lang-script';
+    script.textContent = `
+      window.addEventListener('message', (event) => {
+        if (event.data.type === '@microapp:userPreferences' && event.data.payload.lang) {
+          if (window.next && window.next.router) {
+            const currentPath = window.location.pathname;
+            const newLocale = event.data.payload.lang;
+            window.next.router.push(currentPath, currentPath, { locale: newLocale });
+          }
+        }
+      });
     `;
     iframeDoc.head.appendChild(script);
   };
