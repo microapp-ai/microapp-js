@@ -14,8 +14,8 @@ type MicroappProps = {
 export const Microapp: React.FC<MicroappProps> = ({
   url,
   title,
-  theme = 'light',
-  lang = 'en',
+  theme,
+  lang,
   onLoad,
   onError,
   onRouteChange,
@@ -26,6 +26,7 @@ export const Microapp: React.FC<MicroappProps> = ({
   const [isLoading, setIsLoading] = React.useState(true);
 
   React.useEffect(() => {
+    setIsLoading(true);
     if (iframeRef.current) {
       try {
         if (runtimeRef.current) {
@@ -41,9 +42,6 @@ export const Microapp: React.FC<MicroappProps> = ({
         });
 
         onLoad?.();
-
-        runtimeRef.current?.setIframeDimensions();
-        runtimeRef.current?.setIframeTheme(theme);
       } catch (error) {
         onError?.(
           error instanceof Error
@@ -60,18 +58,6 @@ export const Microapp: React.FC<MicroappProps> = ({
       runtimeRef.current = null;
     };
   }, [url, onLoad, onError, onRouteChange]);
-
-  React.useEffect(() => {
-    if (runtimeRef.current) {
-      runtimeRef.current.setIframeTheme(theme);
-    }
-  }, [theme]);
-
-  React.useEffect(() => {
-    if (runtimeRef.current) {
-      runtimeRef.current.setIframeLang(lang);
-    }
-  }, [lang]);
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>

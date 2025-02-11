@@ -3,7 +3,6 @@ import { PRODUCTION_MARKETPLACE_HOST_URL } from './constants';
 type MicroappRuntimeOptions = {
   iframeElement: HTMLIFrameElement;
   url: string;
-  timeout?: number;
   theme?: string;
   lang?: string;
   onRouteChange?: (route: string) => void;
@@ -13,10 +12,9 @@ export class MicroappRuntime {
   #iframe: HTMLIFrameElement;
   #theme: string = 'light';
   #lang: string = 'en-us';
-  #onRouteChange?: (route: string) => void;
-  #resizeObserver?: ResizeObserver;
-
   #baseRoute: string;
+  #resizeObserver?: ResizeObserver;
+  #onRouteChange?: (route: string) => void;
 
   constructor({
     iframeElement: iframe,
@@ -31,21 +29,9 @@ export class MicroappRuntime {
     this.#onRouteChange = onRouteChange;
 
     this.#baseRoute = window.location.pathname;
+    this.#setIframeDimensions();
 
     window.addEventListener('message', this.#onMessageEvent);
-
-    const parentElement = this.#iframe.parentElement;
-    if (parentElement) {
-      this.#resizeObserver = new ResizeObserver((entries) => {
-        for (const entry of entries) {
-          const { width, height } = entry.contentRect;
-          this.#iframe.style.width = `${width}px`;
-          this.#iframe.style.height = `${height}px`;
-        }
-      });
-      this.#resizeObserver.observe(parentElement);
-    }
-
     this.#iframe.addEventListener('load', () => {
       this.#updateUserPreferences();
       this.#injectRoutingScript();
@@ -62,25 +48,18 @@ export class MicroappRuntime {
     this.#iframe.remove();
   };
 
-  setIframeDimensions = () => {
-    setTimeout(() => {
-      const parentElement = this.#iframe.parentElement;
-      if (parentElement) {
-        const { width, height } = parentElement.getBoundingClientRect();
-        this.#iframe.style.width = `${width}px`;
-        this.#iframe.style.height = `${height}px`;
-      }
-    }, 100);
-  };
-
-  setIframeTheme = (theme: string) => {
-    this.#theme = theme;
-    this.#updateUserPreferences();
-  };
-
-  setIframeLang = (lang: string) => {
-    this.#lang = lang;
-    this.#updateUserPreferences();
+  #setIframeDimensions = () => {
+    const parentElement = this.#iframe.parentElement;
+    if (parentElement) {
+      this.#resizeObserver = new ResizeObserver((entries) => {
+        for (const entry of entries) {
+          const { width, height } = entry.contentRect;
+          this.#iframe.style.width = `${width}px`;
+          this.#iframe.style.height = `${height}px`;
+        }
+      });
+      this.#resizeObserver.observe(parentElement);
+    }
   };
 
   #onMessageEvent = (event: MessageEvent) => {

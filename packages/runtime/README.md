@@ -1,3 +1,3 @@
-# Microapp React
+# Microapp Runtime
 
-The `react` package is a React component that can be used to render components of a Microapp.
+The `runtime` package is a React component that can be used to render Microapps.

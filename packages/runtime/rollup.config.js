@@ -21,7 +21,6 @@ module.exports = function rollup() {
 
   const banner = createBanner('Microapp Runtime', version);
 
-  // JS modules for bundlers
   const modules = [
     {
       input: `${SOURCE_DIR}/index.ts`,
@@ -64,7 +63,6 @@ module.exports = function rollup() {
     },
   ];
 
-  // JS modules for <script type=module>
   const webModules = [
     {
       input: `${SOURCE_DIR}/index.ts`,
@@ -129,7 +127,6 @@ module.exports = function rollup() {
     },
   ];
 
-  // UMD modules for <script> tags and CommonJS (node)
   const globals = [
     {
       input: `${SOURCE_DIR}/index.ts`,

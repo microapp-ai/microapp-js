@@ -8,9 +8,9 @@ module.exports = {
     browser: true,
     commonjs: true,
   },
-  // globals: {
-  //   __DEV__: true,
-  // },
+  globals: {
+    __DEV__: true,
+  },
   rules: {
     strict: 0,
   },
