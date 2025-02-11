@@ -1,0 +1,32 @@
+{
+  "name": "@microapp-io/user-preferences",
+  "version": "0.1.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/microapp-io/microapp-js",
+    "directory": "packages/user-preferences"
+  },
+  "license": "MIT",
+  "author": "Microapp <hi@microapp.io>",
+  "sideEffects": false,
+  "main": "./dist/main.js",
+  "unpkg": "./dist/umd/user-preferences.production.min.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "rollup -c",
+    "lint": "eslint --cache ."
+  },
+  "files": [
+    "dist/",
+    "CHANGELOG.md",
+    "LICENSE.md",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "dependencies": {
+    "rollup": "^4.34.3"
+  }
+}
