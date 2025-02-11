@@ -8,8 +8,7 @@
     "moduleResolution": "node",
 
     "strict": true,
-    "jsx": "react-jsx",
-    "esModuleInterop": true,
+    "jsx": "react",
     "declaration": true,
     "emitDeclarationOnly": true,
 
