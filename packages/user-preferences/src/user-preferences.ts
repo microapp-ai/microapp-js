@@ -51,4 +51,9 @@ export class UserPreferences {
   getPreferences(): UserPreferencesData {
     return this.preferences || { theme: 'light', lang: 'en-us' };
   }
+
+  updatePreferences(newPreferences: Partial<UserPreferencesData>) {
+    this.preferences = { ...this.preferences, ...newPreferences };
+    this.notifyListeners();
+  }
 }

@@ -49,14 +49,21 @@ export class SandboxUserPreferences extends UserPreferences {
     }, 100);
   }
 
+  #throwIfNotEnabled() {
+    if (!this.#enabled) {
+      throw new Error('Sandbox user preferences are not enabled.');
+    }
+  }
+
   override getPreferences(): UserPreferencesData {
     this.#throwIfNotEnabled();
     return this.#mockPreferences || { theme: 'light', lang: 'en-us' };
   }
 
-  #throwIfNotEnabled() {
-    if (!this.#enabled) {
-      throw new Error('Sandbox user preferences are not enabled.');
-    }
+  updatePreferences(newPreferences: Partial<UserPreferencesData>) {
+    this.#throwIfNotEnabled();
+    this.#mockPreferences = { ...this.#mockPreferences, ...newPreferences };
+    this.preferences = this.#mockPreferences;
+    this.notifyListeners();
   }
 }
