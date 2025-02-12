@@ -9,6 +9,7 @@ type MicroappProps = {
   onLoad?: () => void;
   onError?: (error: Error) => void;
   onRouteChange?: (route: string) => void;
+  loadingComponent?: JSX.Element;
 } & Omit<React.IframeHTMLAttributes<HTMLIFrameElement>, 'src'>;
 
 export const Microapp: React.FC<MicroappProps> = ({
@@ -19,6 +20,7 @@ export const Microapp: React.FC<MicroappProps> = ({
   onLoad,
   onError,
   onRouteChange,
+  loadingComponent,
   ...rest
 }) => {
   const iframeRef = React.useRef<HTMLIFrameElement>(null);
@@ -60,8 +62,7 @@ export const Microapp: React.FC<MicroappProps> = ({
   }, [url, onLoad, onError, onRouteChange]);
 
   return (
-    <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-      {isLoading && <LoadingSpinner />}
+    <>
       <iframe
         ref={iframeRef}
         title={title}
@@ -72,23 +73,30 @@ export const Microapp: React.FC<MicroappProps> = ({
         }}
         {...rest}
       />
-    </div>
+      {isLoading ? (
+        loadingComponent ? (
+          loadingComponent
+        ) : (
+          <DefaultLoadingSpinner />
+        )
+      ) : null}
+    </>
   );
 };
 
-const LoadingSpinner = () => (
+const DefaultLoadingSpinner = () => (
   <div
     style={{
       position: 'absolute',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
+      top: '0',
       display: 'flex',
-      alignItems: 'center',
+      alignItems: 'flex-start',
       justifyContent: 'center',
       background: 'rgba(255, 255, 255, 0.8)',
-      zIndex: 1000,
+      zIndex: 10000,
+      width: '100vw',
+      height: '100vh',
+      padding: '25%',
     }}
   >
     <div

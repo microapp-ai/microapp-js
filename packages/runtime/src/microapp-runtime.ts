@@ -32,10 +32,9 @@ export class MicroappRuntime {
     this.#setIframeDimensions();
 
     window.addEventListener('message', this.#onMessageEvent);
-    this.#iframe.addEventListener('load', () => {
-      this.#updateUserPreferences();
-      this.#injectRoutingScript();
-    });
+
+    this.#updateUserPreferences();
+    this.#injectRoutingScript();
     this.#iframe.src = src;
   }
 
