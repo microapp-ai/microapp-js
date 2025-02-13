@@ -28,5 +28,8 @@
   },
   "dependencies": {
     "rollup": "^4.34.3"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
