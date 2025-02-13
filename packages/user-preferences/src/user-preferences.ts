@@ -1,4 +1,4 @@
-// import { PRODUCTION_MARKETPLACE_HOST_URL } from './constants';
+import { PRODUCTION_MARKETPLACE_HOST_URL } from './constants';
 export type UserPreferencesData = {
   theme?: string;
   lang?: string;
@@ -34,8 +34,7 @@ export class UserPreferences {
   #init() {
     window.parent.postMessage(
       { type: '@microapp:userPreferences' },
-      // PRODUCTION_MARKETPLACE_HOST_URL
-      '*'
+      PRODUCTION_MARKETPLACE_HOST_URL
     );
   }
 
