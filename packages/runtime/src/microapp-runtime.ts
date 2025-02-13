@@ -9,6 +9,7 @@ type MicroappRuntimeOptions = {
 };
 
 export class MicroappRuntime {
+  static #instance: MicroappRuntime | null = null;
   #iframe: HTMLIFrameElement;
   #theme: string = 'light';
   #lang: string = 'en-us';
@@ -16,7 +17,23 @@ export class MicroappRuntime {
   #resizeObserver?: ResizeObserver;
   #onRouteChange?: (route: string) => void;
 
-  constructor({
+  static getInstance(options: MicroappRuntimeOptions): MicroappRuntime {
+    if (this.#instance) {
+      this.#instance.update(options);
+      return this.#instance;
+    }
+    this.#instance = new MicroappRuntime(options);
+    return this.#instance;
+  }
+
+  static destroyInstance() {
+    if (this.#instance) {
+      this.#instance.destroy();
+      this.#instance = null;
+    }
+  }
+
+  private constructor({
     iframeElement: iframe,
     url: src,
     theme,
@@ -35,6 +52,23 @@ export class MicroappRuntime {
 
     this.#updateUserPreferences();
     this.#injectRoutingScript();
+    this.#iframe.src = src;
+  }
+
+  update({
+    iframeElement: iframe,
+    url: src,
+    theme,
+    lang,
+    onRouteChange,
+  }: MicroappRuntimeOptions) {
+    this.#iframe = iframe;
+    this.#theme = theme ?? this.#theme;
+    this.#lang = lang ?? this.#lang;
+    this.#onRouteChange = onRouteChange;
+    this.#baseRoute = window.location.pathname;
+
+    this.#updateUserPreferences();
     this.#iframe.src = src;
   }
 

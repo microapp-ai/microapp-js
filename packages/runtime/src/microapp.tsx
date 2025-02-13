@@ -31,11 +31,7 @@ export const Microapp: React.FC<MicroappProps> = ({
     setIsLoading(true);
     if (iframeRef.current) {
       try {
-        if (runtimeRef.current) {
-          runtimeRef.current.destroy();
-        }
-
-        runtimeRef.current = new MicroappRuntime({
+        runtimeRef.current = MicroappRuntime.getInstance({
           iframeElement: iframeRef.current,
           url,
           theme,
@@ -56,8 +52,10 @@ export const Microapp: React.FC<MicroappProps> = ({
     setIsLoading(false);
 
     return () => {
-      runtimeRef.current?.destroy();
-      runtimeRef.current = null;
+      // Only destroy if this is the last microapp instance
+      if (!document.querySelector('iframe')) {
+        MicroappRuntime.destroyInstance();
+      }
     };
   }, [url, onLoad, onError, onRouteChange]);
 
