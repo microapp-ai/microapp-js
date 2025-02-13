@@ -5,45 +5,24 @@ type MicroappRuntimeOptions = {
   url: string;
   theme?: string;
   lang?: string;
-  onRouteChange?: (route: string) => void;
 };
 
 export class MicroappRuntime {
-  static #instance: MicroappRuntime | null = null;
   #iframe: HTMLIFrameElement;
   #theme: string = 'light';
   #lang: string = 'en-us';
   #baseRoute: string;
   #resizeObserver?: ResizeObserver;
-  #onRouteChange?: (route: string) => void;
 
-  static getInstance(options: MicroappRuntimeOptions): MicroappRuntime {
-    if (this.#instance) {
-      this.#instance.update(options);
-      return this.#instance;
-    }
-    this.#instance = new MicroappRuntime(options);
-    return this.#instance;
-  }
-
-  static destroyInstance() {
-    if (this.#instance) {
-      this.#instance.destroy();
-      this.#instance = null;
-    }
-  }
-
-  private constructor({
+  constructor({
     iframeElement: iframe,
     url: src,
     theme,
     lang,
-    onRouteChange,
   }: MicroappRuntimeOptions) {
     this.#iframe = iframe;
     this.#theme = theme ?? this.#theme;
     this.#lang = lang ?? this.#lang;
-    this.#onRouteChange = onRouteChange;
 
     this.#baseRoute = window.location.pathname;
     this.#setIframeDimensions();
@@ -55,23 +34,6 @@ export class MicroappRuntime {
     this.#iframe.src = src;
   }
 
-  update({
-    iframeElement: iframe,
-    url: src,
-    theme,
-    lang,
-    onRouteChange,
-  }: MicroappRuntimeOptions) {
-    this.#iframe = iframe;
-    this.#theme = theme ?? this.#theme;
-    this.#lang = lang ?? this.#lang;
-    this.#onRouteChange = onRouteChange;
-    this.#baseRoute = window.location.pathname;
-
-    this.#updateUserPreferences();
-    this.#iframe.src = src;
-  }
-
   destroy = () => {
     window.removeEventListener('message', this.#onMessageEvent);
 
@@ -79,6 +41,24 @@ export class MicroappRuntime {
       this.#resizeObserver.disconnect();
     }
     this.#iframe.remove();
+  };
+
+  update = (
+    options: Partial<Pick<MicroappRuntimeOptions, 'theme' | 'lang' | 'url'>>
+  ) => {
+    if (options.theme) {
+      this.#theme = options.theme;
+    }
+    if (options.lang) {
+      this.#lang = options.lang;
+    }
+    if (options.url) {
+      this.#iframe.src = options.url;
+    }
+
+    this.#baseRoute = window.location.pathname;
+
+    this.#updateUserPreferences();
   };
 
   #setIframeDimensions = () => {
@@ -116,7 +96,6 @@ export class MicroappRuntime {
           : this.#baseRoute.replace(/\/$/, '') + route;
 
       window.history.pushState({}, '', newRoute);
-      this.#onRouteChange?.(newRoute);
     }
   };
 
@@ -139,7 +118,9 @@ export class MicroappRuntime {
     const iframeDoc = this.#iframe.contentDocument;
     if (!iframeDoc) return;
 
-    if (iframeDoc.getElementById('microapp-routing-script')) return;
+    if (this.#iframe.dataset.hasRoutingScript) {
+      return;
+    }
 
     const script = iframeDoc.createElement('script');
     script.id = 'microapp-routing-script';
@@ -170,5 +151,7 @@ export class MicroappRuntime {
       }
     `;
     iframeDoc.head.appendChild(script);
+
+    this.#iframe.dataset.hasRoutingScript = 'true';
   };
 }

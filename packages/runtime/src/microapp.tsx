@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { MicroappRuntime } from './microapp-runtime';
+import { useEffect } from 'react';
 
 type MicroappProps = {
   url: string;
@@ -27,17 +28,24 @@ export const Microapp: React.FC<MicroappProps> = ({
   const runtimeRef = React.useRef<MicroappRuntime | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
 
-  React.useEffect(() => {
+  useEffect(() => {
     setIsLoading(true);
     if (iframeRef.current) {
       try {
-        runtimeRef.current = MicroappRuntime.getInstance({
+        if (!runtimeRef.current) {
+          runtimeRef.current = new MicroappRuntime({
           iframeElement: iframeRef.current,
           url,
           theme,
           lang,
-          onRouteChange,
+          });
+        } else {
+          runtimeRef.current.update({
+            url,
+            theme,
+            lang,
         });
+        }
 
         onLoad?.();
       } catch (error) {
@@ -52,12 +60,10 @@ export const Microapp: React.FC<MicroappProps> = ({
     setIsLoading(false);
 
     return () => {
-      // Only destroy if this is the last microapp instance
-      if (!document.querySelector('iframe')) {
-        MicroappRuntime.destroyInstance();
-      }
+      runtimeRef.current?.destroy();
+      runtimeRef.current = null;
     };
-  }, [url, onLoad, onError, onRouteChange]);
+  }, [url, theme, lang, onLoad, onError]);
 
   return (
     <>
@@ -82,7 +88,7 @@ export const Microapp: React.FC<MicroappProps> = ({
   );
 };
 
-const DefaultLoadingSpinner = () => (
+const LoadingSpinner = () => (
   <div
     style={{
       position: 'absolute',
