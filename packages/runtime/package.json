@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/microapp-io/microapp-js",
+    "url": "git+https://github.com/microapp-io/microapp-js.git",
     "directory": "packages/runtime"
   },
   "license": "MIT",
@@ -37,5 +37,8 @@
   "dependencies": {
     "@types/react": "^19.0.8",
     "rollup": "^4.34.3"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
