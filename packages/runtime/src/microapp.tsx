@@ -9,7 +9,6 @@ type MicroappProps = {
   height?: number | string;
   onLoad?: () => void;
   onError?: (error: Error) => void;
-  onRouteChange?: (route: string) => void;
   loadingComponent?: JSX.Element;
 } & Omit<React.IframeHTMLAttributes<HTMLIFrameElement>, 'src'>;
 
@@ -20,7 +19,6 @@ export const Microapp: React.FC<MicroappProps> = ({
   lang,
   onLoad,
   onError,
-  onRouteChange,
   loadingComponent,
   ...rest
 }) => {
@@ -34,17 +32,17 @@ export const Microapp: React.FC<MicroappProps> = ({
       try {
         if (!runtimeRef.current) {
           runtimeRef.current = new MicroappRuntime({
-          iframeElement: iframeRef.current,
-          url,
-          theme,
-          lang,
+            iframeElement: iframeRef.current,
+            url,
+            theme,
+            lang,
           });
         } else {
           runtimeRef.current.update({
             url,
             theme,
             lang,
-        });
+          });
         }
 
         onLoad?.();
@@ -88,7 +86,7 @@ export const Microapp: React.FC<MicroappProps> = ({
   );
 };
 
-const LoadingSpinner = () => (
+const DefaultLoadingSpinner = () => (
   <div
     style={{
       position: 'absolute',
