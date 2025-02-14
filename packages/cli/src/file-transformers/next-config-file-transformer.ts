@@ -10,15 +10,15 @@ import { CannotUpdateNextConfigFileError } from './errors';
 const TS_FILE_EXTENSION = '.ts';
 const MJ_SCRIPT_FILE_EXTENSION = '.mjs';
 const PLUGIN_MODULE = '@microapp-io/scripts';
-const PLUGIN_CLASS_NAME = 'MicroappNextFederationPlugin';
-const PLUGIN_IMPORT_CODE_ESM = `import { ${PLUGIN_CLASS_NAME} } from '${PLUGIN_MODULE}';\n`;
-const PLUGIN_IMPORT_CODE_CJS = `const { ${PLUGIN_CLASS_NAME} } = require('${PLUGIN_MODULE}');\n`;
+// const PLUGIN_CLASS_NAME = 'MicroappNextFederationPlugin';
+// const PLUGIN_IMPORT_CODE_ESM = `import { ${PLUGIN_CLASS_NAME} } from '${PLUGIN_MODULE}';\n`;
+// const PLUGIN_IMPORT_CODE_CJS = `const { ${PLUGIN_CLASS_NAME} } = require('${PLUGIN_MODULE}');\n`;
 const CONFIG_KEY = 'config';
 const OPTIONS_KEY = 'options';
-const CONFIG_PLUGINS_KEY = `${CONFIG_KEY}.plugins`;
-const PLUGIN_USAGE_CODE = `if (!${OPTIONS_KEY}.isServer) {
-  ${CONFIG_PLUGINS_KEY}.push(new ${PLUGIN_CLASS_NAME}());
-}\n`;
+// const CONFIG_PLUGINS_KEY = `${CONFIG_KEY}.plugins`;
+// const PLUGIN_USAGE_CODE = `if (!${OPTIONS_KEY}.isServer) {
+//   ${CONFIG_PLUGINS_KEY}.push(new ${PLUGIN_CLASS_NAME}());
+// }\n`;
 const CONFIG_WEBPACK_KEY = 'webpack';
 
 export class MicroappNextConfigFileTransformer
@@ -27,19 +27,17 @@ export class MicroappNextConfigFileTransformer
   public static readonly DEFAULT_CONFIG_FILE_NAME = 'next.config.js';
 
   public static readonly DEFAULT_JS_CONFIG_CONTENT = `module.exports = {
-  ${CONFIG_WEBPACK_KEY}: (${CONFIG_KEY}, ${OPTIONS_KEY}) => {
-    ${PLUGIN_USAGE_CODE}
-    return ${CONFIG_KEY};
-  },
-};
+    webpack: (config) => {
+      return config;
+    },
+  };
 `;
 
   public static readonly DEFAULT_TS_CONFIG_CONTENT = `export default {
-  ${CONFIG_WEBPACK_KEY}: (${CONFIG_KEY}, ${OPTIONS_KEY}) => {
-    ${PLUGIN_USAGE_CODE}
-    return ${CONFIG_KEY};
-  },
-};
+    webpack: (config) => {
+      return config;
+    },
+  };
 `;
 
   buildSampleFileContent(): string {
@@ -79,20 +77,20 @@ export class MicroappNextConfigFileTransformer
 
   private createNewConfigContent({
     isTypeScript,
-    isUsingImportStyle,
-  }: {
+  }: // isUsingImportStyle,
+  {
     isTypeScript: boolean;
-    isUsingImportStyle: boolean;
+    // isUsingImportStyle: boolean;
   }): string {
-    const pluginImportCode = this.getPluginImportCode({
-      isUsingImportStyle,
-    });
+    // const pluginImportCode = this.getPluginImportCode({
+    //   isUsingImportStyle,
+    // });
 
     const configContent = isTypeScript
       ? MicroappNextConfigFileTransformer.DEFAULT_TS_CONFIG_CONTENT
       : MicroappNextConfigFileTransformer.DEFAULT_JS_CONFIG_CONTENT;
 
-    return `${pluginImportCode}${configContent}`;
+    return `${configContent}`;
   }
 
   private processExistingConfig({
@@ -187,13 +185,13 @@ export class MicroappNextConfigFileTransformer
       : false;
   }
 
-  private getPluginImportCode({
-    isUsingImportStyle,
-  }: {
-    isUsingImportStyle: boolean;
-  }): string {
-    return isUsingImportStyle ? PLUGIN_IMPORT_CODE_ESM : PLUGIN_IMPORT_CODE_CJS;
-  }
+  // private getPluginImportCode({
+  //   isUsingImportStyle,
+  // }: {
+  //   isUsingImportStyle: boolean;
+  // }): string {
+  //   return isUsingImportStyle ? PLUGIN_IMPORT_CODE_ESM : PLUGIN_IMPORT_CODE_CJS;
+  // }
 
   private doesAstImportPlugin(ast: namedTypes.Program): boolean {
     let hasPluginImport = false;
