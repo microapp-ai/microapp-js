@@ -1,3 +1,3 @@
 export * from './microapp-runtime';
 export * from './microapp';
-export * from './constants';
+export * from './message-bus';

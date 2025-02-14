@@ -1,14 +1,17 @@
-import { PRODUCTION_MARKETPLACE_HOST_URL } from '@microapp-io/runtime';
 import { UserPreferencesData } from './types';
 import { PreferencesRepo } from './preferences-repo';
+import { MessageBus } from '@microapp-io/runtime';
 
 export type PreferencesUpdateCallback = (data?: UserPreferencesData) => void;
 
 export class ProdUserPreferences implements PreferencesRepo {
   preferences?: UserPreferencesData;
   listeners: Set<PreferencesUpdateCallback> = new Set();
+  #messageBus: MessageBus;
 
   constructor() {
+    this.#messageBus = new MessageBus();
+
     if (typeof window !== 'undefined') {
       this.#setupMessageListener();
       this.#init();
@@ -16,24 +19,20 @@ export class ProdUserPreferences implements PreferencesRepo {
   }
 
   #setupMessageListener() {
-    window.addEventListener('message', (event) => {
-      const { type, payload } = event.data;
-      switch (type) {
-        case '@microapp:userPreferences':
-          this.preferences = payload;
-          this.notifyListeners();
-          break;
-        default:
-          break;
+    this.#messageBus.on(
+      '@microapp:userPreferences',
+      (payload: UserPreferencesData) => {
+        this.preferences = payload;
+        this.notifyListeners();
       }
-    });
+    );
   }
 
   #init() {
-    window.parent.postMessage(
-      { type: '@microapp:userPreferences' },
-      PRODUCTION_MARKETPLACE_HOST_URL
-    );
+    this.#messageBus.send({
+      type: '@microapp:userPreferences',
+      payload: {},
+    });
   }
 
   onUpdate(callback: PreferencesUpdateCallback): () => void {

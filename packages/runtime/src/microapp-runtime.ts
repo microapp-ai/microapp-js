@@ -1,3 +1,4 @@
+import { MessageBus } from './message-bus';
 import { PRODUCTION_MARKETPLACE_HOST_URL } from './constants';
 
 type MicroappRuntimeOptions = {
@@ -13,6 +14,7 @@ export class MicroappRuntime {
   #lang: string = 'en-us';
   #baseRoute: string;
   #resizeObserver?: ResizeObserver;
+  #messageBus: MessageBus;
 
   constructor({
     iframeElement: iframe,
@@ -25,17 +27,24 @@ export class MicroappRuntime {
     this.#lang = lang ?? this.#lang;
 
     this.#baseRoute = window.location.pathname;
-    this.#setIframeDimensions();
+    this.#messageBus = new MessageBus();
 
-    window.addEventListener('message', this.#onMessageEvent);
+    this.#iframe.addEventListener('load', () => {
+      this.#setIframeDimensions();
+      this.#updateUserPreferences();
+      this.#injectRoutingScript();
 
-    this.#updateUserPreferences();
-    this.#injectRoutingScript();
+      this.#messageBus.on('@microapp:userPreferences', () => {
+        this.#updateUserPreferences();
+      });
+      this.#messageBus.on('@microapp:routeChange', this.#handleRouteChange);
+    });
+
     this.#iframe.src = src;
   }
 
   destroy = () => {
-    window.removeEventListener('message', this.#onMessageEvent);
+    this.#messageBus.destroy();
 
     if (this.#resizeObserver) {
       this.#resizeObserver.disconnect();
@@ -75,19 +84,6 @@ export class MicroappRuntime {
     }
   };
 
-  #onMessageEvent = (event: MessageEvent) => {
-    const { type, payload } = event.data;
-
-    switch (type) {
-      case '@microapp:userPreferences':
-        return this.#updateUserPreferences();
-      case '@microapp:routeChange':
-        return this.#handleRouteChange(payload);
-      default:
-        return;
-    }
-  };
-
   #handleRouteChange = ({ route }: { route: string }) => {
     if (typeof window !== 'undefined') {
       const newRoute =
@@ -100,17 +96,15 @@ export class MicroappRuntime {
   };
 
   #updateUserPreferences = () => {
-    const message = {
-      type: '@microapp:userPreferences',
-      payload: {
-        theme: this.#theme,
-        lang: this.#lang,
+    this.#messageBus.send(
+      {
+        type: '@microapp:userPreferences',
+        payload: {
+          theme: this.#theme,
+          lang: this.#lang,
+        },
       },
-    };
-
-    this.#iframe.contentWindow?.postMessage(
-      message,
-      PRODUCTION_MARKETPLACE_HOST_URL
+      this.#iframe.contentWindow ?? undefined
     );
   };
 
@@ -130,7 +124,13 @@ export class MicroappRuntime {
 
         function notifyRouteChange(method) {
           const currentRoute = window.location.pathname;
-          window.parent.postMessage({ type: '@microapp:routeChange', payload: { route: currentRoute }}, PRODUCTION_MARKETPLACE_HOST_URL);
+          window.parent.postMessage(
+            { 
+              type: '@microapp:routeChange', 
+              payload: { route: currentRoute }
+            }, 
+            '${PRODUCTION_MARKETPLACE_HOST_URL}'
+          );
         }
 
         window.addEventListener('popstate', () => {

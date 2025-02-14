@@ -29,6 +29,7 @@ module.exports = function rollup() {
         sourcemap: !PRETTY,
         banner,
       },
+      external: ['@microapp-io/runtime'],
       plugins: [
         extensions({ extensions: ['.ts'] }),
         typescript({
@@ -59,6 +60,7 @@ module.exports = function rollup() {
         sourcemap: !PRETTY,
         banner,
       },
+      external: ['@microapp-io/runtime'],
       plugins: [
         extensions({ extensions: ['.ts'] }),
         typescript({
@@ -82,6 +84,7 @@ module.exports = function rollup() {
         sourcemap: !PRETTY,
         banner,
       },
+      external: ['@microapp-io/runtime'],
       plugins: [
         extensions({ extensions: ['.ts'] }),
         typescript({
@@ -109,7 +112,11 @@ module.exports = function rollup() {
         sourcemap: !PRETTY,
         banner,
         name: 'MicroappUserPreferences',
+        globals: {
+          '@microapp-io/runtime': 'MicroappRuntime',
+        },
       },
+      external: ['@microapp-io/runtime'],
       plugins: [
         extensions({ extensions: ['.ts'] }),
         typescript({
@@ -133,7 +140,11 @@ module.exports = function rollup() {
         sourcemap: !PRETTY,
         banner,
         name: 'MicroappUserPreferences',
+        globals: {
+          '@microapp-io/runtime': 'MicroappRuntime',
+        },
       },
+      external: ['@microapp-io/runtime'],
       plugins: [
         extensions({ extensions: ['.ts'] }),
         typescript({
