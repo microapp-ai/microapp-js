@@ -28,9 +28,9 @@ export class MicroappRuntime {
 
     this.#baseRoute = window.location.pathname;
     this.#messageBus = new MessageBus();
+    this.#setIframeDimensions();
 
     this.#iframe.addEventListener('load', () => {
-      this.#setIframeDimensions();
       this.#updateUserPreferences();
       this.#injectRoutingScript();
 

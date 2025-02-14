@@ -30,16 +30,23 @@ export const Microapp: React.FC<MicroappProps> = ({
     setIsLoading(true);
     if (iframeRef.current) {
       try {
+        const searchParams = new URLSearchParams();
+        if (theme) searchParams.append('theme', theme);
+        if (lang) searchParams.append('lang', lang);
+
+        const queryString = searchParams.toString();
+        const urlWithParams = queryString ? `${url}?${queryString}` : url;
+
         if (!runtimeRef.current) {
           runtimeRef.current = new MicroappRuntime({
             iframeElement: iframeRef.current,
-            url,
+            url: urlWithParams,
             theme,
             lang,
           });
         } else {
           runtimeRef.current.update({
-            url,
+            url: urlWithParams,
             theme,
             lang,
           });
