@@ -27,6 +27,7 @@
     "node": ">=14.0.0"
   },
   "dependencies": {
+    "@microapp-io/runtime": "^0.1.0",
     "rollup": "^4.34.3"
   },
   "publishConfig": {

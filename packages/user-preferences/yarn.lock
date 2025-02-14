@@ -2,6 +2,14 @@
 # yarn lockfile v1
 
 
+"@microapp-io/runtime@^0.1.0":
+  version "0.1.0"
+  resolved "https://registry.yarnpkg.com/@microapp-io/runtime/-/runtime-0.1.0.tgz#b01d3b051d304f56f22d7275601b4d7ec8bf299f"
+  integrity sha512-6gMh2GQa4ioa2nReRUGGVZMJZKHJctpEZ4D0iDDKoXMNy6iPRsmYXmAPt1vo8ZHIHyNO2ImWuHWzBV1iZ6v9Gw==
+  dependencies:
+    "@types/react" "^19.0.8"
+    rollup "^4.34.3"
+
 "@rollup/rollup-android-arm-eabi@4.34.6":
   version "4.34.6"
   resolved "https://registry.yarnpkg.com/@rollup/rollup-android-arm-eabi/-/rollup-android-arm-eabi-4.34.6.tgz#9b726b4dcafb9332991e9ca49d54bafc71d9d87f"
@@ -101,6 +109,18 @@
   version "1.0.6"
   resolved "https://registry.yarnpkg.com/@types/estree/-/estree-1.0.6.tgz#628effeeae2064a1b4e79f78e81d87b7e5fc7b50"
   integrity sha512-AYnb1nQyY49te+VRAVgmzfcgjYS91mY5P0TKUDCLEM+gNnA+3T6rWITXRLYCpahpqSQbN5cE+gHpnPyXjHWxcw==
+
+"@types/react@^19.0.8":
+  version "19.0.8"
+  resolved "https://registry.yarnpkg.com/@types/react/-/react-19.0.8.tgz#7098e6159f2a61e4f4cef2c1223c044a9bec590e"
+  integrity sha512-9P/o1IGdfmQxrujGbIMDyYaaCykhLKc0NGCtYcECNUr9UAaDe4gwvV9bR6tvd5Br1SG0j+PBpbKr2UYY8CwqSw==
+  dependencies:
+    csstype "^3.0.2"
+
+csstype@^3.0.2:
+  version "3.1.3"
+  resolved "https://registry.yarnpkg.com/csstype/-/csstype-3.1.3.tgz#d80ff294d114fb0e6ac500fbf85b60137d7eff81"
+  integrity sha512-M1uQkMl8rQK/szD0LNhtqxIPLpimGm8sOBwU7lLnCpSbTyY3yeU1Vc7l4KT5zT4s/yOxHH5O7tIuuLOCnLADRw==
 
 fsevents@~2.3.2:
   version "2.3.3"

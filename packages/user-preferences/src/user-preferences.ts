@@ -1,58 +1,22 @@
-import { PRODUCTION_MARKETPLACE_HOST_URL } from './constants';
-export type UserPreferencesData = {
-  theme?: string;
-  lang?: string;
-};
-
-export type PreferencesUpdateCallback = (data?: UserPreferencesData) => void;
+import { PreferencesRepo } from './preferences-repo';
+import { ProdUserPreferences } from './prod-user-preferences';
+import { SandboxUserPreferences } from './sandbox-user-preferences';
+import { UserPreferencesData, UserPreferencesOptions } from './types';
 
 export class UserPreferences {
-  preferences?: UserPreferencesData;
-  listeners: Set<PreferencesUpdateCallback> = new Set();
+  #repo: PreferencesRepo;
 
-  constructor() {
-    if (typeof window !== 'undefined') {
-      this.#setupMessageListener();
-      this.#init();
-    }
-  }
-
-  #setupMessageListener() {
-    window.addEventListener('message', (event) => {
-      const { type, payload } = event.data;
-      switch (type) {
-        case '@microapp:userPreferences':
-          this.preferences = payload;
-          this.notifyListeners();
-          break;
-        default:
-          break;
-      }
-    });
-  }
-
-  #init() {
-    window.parent.postMessage(
-      { type: '@microapp:userPreferences' },
-      PRODUCTION_MARKETPLACE_HOST_URL
-    );
-  }
-
-  onUpdate(callback: PreferencesUpdateCallback): () => void {
-    this.listeners.add(callback);
-    return () => this.listeners.delete(callback);
-  }
-
-  notifyListeners() {
-    this.listeners.forEach((callback) => callback(this.preferences));
+  constructor(options: UserPreferencesOptions = {}) {
+    this.#repo = options.sandbox
+      ? new SandboxUserPreferences(options.sandbox)
+      : new ProdUserPreferences();
   }
 
   getPreferences(): UserPreferencesData {
-    return this.preferences || { theme: 'light', lang: 'en-us' };
+    return this.#repo.getPreferences();
   }
 
-  updatePreferences(newPreferences: Partial<UserPreferencesData>) {
-    this.preferences = { ...this.preferences, ...newPreferences };
-    this.notifyListeners();
+  onUpdate(callback: (data?: UserPreferencesData) => void): () => void {
+    return this.#repo.onUpdate(callback);
   }
 }
