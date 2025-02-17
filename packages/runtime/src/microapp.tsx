@@ -65,8 +65,10 @@ export const Microapp: React.FC<MicroappProps> = ({
     setIsLoading(false);
 
     return () => {
-      runtimeRef.current?.destroy();
-      runtimeRef.current = null;
+      if (runtimeRef.current) {
+        runtimeRef.current.destroy();
+        runtimeRef.current = null;
+      }
     };
   }, [url, theme, lang, onLoad, onError]);
 

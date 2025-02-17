@@ -27,17 +27,17 @@ export class MicroappRuntime {
     this.#lang = lang ?? this.#lang;
 
     this.#baseRoute = window.location.pathname;
-    this.#messageBus = new WindowPostMessageBus();
     this.#setIframeDimensions();
+
+    this.#messageBus = new WindowPostMessageBus();
+    this.#messageBus.on('@microapp:userPreferences', () => {
+      this.#updateUserPreferences();
+    });
+    this.#messageBus.on('@microapp:routeChange', this.#handleRouteChange);
 
     this.#iframe.addEventListener('load', () => {
       this.#updateUserPreferences();
       this.#injectRoutingScript();
-
-      this.#messageBus.on('@microapp:userPreferences', () => {
-        this.#updateUserPreferences();
-      });
-      this.#messageBus.on('@microapp:routeChange', this.#handleRouteChange);
     });
 
     this.#iframe.src = src;
@@ -49,7 +49,6 @@ export class MicroappRuntime {
     if (this.#resizeObserver) {
       this.#resizeObserver.disconnect();
     }
-    this.#iframe.remove();
   };
 
   update = (
@@ -96,13 +95,10 @@ export class MicroappRuntime {
   };
 
   #updateUserPreferences = () => {
-    this.#messageBus.send(
+    this.#messageBus.sendUserPreferences(
       {
-        payload: {
-          type: '@microapp:userPreferences',
-          theme: this.#theme,
-          lang: this.#lang,
-        },
+        theme: this.#theme,
+        lang: this.#lang,
       },
       this.#iframe.contentWindow ?? undefined
     );

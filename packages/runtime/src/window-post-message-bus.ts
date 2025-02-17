@@ -1,22 +1,10 @@
+type MessageHandler<T = unknown> = (payload: T) => void;
+type MessageType = '@microapp:userPreferences' | '@microapp:routeChange';
 import { PRODUCTION_MARKETPLACE_HOST_URL } from './constants';
 
-type MessageHandler<T = unknown> = (payload: T) => void;
-export type MessageType = '@microapp:userPreferences' | '@microapp:routeChange';
-
-type MessagePayloadMap = {
-  '@microapp:userPreferences': {
-    type: '@microapp:userPreferences';
-    theme?: string;
-    lang?: string;
-  };
-  '@microapp:routeChange': {
-    type: '@microapp:routeChange';
-    route: string;
-  };
-};
-
-interface Message<T extends MessageType = MessageType> {
-  payload: MessagePayloadMap[T];
+interface Message<T = unknown> {
+  type: MessageType;
+  payload: T;
 }
 
 export class WindowPostMessageBus {
@@ -35,10 +23,7 @@ export class WindowPostMessageBus {
     this.#handlers.clear();
   }
 
-  on<T extends MessageType>(
-    type: T,
-    handler: MessageHandler<MessagePayloadMap[T]>
-  ): () => void {
+  on<T>(type: MessageType, handler: MessageHandler<T>): () => void {
     if (!this.#handlers.has(type)) {
       this.#handlers.set(type, new Set());
     }
@@ -49,20 +34,27 @@ export class WindowPostMessageBus {
     };
   }
 
-  send<T extends MessageType>(
-    payload: MessagePayloadMap[T] | { payload: MessagePayloadMap[T] },
+  sendUserPreferences = (
+    payload: { theme?: string; lang?: string },
     target?: Window
-  ) {
+  ) => {
+    this.#send({ type: '@microapp:userPreferences', payload }, target);
+  };
+
+  sendRouteChange = (route: string, target?: Window) => {
+    this.#send({ type: '@microapp:routeChange', payload: { route } }, target);
+  };
+
+  #send<T>(message: Message<T>, target?: Window) {
     if (typeof window !== 'undefined') {
       const targetWindow = target || window.parent;
-      const message = 'payload' in payload ? payload : { payload };
       targetWindow.postMessage(message, PRODUCTION_MARKETPLACE_HOST_URL);
     }
   }
 
   #handleMessage = (event: MessageEvent) => {
-    const { payload } = event.data as Message;
-    const handlers = this.#handlers.get(payload.type);
+    const { type, payload } = event.data as Message;
+    const handlers = this.#handlers.get(type);
 
     if (handlers) {
       handlers.forEach((handler) => handler(payload));

@@ -30,11 +30,7 @@ export class ProdUserPreferences implements PreferencesRepo {
   }
 
   #init() {
-    this.#messageBus.send({
-      payload: {
-        type: '@microapp:userPreferences',
-      },
-    });
+    this.#messageBus.sendUserPreferences({});
   }
 
   onUpdate(callback: PreferencesUpdateCallback): () => void {
