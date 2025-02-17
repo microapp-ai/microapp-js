@@ -1,10 +1,10 @@
 import * as React from 'react';
 import type { PropsWithChildren } from 'react';
+import { UserPreferences } from '@microapp-io/user-preferences';
 import type {
   UserPreferencesData,
   UserPreferencesOptions,
 } from '@microapp-io/user-preferences';
-import { createUserPreferences } from '@microapp-io/user-preferences';
 
 type UserPreferencesContextValue = {
   preferences?: UserPreferencesData;
@@ -32,10 +32,9 @@ export const UserPreferencesProvider = ({
   options,
   children,
 }: PropsWithChildren<{ options: UserPreferencesOptions }>) => {
-  const userPreferences = React.useMemo(
-    () => createUserPreferences(options),
-    [options]
-  );
+  const userPreferences = React.useMemo(() => {
+    return new UserPreferences(options);
+  }, [options]);
   const preferences = React.useSyncExternalStore(
     (onChange) => userPreferences.onUpdate(onChange),
     () => userPreferences.getPreferences()
