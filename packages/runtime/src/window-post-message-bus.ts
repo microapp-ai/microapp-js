@@ -1,13 +1,25 @@
-type MessageHandler<T = unknown> = (payload: T) => void;
-type MessageType = '@microapp:userPreferences' | '@microapp:routeChange';
 import { PRODUCTION_MARKETPLACE_HOST_URL } from './constants';
 
-interface Message<T = unknown> {
-  type: MessageType;
-  payload: T;
+type MessageHandler<T = unknown> = (payload: T) => void;
+export type MessageType = '@microapp:userPreferences' | '@microapp:routeChange';
+
+type MessagePayloadMap = {
+  '@microapp:userPreferences': {
+    type: '@microapp:userPreferences';
+    theme?: string;
+    lang?: string;
+  };
+  '@microapp:routeChange': {
+    type: '@microapp:routeChange';
+    route: string;
+  };
+};
+
+interface Message<T extends MessageType = MessageType> {
+  payload: MessagePayloadMap[T];
 }
 
-export class MessageBus {
+export class WindowPostMessageBus {
   #handlers: Map<MessageType, Set<MessageHandler>> = new Map();
 
   constructor() {
@@ -23,7 +35,10 @@ export class MessageBus {
     this.#handlers.clear();
   }
 
-  on<T>(type: MessageType, handler: MessageHandler<T>): () => void {
+  on<T extends MessageType>(
+    type: T,
+    handler: MessageHandler<MessagePayloadMap[T]>
+  ): () => void {
     if (!this.#handlers.has(type)) {
       this.#handlers.set(type, new Set());
     }
@@ -34,16 +49,20 @@ export class MessageBus {
     };
   }
 
-  send<T>(message: Message<T>, target?: Window) {
+  send<T extends MessageType>(
+    payload: MessagePayloadMap[T] | { payload: MessagePayloadMap[T] },
+    target?: Window
+  ) {
     if (typeof window !== 'undefined') {
       const targetWindow = target || window.parent;
+      const message = 'payload' in payload ? payload : { payload };
       targetWindow.postMessage(message, PRODUCTION_MARKETPLACE_HOST_URL);
     }
   }
 
   #handleMessage = (event: MessageEvent) => {
-    const { type, payload } = event.data as Message;
-    const handlers = this.#handlers.get(type);
+    const { payload } = event.data as Message;
+    const handlers = this.#handlers.get(payload.type);
 
     if (handlers) {
       handlers.forEach((handler) => handler(payload));

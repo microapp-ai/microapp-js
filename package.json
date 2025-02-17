@@ -9,7 +9,8 @@
       "packages/create-microapp",
       "packages/react",
       "packages/scripts",
-      "packages/runtime"
+      "packages/runtime",
+      "packages/user-preferences"
     ]
   },
   "scripts": {

@@ -1,4 +1,4 @@
-import { MessageBus } from './message-bus';
+import { WindowPostMessageBus } from './window-post-message-bus';
 import { PRODUCTION_MARKETPLACE_HOST_URL } from './constants';
 
 type MicroappRuntimeOptions = {
@@ -14,7 +14,7 @@ export class MicroappRuntime {
   #lang: string = 'en-us';
   #baseRoute: string;
   #resizeObserver?: ResizeObserver;
-  #messageBus: MessageBus;
+  #messageBus: WindowPostMessageBus;
 
   constructor({
     iframeElement: iframe,
@@ -27,7 +27,7 @@ export class MicroappRuntime {
     this.#lang = lang ?? this.#lang;
 
     this.#baseRoute = window.location.pathname;
-    this.#messageBus = new MessageBus();
+    this.#messageBus = new WindowPostMessageBus();
     this.#setIframeDimensions();
 
     this.#iframe.addEventListener('load', () => {
@@ -98,8 +98,8 @@ export class MicroappRuntime {
   #updateUserPreferences = () => {
     this.#messageBus.send(
       {
-        type: '@microapp:userPreferences',
         payload: {
+          type: '@microapp:userPreferences',
           theme: this.#theme,
           lang: this.#lang,
         },
