@@ -173,14 +173,8 @@ export class InitCommand extends Command {
 
     const defaultName =
       config?.name || this.generateDefaultNameByPath(folderPath);
-    const defaultEntryComponent =
-      config?.entryComponent ||
-      this.getDefaultEntryComponent({
-        folderPath,
-        framework,
-      });
 
-    const { name, entryComponent } = await inquirer.prompt([
+    const { name } = await inquirer.prompt([
       {
         type: 'input',
         name: 'name',
@@ -191,22 +185,9 @@ export class InitCommand extends Command {
             MicroappConfigValidator.validateConfigName(name)
           ),
       },
-      {
-        type: 'input',
-        name: 'entryComponent',
-        message: 'Enter the name of the entry component:',
-        default: defaultEntryComponent,
-        validate: (entryComponent: string) =>
-          this.validateConfig(() =>
-            MicroappConfigValidator.validateConfigEntryComponent(
-              entryComponent,
-              folderPath
-            )
-          ),
-      },
     ]);
 
-    configManager.write({ name, entryComponent });
+    configManager.write({ name });
 
     this.installScripts({ folderPath, packageManager });
   }
@@ -216,62 +197,6 @@ export class InitCommand extends Command {
       .basename(folderPath)
       .toLowerCase()
       .replace(/[^a-z0-9-_]/g, '-');
-  }
-
-  private getDefaultEntryComponent({
-    folderPath,
-    framework,
-  }: {
-    folderPath: string;
-    framework: MicroappSupportedFramework;
-  }): string | undefined {
-    if (framework.isEquals(MicroappSupportedFramework.NEXT)) {
-      return this.getFirstRelativeFilePathThatExists({
-        folderPath,
-        fileNames: [
-          // App router
-          'app/page.tsx',
-          'app/page.ts',
-          'app/page.js',
-
-          // App router within src/
-          'src/app/page.tsx',
-          'src/app/page.ts',
-          'src/app/page.js',
-
-          // Pages router
-          'pages/index.tsx',
-          'pages/index.ts',
-          'pages/index.js',
-
-          // Pages router within src/
-          'src/pages/index.tsx',
-          'src/pages/index.ts',
-          'src/pages/index.js',
-        ],
-      });
-    }
-
-    return undefined;
-  }
-
-  private getFirstRelativeFilePathThatExists({
-    folderPath,
-    fileNames,
-  }: {
-    folderPath: string;
-    fileNames: string[];
-  }): string | undefined {
-    const absolutePath = fileNames
-      .map((fileName) => path.join(folderPath, fileName))
-      .find((filePath) => fs.existsSync(filePath));
-
-    if (!absolutePath) {
-      return undefined;
-    }
-
-    const relativePath = path.relative(folderPath, absolutePath);
-    return `./${relativePath}`;
   }
 
   private validateConfig(validate: () => void): string | boolean {

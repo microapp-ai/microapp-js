@@ -60,10 +60,6 @@ export class MicroappConfigValidator {
     rootPath?: string;
   }): void {
     MicroappConfigValidator.validateConfigName(config.name);
-    MicroappConfigValidator.validateConfigEntryComponent(
-      config.entryComponent,
-      rootPath
-    );
 
     MicroappConfigValidator.validateConfigDependencies(
       config.shared,
@@ -85,35 +81,6 @@ export class MicroappConfigValidator {
     if (!isNameSlug) {
       throw new InvalidConfigError(
         "The 'name' field must be a slug with lowercase letters, numbers, hyphens, and underscores. Example: 'my-microapp' or 'my_microapp'."
-      );
-    }
-  }
-
-  public static validateConfigEntryComponent(
-    entryComponent: any,
-    rootPath?: string
-  ): void {
-    if (!entryComponent) {
-      throw new InvalidConfigError("The 'entryComponent' field is required.");
-    }
-
-    if (typeof entryComponent !== 'string') {
-      throw new InvalidConfigError(
-        "The 'entryComponent' field must be a string."
-      );
-    }
-
-    if (!rootPath) {
-      return;
-    }
-
-    const doesEntryComponentExist = fs.existsSync(
-      path.resolve(rootPath, entryComponent)
-    );
-
-    if (!doesEntryComponentExist) {
-      throw new InvalidConfigError(
-        `The 'entryComponent' field must be a valid path of a React component file. Check the file path in the folder: ${rootPath}.`
       );
     }
   }

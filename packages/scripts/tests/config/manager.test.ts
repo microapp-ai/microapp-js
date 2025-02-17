@@ -26,36 +26,6 @@ describe('MicroappConfigReader', () => {
     );
   });
 
-  it('throws if the config file is missing the entryComponent field', () => {
-    const reader = new MicroappConfigManager({
-      rootPath: path.join(
-        __dirname,
-        '../fixtures/projects/04-missing-config-entry-component'
-      ),
-    });
-
-    expect(() => reader.read()).toThrow(
-      new InvalidConfigError("The 'entryComponent' field is required.")
-    );
-  });
-
-  it('throws if the entryComponent is not a valid path', () => {
-    const configPath = path.join(
-      __dirname,
-      '../fixtures/projects/05-missing-component-file'
-    );
-
-    const reader = new MicroappConfigManager({
-      rootPath: configPath,
-    });
-
-    expect(() => reader.read()).toThrow(
-      new InvalidConfigError(
-        `The 'entryComponent' field must be a valid path of a React component file. Check the file path in the folder: ${configPath}.`
-      )
-    );
-  });
-
   it('throws if the shared library is not a dependency', () => {
     const reader = new MicroappConfigManager({
       rootPath: path.join(

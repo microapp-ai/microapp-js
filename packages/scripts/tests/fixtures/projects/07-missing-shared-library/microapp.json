@@ -1,6 +1,5 @@
 {
   "name": "07-missing-shared-library",
-  "entryComponent": "./index.js",
   "shared": {
     "react": "^18.3.1"
   }
