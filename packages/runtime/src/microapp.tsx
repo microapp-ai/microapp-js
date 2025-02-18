@@ -25,9 +25,9 @@ export const Microapp: React.FC<MicroappProps> = ({
   const iframeRef = React.useRef<HTMLIFrameElement>(null);
   const runtimeRef = React.useRef<MicroappRuntime | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
+  const [isRuntimeCreated, setIsRuntimeCreated] = React.useState(false);
 
   useEffect(() => {
-    setIsLoading(true);
     if (iframeRef.current) {
       try {
         const searchParams = new URLSearchParams();
@@ -37,16 +37,18 @@ export const Microapp: React.FC<MicroappProps> = ({
         const queryString = searchParams.toString();
         const urlWithParams = queryString ? `${url}?${queryString}` : url;
 
-        if (!runtimeRef.current) {
+        if (!isRuntimeCreated) {
           runtimeRef.current = new MicroappRuntime({
             iframeElement: iframeRef.current,
-            url: urlWithParams,
+            url,
             theme,
             lang,
           });
+          setIsRuntimeCreated(true);
+          setIsLoading(false);
         } else {
-          runtimeRef.current.update({
-            url: urlWithParams,
+          runtimeRef.current?.update({
+            url,
             theme,
             lang,
           });
@@ -54,6 +56,7 @@ export const Microapp: React.FC<MicroappProps> = ({
 
         onLoad?.();
       } catch (error) {
+        setIsLoading(false);
         onError?.(
           error instanceof Error
             ? error
@@ -61,16 +64,7 @@ export const Microapp: React.FC<MicroappProps> = ({
         );
       }
     }
-
-    setIsLoading(false);
-
-    return () => {
-      if (runtimeRef.current) {
-        runtimeRef.current.destroy();
-        runtimeRef.current = null;
-      }
-    };
-  }, [url, theme, lang, onLoad, onError]);
+  }, [url, theme, lang, onLoad, onError, isRuntimeCreated]);
 
   return (
     <>

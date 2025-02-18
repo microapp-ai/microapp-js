@@ -1,6 +1,6 @@
 import { UserPreferencesData } from './types';
 import { PreferencesRepo } from './preferences-repo';
-import { WindowPostMessageBus } from '@microapp-io/runtime';
+import { WindowMessage, WindowPostMessageBus } from '@microapp-io/runtime';
 import { DEFAULT_PREFERENCES } from './constants';
 
 export type PreferencesUpdateCallback = (data?: UserPreferencesData) => void;
@@ -8,18 +8,23 @@ export type PreferencesUpdateCallback = (data?: UserPreferencesData) => void;
 export class ProdUserPreferences implements PreferencesRepo {
   preferences?: UserPreferencesData;
   listeners: Set<PreferencesUpdateCallback> = new Set();
-  #messageBus: WindowPostMessageBus;
+  #messageBus: WindowPostMessageBus<
+    WindowMessage<
+      '@microapp:userPreferences',
+      { theme?: string; lang?: string }
+    >
+  >;
 
   constructor() {
     this.#messageBus = new WindowPostMessageBus();
 
     if (typeof window !== 'undefined') {
       this.#setupMessageListener();
-      this.#init();
     }
   }
 
   #setupMessageListener() {
+    console.log('setupMessageListener', { preferences: this.preferences });
     this.#messageBus.on(
       '@microapp:userPreferences',
       (payload: UserPreferencesData) => {
@@ -27,10 +32,6 @@ export class ProdUserPreferences implements PreferencesRepo {
         this.notifyListeners();
       }
     );
-  }
-
-  #init() {
-    this.#messageBus.sendUserPreferences({});
   }
 
   onUpdate(callback: PreferencesUpdateCallback): () => void {
