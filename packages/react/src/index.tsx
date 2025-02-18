@@ -1,7 +1,6 @@
 import * as React from 'react';
 import type {
   AuthOptions,
-  AuthRepoBuildLoginUrlParams,
   User,
 } from '@microapp-io/auth';
 import { Auth } from '@microapp-io/auth';
@@ -14,7 +13,7 @@ export type AuthContextType =
       user?: undefined;
       refresh: () => void;
       requestLogin: () => void;
-      buildLoginUrl: (params?: { returnTo?: string }) => string;
+      onUserAuthenticated: (callback: (user: User) => void) => void;
     }
   | {
       isAuthenticated: true;
@@ -23,19 +22,17 @@ export type AuthContextType =
       user: User;
       refresh: () => void;
       requestLogin: () => void;
-      buildLoginUrl: (params?: { returnTo?: string }) => string;
+      onUserAuthenticated: (callback: (user: User) => void) => void;
     };
 
 const INITIAL_AUTH_CONTEXT: AuthContextType = {
-  isAuthenticated: false,
-  isLoading: false,
-  error: undefined,
-  user: undefined,
-  refresh: () => {},
-  requestLogin: () => {},
-  buildLoginUrl: (params?: { returnTo?: string }) => {
-    return '';
-  },
+    isAuthenticated: false,
+    isLoading: false,
+    error: undefined,
+    user: undefined,
+    refresh: () => {},
+    requestLogin: () => {},
+    onUserAuthenticated: (callback: (user: User) => void) => {}
 };
 
 export const AuthContext = React.createContext<AuthContextType | undefined>(
@@ -107,8 +104,9 @@ export function AuthProvider({
       ...previousState,
       refresh: () => load({ shouldForceRefresh: true }),
       requestLogin: () => auth.requestLogin(),
-      buildLoginUrl: (params?: AuthRepoBuildLoginUrlParams) =>
-        auth.buildLoginUrl(params),
+        onUserAuthenticated: (callback: (user: User) => void) =>
+            auth.onUserAuthenticated(callback)
+
     }));
 
     load();
