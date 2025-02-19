@@ -1,7 +1,7 @@
-import { PreferencesRepo } from './user-preferences-repo';
+import { UserPreferencesRepo } from './user-preferences-repo';
 import { SandboxPreferencesOptions, type UserPreferencesData } from './types';
 
-export class SandboxUserPreferences implements PreferencesRepo {
+export class SandboxUserPreferences implements UserPreferencesRepo {
   #mockPreferences: UserPreferencesData;
   #listeners: Set<(data?: UserPreferencesData) => void> = new Set();
 

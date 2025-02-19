@@ -36,6 +36,7 @@ export const Microapp: React.FC<MicroappProps> = ({
 
         const queryString = searchParams.toString();
         const urlWithParams = queryString ? `${url}?${queryString}` : url;
+        const targetOrigin = new URL(url).origin;
 
         if (!isRuntimeCreated) {
           runtimeRef.current = new MicroappRuntime({
@@ -43,6 +44,7 @@ export const Microapp: React.FC<MicroappProps> = ({
             url: urlWithParams,
             theme,
             lang,
+            targetOrigin,
           });
           setIsRuntimeCreated(true);
           setIsLoading(false);
@@ -51,6 +53,7 @@ export const Microapp: React.FC<MicroappProps> = ({
             url: urlWithParams,
             theme,
             lang,
+            targetOrigin,
           });
         }
 
@@ -73,8 +76,6 @@ export const Microapp: React.FC<MicroappProps> = ({
         title={title}
         style={{
           border: 'none',
-          width: '100%',
-          minHeight: '100%',
         }}
         {...rest}
       />

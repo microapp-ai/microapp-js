@@ -1,19 +1,13 @@
-import { WindowMessage, WindowPostMessageBus } from './window-post-message-bus';
 import { PRODUCTION_MARKETPLACE_HOST_URL } from './constants';
+import { MicroappMessageBus } from './microapp-message-bus';
 
 type MicroappRuntimeOptions = {
   iframeElement: HTMLIFrameElement;
   url: string;
   theme?: string;
   lang?: string;
+  targetOrigin?: string;
 };
-
-type MessageTypes =
-  | WindowMessage<
-      '@microapp:userPreferences',
-      { theme?: string; lang?: string }
-    >
-  | WindowMessage<'@microapp:routeChange', { route: string }>;
 
 export class MicroappRuntime {
   #iframe: HTMLIFrameElement;
@@ -21,23 +15,29 @@ export class MicroappRuntime {
   #lang: string = 'en-us';
   #baseRoute: string;
   #resizeObserver?: ResizeObserver;
-  #messageBus: WindowPostMessageBus<MessageTypes>;
+  #messageBus: MicroappMessageBus;
+  #targetOrigin: string;
 
   constructor({
     iframeElement: iframe,
     url: src,
     theme,
     lang,
+    targetOrigin = PRODUCTION_MARKETPLACE_HOST_URL,
   }: MicroappRuntimeOptions) {
     this.#iframe = iframe;
     this.#theme = theme ?? this.#theme;
     this.#lang = lang ?? this.#lang;
+    this.#targetOrigin = targetOrigin;
 
     this.#baseRoute = window.location.pathname;
     this.#setIframeDimensions();
 
-    this.#messageBus = new WindowPostMessageBus();
+    this.#messageBus = new MicroappMessageBus({ targetOrigin });
     this.#messageBus.on('@microapp:userPreferences', (payload) => {
+      if (payload.theme) this.#theme = payload.theme;
+      if (payload.lang) this.#lang = payload.lang;
+
       this.#updateUserPreferences();
     });
     this.#messageBus.on('@microapp:routeChange', this.#handleRouteChange);
@@ -59,7 +59,9 @@ export class MicroappRuntime {
   };
 
   update = (
-    options: Partial<Pick<MicroappRuntimeOptions, 'theme' | 'lang' | 'url'>>
+    options: Partial<
+      Pick<MicroappRuntimeOptions, 'theme' | 'lang' | 'url' | 'targetOrigin'>
+    >
   ) => {
     if (options.theme) {
       this.#theme = options.theme;
@@ -69,6 +71,9 @@ export class MicroappRuntime {
     }
     if (options.url) {
       this.#iframe.src = options.url;
+    }
+    if (options.targetOrigin) {
+      this.#targetOrigin = options.targetOrigin;
     }
 
     this.#baseRoute = window.location.pathname;
@@ -133,7 +138,7 @@ export class MicroappRuntime {
               type: '@microapp:routeChange', 
               payload: { route: currentRoute }
             }, 
-            '${PRODUCTION_MARKETPLACE_HOST_URL}'
+            '${this.#targetOrigin}'
           );
         }
 

@@ -19,24 +19,27 @@ export class WindowPostMessageBus<
   TMessage extends WindowMessage<string, Record<string, unknown>>
 > {
   #handlers: Map<string, Set<(payload: any) => void>> = new Map();
+  #targetOrigin: string;
 
-  constructor() {
+  constructor(options?: { targetOrigin: string }) {
+    this.#targetOrigin =
+      options?.targetOrigin ?? PRODUCTION_MARKETPLACE_HOST_URL;
     if (typeof window !== 'undefined') {
       window.addEventListener('message', this.trigger);
     }
   }
 
-  destroy() {
+  destroy = () => {
     if (typeof window !== 'undefined') {
       window.removeEventListener('message', this.trigger);
     }
     this.#handlers.clear();
-  }
+  };
 
-  on<TType extends TMessage['type']>(
+  on = <TType extends TMessage['type']>(
     type: TType,
     handler: (payload: ExtractPayload<TMessage, TType>) => void
-  ): () => void {
+  ): (() => void) => {
     if (!this.#handlers.has(type)) {
       this.#handlers.set(type, new Set());
     }
@@ -45,23 +48,20 @@ export class WindowPostMessageBus<
     return () => {
       this.#handlers.get(type)?.delete(handler);
     };
-  }
+  };
 
-  send<TType extends TMessage['type']>(
+  send = <TType extends TMessage['type']>(
     type: TType,
     payload: ExtractPayload<TMessage, TType>,
     target?: Window
-  ) {
+  ) => {
     if (typeof window !== 'undefined') {
       const targetWindow = target || window.parent;
-      targetWindow.postMessage(
-        { type, payload },
-        PRODUCTION_MARKETPLACE_HOST_URL
-      );
+      targetWindow.postMessage({ type, payload }, this.#targetOrigin);
     }
-  }
+  };
 
-  private trigger(event: MessageEvent) {
+  private trigger = (event: MessageEvent) => {
     if (!event.data || typeof event.data !== 'object') {
       return;
     }
@@ -77,5 +77,5 @@ export class WindowPostMessageBus<
     }
 
     handlers.forEach((handler) => handler(message.payload));
-  }
+  };
 }
