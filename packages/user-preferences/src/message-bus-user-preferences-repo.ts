@@ -5,7 +5,7 @@ import { DEFAULT_PREFERENCES } from './constants';
 
 export type PreferencesUpdateCallback = (data?: UserPreferencesData) => void;
 
-export class ProductionUserPreferencesRepo implements UserPreferencesRepo {
+export class MessageBusUserPreferencesRepo implements UserPreferencesRepo {
   preferences?: UserPreferencesData;
   listeners: Set<PreferencesUpdateCallback> = new Set();
   #messageBus: MicroappMessageBus;

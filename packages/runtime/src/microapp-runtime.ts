@@ -1,4 +1,3 @@
-import { PRODUCTION_MARKETPLACE_HOST_URL } from './constants';
 import { MicroappMessageBus } from './microapp-message-bus';
 
 type MicroappRuntimeOptions = {
@@ -23,17 +22,18 @@ export class MicroappRuntime {
     url: src,
     theme,
     lang,
-    targetOrigin = PRODUCTION_MARKETPLACE_HOST_URL,
   }: MicroappRuntimeOptions) {
     this.#iframe = iframe;
     this.#theme = theme ?? this.#theme;
     this.#lang = lang ?? this.#lang;
-    this.#targetOrigin = targetOrigin;
+    this.#targetOrigin = new URL(src).origin;
 
     this.#baseRoute = window.location.pathname;
     this.#setIframeDimensions();
 
-    this.#messageBus = new MicroappMessageBus({ targetOrigin });
+    this.#messageBus = new MicroappMessageBus({
+      targetOrigin: this.#targetOrigin,
+    });
     this.#messageBus.on(
       '@microapp:userPreferences',
       this.#handlePreferencesChange
@@ -45,7 +45,14 @@ export class MicroappRuntime {
       this.#injectRoutingScript();
     });
 
-    this.#iframe.src = src;
+    const searchParams = new URLSearchParams();
+    if (theme) searchParams.append('theme', theme);
+    if (lang) searchParams.append('lang', lang);
+
+    const queryString = searchParams.toString();
+    const srcWithParams = queryString ? `${src}?${queryString}` : src;
+
+    this.#iframe.src = srcWithParams;
   }
 
   destroy = () => {
@@ -57,9 +64,7 @@ export class MicroappRuntime {
   };
 
   update = (
-    options: Partial<
-      Pick<MicroappRuntimeOptions, 'theme' | 'lang' | 'url' | 'targetOrigin'>
-    >
+    options: Partial<Pick<MicroappRuntimeOptions, 'theme' | 'lang' | 'url'>>
   ) => {
     if (options.theme) {
       this.#theme = options.theme;
@@ -69,9 +74,6 @@ export class MicroappRuntime {
     }
     if (options.url) {
       this.#iframe.src = options.url;
-    }
-    if (options.targetOrigin) {
-      this.#targetOrigin = options.targetOrigin;
     }
 
     this.#baseRoute = window.location.pathname;

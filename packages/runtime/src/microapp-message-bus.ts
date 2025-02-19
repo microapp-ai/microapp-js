@@ -7,8 +7,4 @@ export type MicroappMessageTypes =
     >
   | WindowMessage<'@microapp:routeChange', { route: string }>;
 
-export class MicroappMessageBus extends WindowPostMessageBus<MicroappMessageTypes> {
-  constructor(options?: { targetOrigin: string }) {
-    super(options);
-  }
-}
+export class MicroappMessageBus extends WindowPostMessageBus<MicroappMessageTypes> {}

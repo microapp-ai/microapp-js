@@ -21,9 +21,11 @@ export class WindowPostMessageBus<
   #handlers: Map<string, Set<(payload: any) => void>> = new Map();
   #targetOrigin: string;
 
-  constructor(options?: { targetOrigin: string }) {
-    this.#targetOrigin =
-      options?.targetOrigin ?? PRODUCTION_MARKETPLACE_HOST_URL;
+  // NB: targetOrigin is required only for sending messages.
+  constructor({
+    targetOrigin = PRODUCTION_MARKETPLACE_HOST_URL,
+  }: { targetOrigin?: string } = {}) {
+    this.#targetOrigin = targetOrigin;
     if (typeof window !== 'undefined') {
       window.addEventListener('message', this.trigger);
     }

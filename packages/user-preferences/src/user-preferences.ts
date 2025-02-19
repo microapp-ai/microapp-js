@@ -1,6 +1,6 @@
 import { UserPreferencesRepo } from './user-preferences-repo';
-import { ProductionUserPreferencesRepo } from './production-user-preferences';
-import { SandboxUserPreferences } from './sandbox-user-preferences';
+import { MessageBusUserPreferencesRepo } from './message-bus-user-preferences-repo';
+import { SandboxUserPreferencesRepo } from './sandbox-user-preferences-repo';
 import { UserPreferencesData, UserPreferencesOptions } from './types';
 
 export class UserPreferences {
@@ -8,8 +8,8 @@ export class UserPreferences {
 
   constructor(options: UserPreferencesOptions = {}) {
     this.#repo = options.sandbox
-      ? new SandboxUserPreferences(options.sandbox)
-      : new ProductionUserPreferencesRepo();
+      ? new SandboxUserPreferencesRepo(options.sandbox)
+      : new MessageBusUserPreferencesRepo();
   }
 
   getPreferences(): UserPreferencesData {
