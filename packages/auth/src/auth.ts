@@ -1,6 +1,6 @@
 import type { AuthConfigParams } from './auth-config';
 import { AuthConfig } from './auth-config';
-import type { AuthRepo } from './auth-repo';
+import type {AuthRepo, UnsubscribeCallback, UserAuthenticatedCallback} from './auth-repo';
 import type { User } from './user';
 import { HttpAuthRepo } from './http-auth-repo';
 import type { SandboxAuthOptions } from './sandbox-auth-repo';
@@ -32,8 +32,8 @@ export class Auth {
 
   requestLogin(): void {
     invariant(
-        typeof window !== 'undefined',
-        'requestLogin can only be used in the browser'
+      typeof window !== 'undefined',
+      'requestLogin can only be used in the browser'
     );
 
     this.repo.requestLogin();
@@ -56,7 +56,7 @@ export class Auth {
     return this.user;
   }
 
-  onUserAuthenticated(callback: (user: User) => void): void{
-    this.repo.onUserAuthenticated(callback);
+  onUserAuthenticated(callback: UserAuthenticatedCallback): UnsubscribeCallback{
+    return this.repo.onUserAuthenticated(callback);    
   }
 }

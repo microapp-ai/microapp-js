@@ -1,4 +1,4 @@
-import type { AuthRepo } from './auth-repo';
+import type {AuthRepo, UnsubscribeCallback, UserAuthenticatedCallback} from './auth-repo';
 import type { User } from './user';
 import { NoAuthenticatedUserError } from './errors';
 import { invariant, isProduction, warning } from './utils';
@@ -8,22 +8,20 @@ export type SandboxAuthOptions =
   | {
       enabled?: boolean;
       user: User | null | (() => User | null) | (() => Promise<User | null>);
-      autologin?: boolean;
     };
 
 export class SandboxAuthRepo implements AuthRepo {
   private readonly enabled: boolean;
   private readonly _getUser: () => Promise<User | null>;
-  private onUserAuthenticatedCallback: (user: User) => void = () => {};
+  private onUserAuthenticatedCallback: (user: User | null) => void = () => {};
   private authenticatedUser: User | null = null;
 
   static parseOptions(options: SandboxAuthOptions): {
     enabled: boolean;
     getUser: () => Promise<User | null>;
-    autologin: boolean;
   } {
     if (typeof options === 'boolean') {
-      return { enabled: options, getUser: async () => null, autologin: false };
+      return { enabled: options, getUser: async () => null };
     }
 
     const { enabled = true, user } = options;
@@ -31,7 +29,6 @@ export class SandboxAuthRepo implements AuthRepo {
       enabled,
       getUser:
         typeof user === 'function' ? async () => user() : async () => user,
-      autologin: options.autologin ?? false,
     };
   }
 
@@ -45,12 +42,9 @@ export class SandboxAuthRepo implements AuthRepo {
   }
 
   constructor(options: SandboxAuthOptions) {
-    const { enabled, getUser, autologin } = SandboxAuthRepo.parseOptions(options);
+    const { enabled, getUser } = SandboxAuthRepo.parseOptions(options);
     this.enabled = enabled;
     this._getUser = getUser;
-    if(autologin) {
-      this.requestLogin()
-    }
 
     warning(
       isProduction() && enabled,
@@ -61,6 +55,7 @@ export class SandboxAuthRepo implements AuthRepo {
   async getUser(): Promise<User> {
     this.throwIfNotEnabled();
     if(this.authenticatedUser == null) {
+      this.onUserAuthenticatedCallback(null)
       throw new NoAuthenticatedUserError('Sandbox user not authenticated');
     }
 
@@ -91,7 +86,8 @@ export class SandboxAuthRepo implements AuthRepo {
     }
   }
 
-  onUserAuthenticated(callback: (user: User) => void): void {
+  onUserAuthenticated(callback: UserAuthenticatedCallback): UnsubscribeCallback {
     this.onUserAuthenticatedCallback = callback;
+    return () => {this.onUserAuthenticatedCallback = ()=> {}}
   }
 }
