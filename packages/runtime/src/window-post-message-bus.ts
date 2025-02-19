@@ -56,8 +56,7 @@ export class WindowPostMessageBus<
       const targetWindow = target || window.parent;
       targetWindow.postMessage(
         { type, payload },
-        '*'
-        // PRODUCTION_MARKETPLACE_HOST_URL
+        PRODUCTION_MARKETPLACE_HOST_URL
       );
     }
   }
