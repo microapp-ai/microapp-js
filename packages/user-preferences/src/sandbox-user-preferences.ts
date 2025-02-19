@@ -1,4 +1,4 @@
-import { PreferencesRepo } from './preferences-repo';
+import { PreferencesRepo } from './user-preferences-repo';
 import { SandboxPreferencesOptions, type UserPreferencesData } from './types';
 
 export class SandboxUserPreferences implements PreferencesRepo {

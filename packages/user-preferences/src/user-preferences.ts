@@ -1,15 +1,15 @@
-import { PreferencesRepo } from './preferences-repo';
-import { ProdUserPreferences } from './prod-user-preferences';
+import { UserPreferencesRepo } from './user-preferences-repo';
+import { ProductionUserPreferencesRepo } from './prod-user-preferences';
 import { SandboxUserPreferences } from './sandbox-user-preferences';
 import { UserPreferencesData, UserPreferencesOptions } from './types';
 
 export class UserPreferences {
-  #repo: PreferencesRepo;
+  #repo: UserPreferencesRepo;
 
   constructor(options: UserPreferencesOptions = {}) {
     this.#repo = options.sandbox
       ? new SandboxUserPreferences(options.sandbox)
-      : new ProdUserPreferences();
+      : new ProductionUserPreferencesRepo();
   }
 
   getPreferences(): UserPreferencesData {

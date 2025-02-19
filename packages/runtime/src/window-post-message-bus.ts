@@ -47,15 +47,6 @@ export class WindowPostMessageBus<
     };
   }
 
-  trigger = (event: MessageEvent) => {
-    const { type, payload } = event.data as TMessage;
-    const handlers = this.#handlers.get(type);
-
-    if (handlers) {
-      handlers.forEach((handler) => handler(payload));
-    }
-  };
-
   send<TType extends TMessage['type']>(
     type: TType,
     payload: ExtractPayload<TMessage, TType>,
@@ -65,8 +56,27 @@ export class WindowPostMessageBus<
       const targetWindow = target || window.parent;
       targetWindow.postMessage(
         { type, payload },
-        PRODUCTION_MARKETPLACE_HOST_URL
+        '*'
+        // PRODUCTION_MARKETPLACE_HOST_URL
       );
     }
+  }
+
+  private trigger(event: MessageEvent) {
+    if (!event.data || typeof event.data !== 'object') {
+      return;
+    }
+
+    const message = event.data as Partial<TMessage>;
+    if (!message.type || !message.payload) {
+      return;
+    }
+
+    const handlers = this.#handlers.get(message.type);
+    if (!handlers) {
+      return;
+    }
+
+    handlers.forEach((handler) => handler(message.payload));
   }
 }

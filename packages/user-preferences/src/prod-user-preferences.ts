@@ -1,11 +1,11 @@
 import { UserPreferencesData } from './types';
-import { PreferencesRepo } from './preferences-repo';
+import { UserPreferencesRepo } from './user-preferences-repo';
 import { WindowMessage, WindowPostMessageBus } from '@microapp-io/runtime';
 import { DEFAULT_PREFERENCES } from './constants';
 
 export type PreferencesUpdateCallback = (data?: UserPreferencesData) => void;
 
-export class ProdUserPreferences implements PreferencesRepo {
+export class ProductionUserPreferencesRepo implements UserPreferencesRepo {
   preferences?: UserPreferencesData;
   listeners: Set<PreferencesUpdateCallback> = new Set();
   #messageBus: WindowPostMessageBus<
@@ -24,7 +24,6 @@ export class ProdUserPreferences implements PreferencesRepo {
   }
 
   #setupMessageListener() {
-    console.log('setupMessageListener', { preferences: this.preferences });
     this.#messageBus.on(
       '@microapp:userPreferences',
       (payload: UserPreferencesData) => {

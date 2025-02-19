@@ -40,7 +40,7 @@ export const Microapp: React.FC<MicroappProps> = ({
         if (!isRuntimeCreated) {
           runtimeRef.current = new MicroappRuntime({
             iframeElement: iframeRef.current,
-            url,
+            url: urlWithParams,
             theme,
             lang,
           });
@@ -48,7 +48,7 @@ export const Microapp: React.FC<MicroappProps> = ({
           setIsLoading(false);
         } else {
           runtimeRef.current?.update({
-            url,
+            url: urlWithParams,
             theme,
             lang,
           });
