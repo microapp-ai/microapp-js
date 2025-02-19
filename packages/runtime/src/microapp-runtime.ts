@@ -1,10 +1,11 @@
-import { PRODUCTION_MARKETPLACE_HOST_URL } from './constants';
+import { MicroappMessageBus } from './microapp-message-bus';
 
 type MicroappRuntimeOptions = {
   iframeElement: HTMLIFrameElement;
   url: string;
   theme?: string;
   lang?: string;
+  targetOrigin?: string;
 };
 
 export class MicroappRuntime {
@@ -13,6 +14,8 @@ export class MicroappRuntime {
   #lang: string = 'en-us';
   #baseRoute: string;
   #resizeObserver?: ResizeObserver;
+  #messageBus: MicroappMessageBus;
+  #targetOrigin: string;
 
   constructor({
     iframeElement: iframe,
@@ -27,20 +30,38 @@ export class MicroappRuntime {
     this.#baseRoute = window.location.pathname;
     this.#setIframeDimensions();
 
-    window.addEventListener('message', this.#onMessageEvent);
+    const { origin: targetOrigin } = new URL(src);
+    this.#targetOrigin = targetOrigin;
+    this.#messageBus = new MicroappMessageBus({
+      targetOrigin,
+    });
+    this.#messageBus.on(
+      '@microapp:userPreferences',
+      this.#handlePreferencesChange
+    );
+    this.#messageBus.on('@microapp:routeChange', this.#handleRouteChange);
 
-    this.#updateUserPreferences();
-    this.#injectRoutingScript();
-    this.#iframe.src = src;
+    this.#iframe.addEventListener('load', () => {
+      this.#updateUserPreferences();
+      this.#injectRoutingScript();
+    });
+
+    const searchParams = new URLSearchParams();
+    if (theme) searchParams.append('theme', theme);
+    if (lang) searchParams.append('lang', lang);
+
+    const queryString = searchParams.toString();
+    const srcWithParams = queryString ? `${src}?${queryString}` : src;
+
+    this.#iframe.src = srcWithParams;
   }
 
   destroy = () => {
-    window.removeEventListener('message', this.#onMessageEvent);
+    this.#messageBus.destroy();
 
     if (this.#resizeObserver) {
       this.#resizeObserver.disconnect();
     }
-    this.#iframe.remove();
   };
 
   update = (
@@ -75,17 +96,17 @@ export class MicroappRuntime {
     }
   };
 
-  #onMessageEvent = (event: MessageEvent) => {
-    const { type, payload } = event.data;
+  #handlePreferencesChange = ({
+    theme,
+    lang,
+  }: {
+    theme?: string;
+    lang?: string;
+  }) => {
+    if (theme) this.#theme = theme;
+    if (lang) this.#lang = lang;
 
-    switch (type) {
-      case '@microapp:userPreferences':
-        return this.#updateUserPreferences();
-      case '@microapp:routeChange':
-        return this.#handleRouteChange(payload);
-      default:
-        return;
-    }
+    this.#updateUserPreferences();
   };
 
   #handleRouteChange = ({ route }: { route: string }) => {
@@ -100,17 +121,13 @@ export class MicroappRuntime {
   };
 
   #updateUserPreferences = () => {
-    const message = {
-      type: '@microapp:userPreferences',
-      payload: {
+    this.#messageBus.send(
+      '@microapp:userPreferences',
+      {
         theme: this.#theme,
         lang: this.#lang,
       },
-    };
-
-    this.#iframe.contentWindow?.postMessage(
-      message,
-      PRODUCTION_MARKETPLACE_HOST_URL
+      this.#iframe.contentWindow ?? undefined
     );
   };
 
@@ -130,7 +147,13 @@ export class MicroappRuntime {
 
         function notifyRouteChange(method) {
           const currentRoute = window.location.pathname;
-          window.parent.postMessage({ type: '@microapp:routeChange', payload: { route: currentRoute }}, PRODUCTION_MARKETPLACE_HOST_URL);
+          window.parent.postMessage(
+            { 
+              type: '@microapp:routeChange', 
+              payload: { route: currentRoute }
+            }, 
+            '${this.#targetOrigin}'
+          );
         }
 
         window.addEventListener('popstate', () => {
