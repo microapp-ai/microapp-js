@@ -34,12 +34,10 @@ export class MicroappRuntime {
     this.#setIframeDimensions();
 
     this.#messageBus = new MicroappMessageBus({ targetOrigin });
-    this.#messageBus.on('@microapp:userPreferences', (payload) => {
-      if (payload.theme) this.#theme = payload.theme;
-      if (payload.lang) this.#lang = payload.lang;
-
-      this.#updateUserPreferences();
-    });
+    this.#messageBus.on(
+      '@microapp:userPreferences',
+      this.#handlePreferencesChange
+    );
     this.#messageBus.on('@microapp:routeChange', this.#handleRouteChange);
 
     this.#iframe.addEventListener('load', () => {
@@ -93,6 +91,19 @@ export class MicroappRuntime {
       });
       this.#resizeObserver.observe(parentElement);
     }
+  };
+
+  #handlePreferencesChange = ({
+    theme,
+    lang,
+  }: {
+    theme?: string;
+    lang?: string;
+  }) => {
+    if (theme) this.#theme = theme;
+    if (lang) this.#lang = lang;
+
+    this.#updateUserPreferences();
   };
 
   #handleRouteChange = ({ route }: { route: string }) => {
