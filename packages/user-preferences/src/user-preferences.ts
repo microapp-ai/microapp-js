@@ -1,5 +1,5 @@
 import { UserPreferencesRepo } from './user-preferences-repo';
-import { ProductionUserPreferencesRepo } from './prod-user-preferences';
+import { ProductionUserPreferencesRepo } from './production-user-preferences';
 import { SandboxUserPreferences } from './sandbox-user-preferences';
 import { UserPreferencesData, UserPreferencesOptions } from './types';
 
