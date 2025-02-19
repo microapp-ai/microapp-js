@@ -1,5 +1,6 @@
 import { UserPreferencesRepo } from './user-preferences-repo';
 import { SandboxPreferencesOptions, type UserPreferencesData } from './types';
+import { DEFAULT_PREFERENCES } from './constants';
 
 export class SandboxUserPreferencesRepo implements UserPreferencesRepo {
   #mockPreferences: UserPreferencesData;
@@ -17,7 +18,7 @@ export class SandboxUserPreferencesRepo implements UserPreferencesRepo {
   }
 
   getPreferences(): UserPreferencesData {
-    return this.#mockPreferences || { theme: 'light', lang: 'en-us' };
+    return this.#mockPreferences || DEFAULT_PREFERENCES;
   }
 
   onUpdate(callback: (data?: UserPreferencesData) => void): () => void {

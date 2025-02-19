@@ -25,19 +25,18 @@ export const Microapp: React.FC<MicroappProps> = ({
   const iframeRef = React.useRef<HTMLIFrameElement>(null);
   const runtimeRef = React.useRef<MicroappRuntime | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
-  const [isRuntimeCreated, setIsRuntimeCreated] = React.useState(false);
 
   useEffect(() => {
     if (iframeRef.current) {
       try {
-        if (!isRuntimeCreated) {
+        const runtime = runtimeRef.current;
+        if (!runtime) {
           runtimeRef.current = new MicroappRuntime({
             iframeElement: iframeRef.current,
             url,
             theme,
             lang,
           });
-          setIsRuntimeCreated(true);
           setIsLoading(false);
         } else {
           runtimeRef.current?.update({
@@ -57,7 +56,7 @@ export const Microapp: React.FC<MicroappProps> = ({
         );
       }
     }
-  }, [url, theme, lang, onLoad, onError, isRuntimeCreated]);
+  }, [url, theme, lang, onLoad, onError]);
 
   return (
     <>

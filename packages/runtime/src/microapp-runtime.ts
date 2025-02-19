@@ -26,13 +26,14 @@ export class MicroappRuntime {
     this.#iframe = iframe;
     this.#theme = theme ?? this.#theme;
     this.#lang = lang ?? this.#lang;
-    this.#targetOrigin = new URL(src).origin;
 
     this.#baseRoute = window.location.pathname;
     this.#setIframeDimensions();
 
+    const { origin: targetOrigin } = new URL(src);
+    this.#targetOrigin = targetOrigin;
     this.#messageBus = new MicroappMessageBus({
-      targetOrigin: this.#targetOrigin,
+      targetOrigin,
     });
     this.#messageBus.on(
       '@microapp:userPreferences',
