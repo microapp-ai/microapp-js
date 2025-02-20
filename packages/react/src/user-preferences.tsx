@@ -33,9 +33,7 @@ export const UserPreferencesProvider: React.FC<
   UserPreferencesProviderProps
 > = ({ sandbox, children }) => {
   const userPreferences = React.useMemo(() => {
-    return Object.keys(sandbox || {}).length > 0
-      ? new UserPreferences({ sandbox })
-      : new UserPreferences();
+    return new UserPreferences({ sandbox });
   }, [sandbox]);
 
   const preferences = React.useSyncExternalStore(

@@ -33,7 +33,12 @@ module.exports = function rollup() {
         sourcemap: !PRETTY,
         banner,
       },
-      external: ['react', '@microapp-io/auth', '@microapp-io/user-preferences'],
+      external: [
+        'react',
+        'react-dom',
+        '@microapp-io/auth',
+        '@microapp-io/user-preferences',
+      ],
       plugins: [
         extensions({ extensions: ['.ts', '.tsx'] }),
         babel({
