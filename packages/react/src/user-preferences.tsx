@@ -1,10 +1,6 @@
 import * as React from 'react';
-import type { PropsWithChildren } from 'react';
 import { UserPreferences } from '@microapp-io/user-preferences';
-import type {
-  UserPreferencesData,
-  UserPreferencesOptions,
-} from '@microapp-io/user-preferences';
+import type { UserPreferencesData } from '@microapp-io/user-preferences';
 
 type UserPreferencesContextValue = {
   preferences?: UserPreferencesData;
@@ -29,12 +25,18 @@ export const useTheme = () => useUserPreferences().preferences?.theme;
 export const useLang = () => useUserPreferences().preferences?.lang;
 
 export const UserPreferencesProvider = ({
-  options,
+  sandbox,
   children,
-}: PropsWithChildren<{ options: UserPreferencesOptions }>) => {
+}: {
+  sandbox?: UserPreferencesData;
+  children: React.ReactNode;
+}) => {
   const userPreferences = React.useMemo(() => {
-    return new UserPreferences(options);
-  }, [options]);
+    return Object.keys(sandbox || {}).length > 0
+      ? new UserPreferences({ sandbox })
+      : new UserPreferences();
+  }, [sandbox]);
+
   const preferences = React.useSyncExternalStore(
     (onChange) => userPreferences.onUpdate(onChange),
     () => userPreferences.getPreferences()

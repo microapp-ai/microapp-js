@@ -23,6 +23,18 @@ module.exports = function rollup() {
 
   const banner = createBanner('Microapp React', version);
 
+  const moduleGlobals = {
+    react: 'React',
+    '@microapp-io/auth': 'MicroappAuth',
+    '@microapp-io/user-preferences': 'MicroappUserPreferences',
+  };
+
+  const external = [
+    'react',
+    '@microapp-io/auth',
+    '@microapp-io/user-preferences',
+  ];
+
   // JS modules for bundlers
   const modules = [
     {
@@ -33,12 +45,7 @@ module.exports = function rollup() {
         sourcemap: !PRETTY,
         banner,
       },
-      external: [
-        'react',
-        'react-dom',
-        '@microapp-io/auth',
-        '@microapp-io/user-preferences',
-      ],
+      external,
       plugins: [
         extensions({ extensions: ['.ts', '.tsx'] }),
         babel({
@@ -81,7 +88,7 @@ module.exports = function rollup() {
         sourcemap: !PRETTY,
         banner,
       },
-      external: ['react', '@microapp-io/auth'],
+      external: ['react', '@microapp-io/auth', '@microapp-io/user-preferences'],
       plugins: [
         extensions({ extensions: ['.ts', '.tsx'] }),
         babel({
@@ -113,7 +120,7 @@ module.exports = function rollup() {
         sourcemap: !PRETTY,
         banner,
       },
-      external: ['react', '@microapp-io/auth'],
+      external: ['react', '@microapp-io/auth', '@microapp-io/user-preferences'],
       plugins: [
         extensions({ extensions: ['.ts', '.tsx'] }),
         babel({
@@ -161,13 +168,10 @@ module.exports = function rollup() {
         format: 'umd',
         sourcemap: !PRETTY,
         banner,
-        globals: {
-          '@microapp-io/auth': 'MicroappAuth',
-          react: 'React',
-        },
+        globals: moduleGlobals,
         name: 'MicroappReact',
       },
-      external: ['react', '@microapp-io/auth'],
+      external: ['react', '@microapp-io/auth', '@microapp-io/user-preferences'],
       plugins: [
         extensions({ extensions: ['.ts', '.tsx'] }),
         babel({
@@ -198,13 +202,10 @@ module.exports = function rollup() {
         format: 'umd',
         sourcemap: !PRETTY,
         banner,
-        globals: {
-          '@microapp-io/auth': 'MicroappAuth',
-          react: 'React',
-        },
+        globals: moduleGlobals,
         name: 'MicroappReact',
       },
-      external: ['react', '@microapp-io/auth'],
+      external: ['react', '@microapp-io/auth', '@microapp-io/user-preferences'],
       plugins: [
         extensions({ extensions: ['.ts', '.tsx'] }),
         babel({
