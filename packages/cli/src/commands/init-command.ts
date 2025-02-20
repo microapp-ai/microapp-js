@@ -174,13 +174,13 @@ export class InitCommand extends Command {
     const defaultName =
       config?.name || this.generateDefaultNameByPath(folderPath);
     const defaultEntryComponent =
-      // config?.entryComponent ||
+      config?.entryComponent ||
       this.getDefaultEntryComponent({
         folderPath,
         framework,
       });
 
-    const { name } = await inquirer.prompt([
+    const { name, entryComponent } = await inquirer.prompt([
       {
         type: 'input',
         name: 'name',
@@ -196,17 +196,17 @@ export class InitCommand extends Command {
         name: 'entryComponent',
         message: 'Enter the name of the entry component:',
         default: defaultEntryComponent,
-        validate: (entryComponent: string) => true,
-        // this.validateConfig(() =>
-        //   // MicroappConfigValidator.validateConfigEntryComponent(
-        //   //   entryComponent,
-        //   //   folderPath
-        //   // )
-        // ),
+        validate: (entryComponent: string) =>
+          this.validateConfig(() =>
+            MicroappConfigValidator.validateConfigEntryComponent(
+              entryComponent,
+              folderPath
+            )
+          ),
       },
     ]);
 
-    configManager.write({ name });
+    configManager.write({ name, entryComponent });
 
     this.installScripts({ folderPath, packageManager });
   }
