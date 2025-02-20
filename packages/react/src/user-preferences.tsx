@@ -1,4 +1,5 @@
 import * as React from 'react';
+import type { PropsWithChildren } from 'react';
 import { UserPreferences } from '@microapp-io/user-preferences';
 import type { UserPreferencesData } from '@microapp-io/user-preferences';
 
@@ -24,13 +25,13 @@ export const useUserPreferences = (): UserPreferencesContextValue => {
 export const useTheme = () => useUserPreferences().preferences?.theme;
 export const useLang = () => useUserPreferences().preferences?.lang;
 
-export const UserPreferencesProvider = ({
-  sandbox,
-  children,
-}: {
+type UserPreferencesProviderProps = PropsWithChildren<{
   sandbox?: UserPreferencesData;
-  children: React.ReactNode;
-}) => {
+}>;
+
+export const UserPreferencesProvider: React.FC<
+  UserPreferencesProviderProps
+> = ({ sandbox, children }) => {
   const userPreferences = React.useMemo(() => {
     return Object.keys(sandbox || {}).length > 0
       ? new UserPreferences({ sandbox })
