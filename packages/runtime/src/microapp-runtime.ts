@@ -104,7 +104,9 @@ export class MicroappRuntime {
 
     const isParentUrlAllowed =
       parentUrl.hostname === PRODUCTION_MARKETPLACE_HOSTNAME ||
-      parentUrl.hostname === STAGING_MARKETPLACE_HOSTNAME;
+      parentUrl.hostname === STAGING_MARKETPLACE_HOSTNAME ||
+      // TODO: Is this safe?
+      parentUrl.hostname === 'localhost';
 
     if (!isParentUrlAllowed) {
       throw new Error(
