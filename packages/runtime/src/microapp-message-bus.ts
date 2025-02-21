@@ -5,6 +5,7 @@ export type MicroappMessageTypes =
       '@microapp:userPreferences',
       { theme?: string; lang?: string }
     >
-  | WindowMessage<'@microapp:routeChange', { route: string }>;
+  | WindowMessage<'@microapp:routeChange', { route: string }>
+  | WindowMessage<'@microapp:resize', { height: number }>;
 
 export class MicroappMessageBus extends WindowPostMessageBus<MicroappMessageTypes> {}
