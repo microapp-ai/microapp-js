@@ -210,8 +210,6 @@ export class MicroappRuntime {
             }');
           }, 100);
   
-          window.sendHeight = sendHeight;
-  
           const mutationObserver = new MutationObserver(sendHeight);
           mutationObserver.observe(document.body, {
             childList: true,
@@ -225,8 +223,6 @@ export class MicroappRuntime {
           ['load', 'resize', 'DOMContentLoaded'].forEach(event => {
             window.addEventListener(event, sendHeight);
           });
-  
-          setTimeout(sendHeight, 0);
         }
       }());
     `;
