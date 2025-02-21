@@ -1,9 +1,0 @@
-{
-  "name": "01-valid",
-  "version": "1.0.0",
-  "main": "index.js",
-  "license": "MIT",
-  "dependencies": {
-    "next": "^13.5.7"
-  }
-}
