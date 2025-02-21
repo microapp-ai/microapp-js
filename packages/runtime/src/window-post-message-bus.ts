@@ -1,4 +1,4 @@
-import { PRODUCTION_MARKETPLACE_HOSTNAME } from './constants';
+import { PRODUCTION_MARKETPLACE_HOST_URL } from './constants';
 
 export type WindowMessage<
   TType extends string,
@@ -23,7 +23,7 @@ export class WindowPostMessageBus<
 
   // NB: targetOrigin is required only for sending messages.
   constructor({
-    targetOrigin = PRODUCTION_MARKETPLACE_HOSTNAME,
+    targetOrigin = PRODUCTION_MARKETPLACE_HOST_URL,
   }: { targetOrigin?: string } = {}) {
     this.#targetOrigin = targetOrigin;
     if (typeof window !== 'undefined') {

@@ -1,6 +1,6 @@
 import {
-  PRODUCTION_MARKETPLACE_HOSTNAME,
-  STAGING_MARKETPLACE_HOSTNAME,
+  PRODUCTION_MARKETPLACE_HOST_URL,
+  STAGING_MARKETPLACE_HOST_URL,
 } from './constants';
 import { MicroappMessageBus } from './microapp-message-bus';
 
@@ -94,8 +94,8 @@ export class MicroappRuntime {
 
     const parentUrl = new URL(window.location.href);
     const isParentUrlAllowed =
-      parentUrl.hostname === PRODUCTION_MARKETPLACE_HOSTNAME ||
-      parentUrl.hostname === STAGING_MARKETPLACE_HOSTNAME;
+      parentUrl.hostname === PRODUCTION_MARKETPLACE_HOST_URL ||
+      parentUrl.hostname === STAGING_MARKETPLACE_HOST_URL;
 
     if (!isParentUrlAllowed) {
       throw new Error(
