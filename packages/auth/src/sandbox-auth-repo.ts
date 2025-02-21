@@ -54,8 +54,8 @@ export class SandboxAuthRepo implements AuthRepo {
 
   async getUser(): Promise<User> {
     this.throwIfNotEnabled();
-    if(this.authenticatedUser == null) {
-      this.onUserAuthenticatedCallback(null)
+    if (this.authenticatedUser === null) {
+      this.onUserAuthenticatedCallback(null);
       throw new NoAuthenticatedUserError('Sandbox user not authenticated');
     }
 
@@ -72,7 +72,7 @@ export class SandboxAuthRepo implements AuthRepo {
 
   async isAuthenticated(): Promise<boolean> {
     this.throwIfNotEnabled();
-    if(this.authenticatedUser == null) {
+    if (this.authenticatedUser === null) {
       return false;
     }
     const user = await this.getUser();
@@ -80,14 +80,16 @@ export class SandboxAuthRepo implements AuthRepo {
   }
 
   async requestLogin(): Promise<void> {
-    this.authenticatedUser = await this._getUser()
+    this.authenticatedUser = await this._getUser();
     if (this.authenticatedUser) {
-      this.onUserAuthenticatedCallback(this.authenticatedUser)
+      this.onUserAuthenticatedCallback(this.authenticatedUser);
     }
   }
 
   onUserAuthenticated(callback: UserAuthenticatedCallback): UnsubscribeCallback {
     this.onUserAuthenticatedCallback = callback;
-    return () => {this.onUserAuthenticatedCallback = ()=> {}}
+    return () => {
+      this.onUserAuthenticatedCallback = () => {};
+    }
   }
 }
