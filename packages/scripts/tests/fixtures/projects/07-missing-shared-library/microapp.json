@@ -1,0 +1,6 @@
+{
+  "name": "07-missing-shared-library",
+  "shared": {
+    "react": "^18.3.1"
+  }
+}
