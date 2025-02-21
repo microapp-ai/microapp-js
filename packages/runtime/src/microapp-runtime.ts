@@ -1,3 +1,7 @@
+import {
+  PRODUCTION_MARKETPLACE_HOST_URL,
+  STAGING_MARKETPLACE_HOST_URL,
+} from './constants';
 import { MicroappMessageBus } from './microapp-message-bus';
 
 type MicroappRuntimeOptions = {
@@ -14,7 +18,7 @@ export class MicroappRuntime {
   #lang: string = 'en-us';
   #baseRoute: string;
   #messageBus: MicroappMessageBus;
-  #targetOrigin: string;
+  #targetOrigin: string | undefined;
 
   constructor({
     iframeElement: iframe,
@@ -29,10 +33,9 @@ export class MicroappRuntime {
 
     this.#baseRoute = window.location.pathname;
 
-    const { origin: targetOrigin } = new URL(src);
-    this.#targetOrigin = targetOrigin;
+    this.#targetOrigin = this.#getAllowedTargetOriginOrThrow();
     this.#messageBus = new MicroappMessageBus({
-      targetOrigin,
+      targetOrigin: this.#targetOrigin,
     });
     this.#messageBus.on(
       '@microapp:userPreferences',
@@ -42,6 +45,7 @@ export class MicroappRuntime {
     this.#messageBus.on('@microapp:resize', this.#handleIframeResize);
 
     this.#updateUserPreferences();
+
     this.#iframe.addEventListener('load', () => {
       this.#injectIframeDimensionsScript();
       this.#injectRoutingScript();
@@ -77,6 +81,29 @@ export class MicroappRuntime {
     this.#baseRoute = window.location.pathname;
 
     this.#updateUserPreferences();
+  };
+
+  #getAllowedTargetOriginOrThrow = () => {
+    const parentWindow = window.parent;
+
+    if (!parentWindow) {
+      throw new Error(
+        'The runtime SDK should be consumed inside the marketplace'
+      );
+    }
+
+    const parentUrl = new URL(window.location.href);
+    const isParentUrlAllowed =
+      parentUrl.hostname === PRODUCTION_MARKETPLACE_HOST_URL ||
+      parentUrl.hostname === STAGING_MARKETPLACE_HOST_URL;
+
+    if (!isParentUrlAllowed) {
+      throw new Error(
+        'The runtime SDK should be consumed inside the marketplace'
+      );
+    }
+
+    return parentUrl.origin;
   };
 
   #handlePreferencesChange = ({
