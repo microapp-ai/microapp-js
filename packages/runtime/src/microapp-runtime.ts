@@ -6,7 +6,6 @@ type MicroappRuntimeOptions = {
   theme?: string;
   lang?: string;
   targetOrigin?: string;
-  onLoad?: () => void;
 };
 
 export class MicroappRuntime {
@@ -22,7 +21,6 @@ export class MicroappRuntime {
     url: src,
     theme,
     lang,
-    onLoad,
   }: MicroappRuntimeOptions) {
     this.#iframe = iframe;
 
@@ -46,10 +44,10 @@ export class MicroappRuntime {
     this.#messageBus.on('@microapp:routeChange', this.#handleRouteChange);
     this.#messageBus.on('@microapp:resize', this.#handleIframeResize);
 
+    this.#updateUserPreferences();
     this.#iframe.addEventListener('load', () => {
       this.#injectIframeDimensionsScript();
       this.#injectRoutingScript();
-      this.#updateUserPreferences();
     });
 
     const searchParams = new URLSearchParams();
@@ -60,7 +58,6 @@ export class MicroappRuntime {
     const srcWithParams = queryString ? `${src}?${queryString}` : src;
 
     this.#iframe.src = srcWithParams;
-    onLoad?.();
   }
 
   destroy = () => {

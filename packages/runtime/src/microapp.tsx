@@ -36,12 +36,7 @@ export const Microapp: React.FC<MicroappProps> = ({
             url,
             theme,
             lang,
-            onLoad: () => {
-              onLoad?.();
-              setIsLoading(false);
-            },
           });
-          setIsLoading(false);
         } else {
           runtimeRef.current?.update({
             url,
@@ -69,6 +64,7 @@ export const Microapp: React.FC<MicroappProps> = ({
           border: 'none',
         }}
         seamless={true}
+        onLoad={() => setIsLoading(false)}
         {...rest}
       />
       {isLoading ? (
