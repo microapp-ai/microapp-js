@@ -33,7 +33,7 @@ export class MicroappRuntime {
 
     this.#baseRoute = window.location.pathname;
 
-    this.#targetOrigin = this.#getAllowedTargetOriginOrThrow();
+    this.#targetOrigin = this.#getAllowedTargetOriginOrThrow(iframe);
     this.#messageBus = new MicroappMessageBus({
       targetOrigin: this.#targetOrigin,
     });
@@ -83,27 +83,37 @@ export class MicroappRuntime {
     this.#updateUserPreferences();
   };
 
-  #getAllowedTargetOriginOrThrow = () => {
-    const parentWindow = window.parent;
+  #getAllowedTargetOriginOrThrow = (iframe: HTMLIFrameElement) => {
+    const parentWindow = iframe.contentWindow?.parent;
 
     if (!parentWindow) {
       throw new Error(
-        'The runtime SDK should be consumed inside the marketplace'
+        '[MicroappRuntime] The iframe does not have a parent window.'
       );
     }
 
-    const parentUrl = new URL(window.location.href);
+    const parentUrl = new URL(parentWindow.origin);
+
+    const { hostname: PRODUCTION_MARKETPLACE_HOSTNAME } = new URL(
+      PRODUCTION_MARKETPLACE_HOST_URL
+    );
+
+    const { hostname: STAGING_MARKETPLACE_HOSTNAME } = new URL(
+      STAGING_MARKETPLACE_HOST_URL
+    );
+
     const isParentUrlAllowed =
-      parentUrl.hostname === PRODUCTION_MARKETPLACE_HOST_URL ||
-      parentUrl.hostname === STAGING_MARKETPLACE_HOST_URL;
+      parentUrl.hostname === PRODUCTION_MARKETPLACE_HOSTNAME ||
+      parentUrl.hostname === STAGING_MARKETPLACE_HOSTNAME;
 
     if (!isParentUrlAllowed) {
       throw new Error(
-        'The runtime SDK should be consumed inside the marketplace'
+        '[MicroappRuntime] The parent window origin is only allowed to be the production or staging marketplace URLs.'
       );
     }
 
-    return parentUrl.origin;
+    const targetOrigin = parentUrl.hostname;
+    return targetOrigin;
   };
 
   #handlePreferencesChange = ({
