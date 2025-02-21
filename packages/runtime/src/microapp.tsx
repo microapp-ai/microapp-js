@@ -36,6 +36,10 @@ export const Microapp: React.FC<MicroappProps> = ({
             url,
             theme,
             lang,
+            onLoad: () => {
+              onLoad?.();
+              setIsLoading(false);
+            },
           });
           setIsLoading(false);
         } else {
@@ -45,8 +49,6 @@ export const Microapp: React.FC<MicroappProps> = ({
             lang,
           });
         }
-
-        onLoad?.();
       } catch (error) {
         setIsLoading(false);
         onError?.(
@@ -66,6 +68,7 @@ export const Microapp: React.FC<MicroappProps> = ({
         style={{
           border: 'none',
         }}
+        seamless={true}
         {...rest}
       />
       {isLoading ? (
