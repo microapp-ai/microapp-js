@@ -24,9 +24,6 @@ export class MicroappRuntime {
   }: MicroappRuntimeOptions) {
     this.#iframe = iframe;
 
-    // Set initial minimum height to prevent flash of unstyled content
-    this.#iframe.style.minHeight = '100vh';
-
     this.#theme = theme ?? this.#theme;
     this.#lang = lang ?? this.#lang;
 
@@ -182,54 +179,56 @@ export class MicroappRuntime {
     const script = iframeDoc.createElement('script');
     script.id = 'microapp-resize-script';
     script.textContent = `
-      if (!window.__microappResizeInitialized) {
-        window.__microappResizeInitialized = true;
-
-        function throttle(callback, delay) {
-          let last;
-          let timer;
-          return function() {
-            const context = this;
-            const now = +new Date();
-            const args = arguments;
-            if (last && now < last + delay) {
-              clearTimeout(timer);
-              timer = setTimeout(() => {
+      (function() {
+        if (!window.__microappResizeInitialized) {
+          window.__microappResizeInitialized = true;
+  
+          function throttle(callback, delay) {
+            let last;
+            let timer;
+            return function() {
+              const context = this;
+              const now = +new Date();
+              const args = arguments;
+              if (last && now < last + delay) {
+                clearTimeout(timer);
+                timer = setTimeout(() => {
+                  last = now;
+                  callback.apply(context, args);
+                }, delay);
+              } else {
                 last = now;
                 callback.apply(context, args);
-              }, delay);
-            } else {
-              last = now;
-              callback.apply(context, args);
-            }
-          };
+              }
+            };
+          }
+  
+          const sendHeight = throttle(() => {
+            const height = document.body.scrollHeight || document.documentElement.scrollHeight;
+            window.parent.postMessage({ type: '@microapp:resize', payload: { height }}, '${
+              this.#targetOrigin
+            }');
+          }, 100);
+  
+          window.sendHeight = sendHeight;
+  
+          const mutationObserver = new MutationObserver(sendHeight);
+          mutationObserver.observe(document.body, {
+            childList: true,
+            subtree: true,
+            attributes: true
+          });
+  
+          const resizeObserver = new ResizeObserver(sendHeight);
+          resizeObserver.observe(document.body);
+  
+          ['load', 'resize', 'DOMContentLoaded'].forEach(event => {
+            window.addEventListener(event, sendHeight);
+          });
+  
+          setTimeout(sendHeight, 0);
         }
-
-        const sendHeight = throttle(() => {
-          const height = document.body.scrollHeight || document.documentElement.scrollHeight;
-          window.parent.postMessage({ type: '@microapp:resize', payload: { height }}, '${
-            this.#targetOrigin
-          }');
-        }, 100);
-
-        window.sendHeight = sendHeight;
-
-        const mutationObserver = new MutationObserver(sendHeight);
-        mutationObserver.observe(document.body, {
-          childList: true,
-          subtree: true,
-          attributes: true
-        });
-
-        const resizeObserver = new ResizeObserver(sendHeight);
-        resizeObserver.observe(document.body);
-
-        ['load', 'resize', 'DOMContentLoaded'].forEach(event => {
-          window.addEventListener(event, sendHeight);
-        });
-
-        setTimeout(sendHeight, 0);
-      }
+      }());
     `;
     iframeDoc.head.appendChild(script);
 
