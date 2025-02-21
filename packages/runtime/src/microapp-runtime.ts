@@ -164,7 +164,6 @@ export class MicroappRuntime {
   #handleIframeResize = ({ height }: { height: number }) => {
     if (this.#iframe) {
       this.#iframe.style.height = `${height}px`;
-      this.#iframe.style.minHeight = 'unset';
     }
   };
 
