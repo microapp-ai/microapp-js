@@ -1,13 +1,5 @@
 import { MicroappMessageBus } from './microapp-message-bus';
 
-declare global {
-  interface Window {
-    sendHeight?: () => void;
-    __microappResizeInitialized?: boolean;
-    __microappRoutingInitialized?: boolean;
-  }
-}
-
 type MicroappRuntimeOptions = {
   iframeElement: HTMLIFrameElement;
   url: string;
