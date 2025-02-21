@@ -1,5 +1,5 @@
 import {
-  PRODUCTION_MARKETPLACE_HOST_URL,
+  PRODUCTION_MARKETPLACE_HOSTNAME,
   STAGING_MARKETPLACE_HOSTNAME,
 } from './constants';
 import { MicroappMessageBus } from './microapp-message-bus';
@@ -33,7 +33,7 @@ export class MicroappRuntime {
 
     this.#baseRoute = window.location.pathname;
 
-    this.#targetOrigin = this.#getTargetOrigin();
+    this.#targetOrigin = this.#getAllowedTargetOriginOrThrow();
     this.#messageBus = new MicroappMessageBus({
       targetOrigin: this.#targetOrigin,
     });
@@ -83,32 +83,27 @@ export class MicroappRuntime {
     this.#updateUserPreferences();
   };
 
-  #getTargetOrigin = () => {
-    try {
-      const parentWindow = window.parent;
+  #getAllowedTargetOriginOrThrow = () => {
+    const parentWindow = window.parent;
 
-      if (!parentWindow) {
-        throw new Error(
-          'The runtime SDK should be consumed inside the marketplace'
-        );
-      }
-
-      const parentUrl = new URL(window.location.href);
-      const isParentUrlAllowed =
-        parentUrl.hostname === PRODUCTION_MARKETPLACE_HOST_URL ||
-        parentUrl.hostname === STAGING_MARKETPLACE_HOSTNAME;
-
-      // For local development you need to bypass this check
-      if (!isParentUrlAllowed) {
-        throw new Error(
-          'The runtime SDK should be consumed inside the marketplace'
-        );
-      }
-
-      return parentUrl.origin;
-    } catch (error) {
-      console.error('Error getting target origin:', error);
+    if (!parentWindow) {
+      throw new Error(
+        'The runtime SDK should be consumed inside the marketplace'
+      );
     }
+
+    const parentUrl = new URL(window.location.href);
+    const isParentUrlAllowed =
+      parentUrl.hostname === PRODUCTION_MARKETPLACE_HOSTNAME ||
+      parentUrl.hostname === STAGING_MARKETPLACE_HOSTNAME;
+
+    if (!isParentUrlAllowed) {
+      throw new Error(
+        'The runtime SDK should be consumed inside the marketplace'
+      );
+    }
+
+    return parentUrl.origin;
   };
 
   #handlePreferencesChange = ({
