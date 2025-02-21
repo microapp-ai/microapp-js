@@ -33,7 +33,12 @@ module.exports = function rollup() {
         sourcemap: !PRETTY,
         banner,
       },
-      external: ['react', 'react-dom', '@microapp-io/auth'],
+      external: [
+        'react',
+        'react-dom',
+        '@microapp-io/auth',
+        '@microapp-io/user-preferences',
+      ],
       plugins: [
         extensions({ extensions: ['.ts', '.tsx'] }),
         babel({
@@ -76,7 +81,7 @@ module.exports = function rollup() {
         sourcemap: !PRETTY,
         banner,
       },
-      external: ['react', '@microapp-io/auth'],
+      external: ['react', '@microapp-io/auth', '@microapp-io/user-preferences'],
       plugins: [
         extensions({ extensions: ['.ts', '.tsx'] }),
         babel({
@@ -108,7 +113,7 @@ module.exports = function rollup() {
         sourcemap: !PRETTY,
         banner,
       },
-      external: ['react', '@microapp-io/auth'],
+      external: ['react', '@microapp-io/auth', '@microapp-io/user-preferences'],
       plugins: [
         extensions({ extensions: ['.ts', '.tsx'] }),
         babel({
@@ -157,12 +162,13 @@ module.exports = function rollup() {
         sourcemap: !PRETTY,
         banner,
         globals: {
-          '@microapp-io/auth': 'MicroappAuth',
           react: 'React',
+          '@microapp-io/auth': 'MicroappAuth',
+          '@microapp-io/user-preferences': 'MicroappUserPreferences',
         },
         name: 'MicroappReact',
       },
-      external: ['react', '@microapp-io/auth'],
+      external: ['react', '@microapp-io/auth', '@microapp-io/user-preferences'],
       plugins: [
         extensions({ extensions: ['.ts', '.tsx'] }),
         babel({
@@ -194,12 +200,13 @@ module.exports = function rollup() {
         sourcemap: !PRETTY,
         banner,
         globals: {
-          '@microapp-io/auth': 'MicroappAuth',
           react: 'React',
+          '@microapp-io/auth': 'MicroappAuth',
+          '@microapp-io/user-preferences': 'MicroappUserPreferences',
         },
         name: 'MicroappReact',
       },
-      external: ['react', '@microapp-io/auth'],
+      external: ['react', '@microapp-io/auth', '@microapp-io/user-preferences'],
       plugins: [
         extensions({ extensions: ['.ts', '.tsx'] }),
         babel({

@@ -1,10 +1,11 @@
-import { PRODUCTION_MARKETPLACE_HOST_URL } from './constants';
+import { MicroappMessageBus } from './microapp-message-bus';
 
 type MicroappRuntimeOptions = {
   iframeElement: HTMLIFrameElement;
   url: string;
   theme?: string;
   lang?: string;
+  targetOrigin?: string;
 };
 
 export class MicroappRuntime {
@@ -12,7 +13,8 @@ export class MicroappRuntime {
   #theme: string = 'light';
   #lang: string = 'en-us';
   #baseRoute: string;
-  #resizeObserver?: ResizeObserver;
+  #messageBus: MicroappMessageBus;
+  #targetOrigin: string;
 
   constructor({
     iframeElement: iframe,
@@ -21,26 +23,42 @@ export class MicroappRuntime {
     lang,
   }: MicroappRuntimeOptions) {
     this.#iframe = iframe;
+
     this.#theme = theme ?? this.#theme;
     this.#lang = lang ?? this.#lang;
 
     this.#baseRoute = window.location.pathname;
-    this.#setIframeDimensions();
 
-    window.addEventListener('message', this.#onMessageEvent);
+    const { origin: targetOrigin } = new URL(src);
+    this.#targetOrigin = targetOrigin;
+    this.#messageBus = new MicroappMessageBus({
+      targetOrigin,
+    });
+    this.#messageBus.on(
+      '@microapp:userPreferences',
+      this.#handlePreferencesChange
+    );
+    this.#messageBus.on('@microapp:routeChange', this.#handleRouteChange);
+    this.#messageBus.on('@microapp:resize', this.#handleIframeResize);
 
     this.#updateUserPreferences();
-    this.#injectRoutingScript();
-    this.#iframe.src = src;
+    this.#iframe.addEventListener('load', () => {
+      this.#injectIframeDimensionsScript();
+      this.#injectRoutingScript();
+    });
+
+    const searchParams = new URLSearchParams();
+    if (theme) searchParams.append('theme', theme);
+    if (lang) searchParams.append('lang', lang);
+
+    const queryString = searchParams.toString();
+    const srcWithParams = queryString ? `${src}?${queryString}` : src;
+
+    this.#iframe.src = srcWithParams;
   }
 
   destroy = () => {
-    window.removeEventListener('message', this.#onMessageEvent);
-
-    if (this.#resizeObserver) {
-      this.#resizeObserver.disconnect();
-    }
-    this.#iframe.remove();
+    this.#messageBus.destroy();
   };
 
   update = (
@@ -61,31 +79,17 @@ export class MicroappRuntime {
     this.#updateUserPreferences();
   };
 
-  #setIframeDimensions = () => {
-    const parentElement = this.#iframe.parentElement;
-    if (parentElement) {
-      this.#resizeObserver = new ResizeObserver((entries) => {
-        for (const entry of entries) {
-          const { width, height } = entry.contentRect;
-          this.#iframe.style.width = `${width}px`;
-          this.#iframe.style.height = `${height}px`;
-        }
-      });
-      this.#resizeObserver.observe(parentElement);
-    }
-  };
+  #handlePreferencesChange = ({
+    theme,
+    lang,
+  }: {
+    theme?: string;
+    lang?: string;
+  }) => {
+    if (theme) this.#theme = theme;
+    if (lang) this.#lang = lang;
 
-  #onMessageEvent = (event: MessageEvent) => {
-    const { type, payload } = event.data;
-
-    switch (type) {
-      case '@microapp:userPreferences':
-        return this.#updateUserPreferences();
-      case '@microapp:routeChange':
-        return this.#handleRouteChange(payload);
-      default:
-        return;
-    }
+    this.#updateUserPreferences();
   };
 
   #handleRouteChange = ({ route }: { route: string }) => {
@@ -100,17 +104,13 @@ export class MicroappRuntime {
   };
 
   #updateUserPreferences = () => {
-    const message = {
-      type: '@microapp:userPreferences',
-      payload: {
+    this.#messageBus.send(
+      '@microapp:userPreferences',
+      {
         theme: this.#theme,
         lang: this.#lang,
       },
-    };
-
-    this.#iframe.contentWindow?.postMessage(
-      message,
-      PRODUCTION_MARKETPLACE_HOST_URL
+      this.#iframe.contentWindow ?? undefined
     );
   };
 
@@ -130,7 +130,13 @@ export class MicroappRuntime {
 
         function notifyRouteChange(method) {
           const currentRoute = window.location.pathname;
-          window.parent.postMessage({ type: '@microapp:routeChange', payload: { route: currentRoute }}, PRODUCTION_MARKETPLACE_HOST_URL);
+          window.parent.postMessage(
+            { 
+              type: '@microapp:routeChange', 
+              payload: { route: currentRoute }
+            }, 
+            '${this.#targetOrigin}'
+          );
         }
 
         window.addEventListener('popstate', () => {
@@ -153,5 +159,74 @@ export class MicroappRuntime {
     iframeDoc.head.appendChild(script);
 
     this.#iframe.dataset.hasRoutingScript = 'true';
+  };
+
+  #handleIframeResize = ({ height }: { height: number }) => {
+    if (this.#iframe) {
+      this.#iframe.style.height = `${height}px`;
+    }
+  };
+
+  #injectIframeDimensionsScript = () => {
+    const iframeDoc = this.#iframe.contentDocument;
+    if (!iframeDoc) return;
+
+    if (this.#iframe.dataset.hasResizeScript) {
+      return;
+    }
+
+    const script = iframeDoc.createElement('script');
+    script.id = 'microapp-resize-script';
+    script.textContent = `
+      (function() {
+        if (!window.__microappResizeInitialized) {
+          window.__microappResizeInitialized = true;
+  
+          function throttle(callback, delay) {
+            let last;
+            let timer;
+            return function() {
+              const context = this;
+              const now = +new Date();
+              const args = arguments;
+              if (last && now < last + delay) {
+                clearTimeout(timer);
+                timer = setTimeout(() => {
+                  last = now;
+                  callback.apply(context, args);
+                }, delay);
+              } else {
+                last = now;
+                callback.apply(context, args);
+              }
+            };
+          }
+  
+          const sendHeight = throttle(() => {
+            const height = document.body.scrollHeight || document.documentElement.scrollHeight;
+            window.parent.postMessage({ type: '@microapp:resize', payload: { height }}, '${
+              this.#targetOrigin
+            }');
+          }, 100);
+  
+          const mutationObserver = new MutationObserver(sendHeight);
+          mutationObserver.observe(document.body, {
+            childList: true,
+            subtree: true,
+            attributes: true
+          });
+  
+          const resizeObserver = new ResizeObserver(sendHeight);
+          resizeObserver.observe(document.body);
+  
+          ['load', 'resize', 'DOMContentLoaded'].forEach(event => {
+            window.addEventListener(event, sendHeight);
+          });
+        }
+      }());
+    `;
+    iframeDoc.head.appendChild(script);
+
+    this.#iframe.dataset.hasResizeScript = 'true';
   };
 }

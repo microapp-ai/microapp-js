@@ -1,29 +1,28 @@
 {
-  "name": "@microapp-io/runtime",
-  "version": "0.2.2",
+  "name": "@microapp-io/user-preferences",
+  "version": "0.1.3",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/microapp-io/microapp-js.git",
-    "directory": "packages/runtime"
+    "url": "https://github.com/microapp-io/microapp-js",
+    "directory": "packages/user-preferences"
   },
   "license": "MIT",
   "author": "Microapp <hi@microapp.io>",
   "sideEffects": false,
   "main": "./dist/main.js",
-  "unpkg": "./dist/umd/runtime.production.min.js",
+  "unpkg": "./dist/umd/user-preferences.production.min.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/main.js"
+    }
+  },
   "scripts": {
     "build": "rollup -c",
     "lint": "eslint --cache ."
-  },
-  "devDependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
-  },
-  "peerDependencies": {
-    "react": ">=16.8",
-    "react-dom": ">=16.8"
   },
   "files": [
     "dist/",
@@ -34,8 +33,10 @@
   "engines": {
     "node": ">=14.0.0"
   },
-  "dependencies": {
-    "@types/react": "^19.0.8",
+  "peerDependencies": {
+    "@microapp-io/runtime": "^0.1.0"
+  },
+  "devDependencies": {
     "rollup": "^4.34.3"
   },
   "publishConfig": {

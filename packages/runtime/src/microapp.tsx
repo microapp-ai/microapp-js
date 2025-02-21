@@ -27,10 +27,10 @@ export const Microapp: React.FC<MicroappProps> = ({
   const [isLoading, setIsLoading] = React.useState(true);
 
   useEffect(() => {
-    setIsLoading(true);
     if (iframeRef.current) {
       try {
-        if (!runtimeRef.current) {
+        const runtime = runtimeRef.current;
+        if (!runtime) {
           runtimeRef.current = new MicroappRuntime({
             iframeElement: iframeRef.current,
             url,
@@ -38,15 +38,14 @@ export const Microapp: React.FC<MicroappProps> = ({
             lang,
           });
         } else {
-          runtimeRef.current.update({
+          runtimeRef.current?.update({
             url,
             theme,
             lang,
           });
         }
-
-        onLoad?.();
       } catch (error) {
+        setIsLoading(false);
         onError?.(
           error instanceof Error
             ? error
@@ -54,13 +53,6 @@ export const Microapp: React.FC<MicroappProps> = ({
         );
       }
     }
-
-    setIsLoading(false);
-
-    return () => {
-      runtimeRef.current?.destroy();
-      runtimeRef.current = null;
-    };
   }, [url, theme, lang, onLoad, onError]);
 
   return (
@@ -70,9 +62,9 @@ export const Microapp: React.FC<MicroappProps> = ({
         title={title}
         style={{
           border: 'none',
-          width: '100%',
-          minHeight: '100%',
         }}
+        seamless={true}
+        onLoad={() => setIsLoading(false)}
         {...rest}
       />
       {isLoading ? (
