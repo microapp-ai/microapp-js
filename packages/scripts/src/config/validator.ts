@@ -1,7 +1,6 @@
 import type { MicroappConfig } from './types';
 import { InvalidConfigError } from './errors';
 import * as path from 'path';
-import * as semver from 'semver';
 import * as fs from 'fs';
 import { MicroappSupportedFramework } from './supported-framework';
 
@@ -52,19 +51,12 @@ export class MicroappConfigValidator {
 
   private static validateConfig({
     config,
-    packageJson,
-    rootPath,
   }: {
     config: MicroappConfig;
     packageJson: any;
     rootPath?: string;
   }): void {
     MicroappConfigValidator.validateConfigName(config.name);
-
-    MicroappConfigValidator.validateConfigDependencies(
-      config.shared,
-      packageJson
-    );
   }
 
   public static validateConfigName(name: any): void {
@@ -82,44 +74,6 @@ export class MicroappConfigValidator {
       throw new InvalidConfigError(
         "The 'name' field must be a slug with lowercase letters, numbers, hyphens, and underscores. Example: 'my-microapp' or 'my_microapp'."
       );
-    }
-  }
-
-  public static validateConfigDependencies(
-    sharedConfig: any,
-    packageJson: any
-  ): void {
-    if (!sharedConfig) {
-      return;
-    }
-
-    if (typeof sharedConfig !== 'object') {
-      throw new InvalidConfigError("The 'shared' field must be an object.");
-    }
-
-    for (const [sharedPackageName, sharedPackageVersion] of Object.entries(
-      sharedConfig
-    )) {
-      const versionInRootPackageJson = (packageJson.dependencies || {})[
-        sharedPackageName
-      ];
-
-      if (!versionInRootPackageJson) {
-        throw new InvalidConfigError(
-          `The '${sharedPackageName}' package is not listed in the package.json.`
-        );
-      }
-
-      const isVersionSatisfied = semver.satisfies(
-        versionInRootPackageJson,
-        sharedPackageVersion as string
-      );
-
-      if (!isVersionSatisfied) {
-        throw new InvalidConfigError(
-          `The '${sharedPackageName}' package version '${versionInRootPackageJson}' does not satisfy the constraint '${sharedPackageVersion}'.`
-        );
-      }
     }
   }
 }

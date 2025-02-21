@@ -3,6 +3,22 @@ import { InvalidConfigError, MicroappConfigValidator } from '../../src';
 import * as fs from 'fs';
 
 describe('MicroappConfigValidator', () => {
+  it('does not throw if the config is valid', () => {
+    const configPath = path.join(
+      __dirname,
+      '../fixtures/projects/01-valid/microapp.json'
+    );
+
+    const config = require(configPath);
+
+    expect(() => {
+      MicroappConfigValidator.validate({
+        config,
+        rootPath: path.dirname(configPath),
+      });
+    }).not.toThrow();
+  });
+
   it('throws if the config file is missing', () => {
     const configPath = path.join(
       __dirname,
@@ -43,61 +59,5 @@ describe('MicroappConfigValidator', () => {
         rootPath: path.dirname(configPath),
       });
     }).toThrow(new InvalidConfigError("The 'name' field is required."));
-  });
-
-  it('throws if the shared library is not a dependency', () => {
-    const configPath = path.join(
-      __dirname,
-      '../fixtures/projects/07-missing-shared-library/microapp.json'
-    );
-
-    const config = require(configPath);
-
-    expect(() => {
-      MicroappConfigValidator.validate({
-        config,
-        rootPath: path.dirname(configPath),
-      });
-    }).toThrow(
-      new InvalidConfigError(
-        "The 'react' package is not listed in the package.json."
-      )
-    );
-  });
-
-  it('throws if the shared library version is not satisfied', () => {
-    const configPath = path.join(
-      __dirname,
-      '../fixtures/projects/08-mismatching-shared-library-version/microapp.json'
-    );
-
-    const config = require(configPath);
-
-    expect(() => {
-      MicroappConfigValidator.validate({
-        config,
-        rootPath: path.dirname(configPath),
-      });
-    }).toThrow(
-      new InvalidConfigError(
-        "The 'react' package version '^17.0.0' does not satisfy the constraint '^18.3.1'."
-      )
-    );
-  });
-
-  it('does not throw if the config is valid', () => {
-    const configPath = path.join(
-      __dirname,
-      '../fixtures/projects/01-valid/microapp.json'
-    );
-
-    const config = require(configPath);
-
-    expect(() => {
-      MicroappConfigValidator.validate({
-        config,
-        rootPath: path.dirname(configPath),
-      });
-    }).not.toThrow();
   });
 });
