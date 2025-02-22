@@ -114,8 +114,7 @@ export class MicroappRuntime {
       );
     }
 
-    const targetOrigin = parentUrl.hostname;
-    return targetOrigin;
+    return parentUrl.toString();
   };
 
   #handlePreferencesChange = ({
