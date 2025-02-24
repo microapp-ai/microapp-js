@@ -1,7 +1,6 @@
 import * as fs from 'fs';
 import type { MicroappConfig } from './types';
 import { MicroappConfigValidator } from './validator';
-import * as path from 'path';
 
 export interface MicroappConfigOptions {
   rootPath?: string;
@@ -15,7 +14,7 @@ export class MicroappConfigManager {
   }
 
   read(): MicroappConfig | null {
-    const configPath = path.join(this.rootPath, 'microapp.json');
+    const configPath = this.rootPath;
 
     if (!fs.existsSync(configPath)) {
       return null;
@@ -31,8 +30,7 @@ export class MicroappConfigManager {
 
   write(config: MicroappConfig): void {
     MicroappConfigValidator.validate({ config, rootPath: this.rootPath });
-    const configPath = path.join(this.rootPath, 'microapp.json');
 
-    fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+    fs.writeFileSync(this.rootPath, JSON.stringify(config, null, 2));
   }
 }
