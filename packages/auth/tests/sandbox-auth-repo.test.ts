@@ -15,7 +15,7 @@ describe('SandboxAuthRepo', () => {
     expect(isAuthenticated).toBe(false);
 
     await expect(repo.getUser()).rejects.toThrow(
-      'Sandbox user not authenticated'
+      'Could not get auth user'
     );
 
     await repo.requestLogin();
