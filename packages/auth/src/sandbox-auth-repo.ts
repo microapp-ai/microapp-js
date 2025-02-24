@@ -56,14 +56,10 @@ export class SandboxAuthRepo implements AuthRepo {
     this.throwIfNotEnabled();
     if (this.authenticatedUser === null) {
       (this.onUserAuthenticatedCallback)?.(null);
-      throw new NoAuthenticatedUserError('Sandbox user not authenticated');
+      throw new NoAuthenticatedUserError('Could not get auth user');
     }
 
-    const user = await this._getUser();
-    if (!user) {
-      throw new NoAuthenticatedUserError('Could not get sandbox user');
-    }
-    return user;
+    return this.authenticatedUser;
   }
 
   private throwIfNotEnabled(): void {
