@@ -13,7 +13,7 @@ export type SandboxAuthOptions =
 export class SandboxAuthRepo implements AuthRepo {
   private readonly enabled: boolean;
   private readonly _getUser: () => Promise<User | null>;
-  private onUserAuthenticatedCallback: (user: User | null) => void = () => {};
+  private onUserAuthenticatedCallback: UserAuthenticatedCallback | null = null;
   private authenticatedUser: User | null = null;
 
   static parseOptions(options: SandboxAuthOptions): {
@@ -55,7 +55,7 @@ export class SandboxAuthRepo implements AuthRepo {
   async getUser(): Promise<User> {
     this.throwIfNotEnabled();
     if (this.authenticatedUser === null) {
-      this.onUserAuthenticatedCallback(null);
+      (this.onUserAuthenticatedCallback)?.(null);
       throw new NoAuthenticatedUserError('Sandbox user not authenticated');
     }
 
@@ -82,14 +82,14 @@ export class SandboxAuthRepo implements AuthRepo {
   async requestLogin(): Promise<void> {
     this.authenticatedUser = await this._getUser();
     if (this.authenticatedUser) {
-      this.onUserAuthenticatedCallback(this.authenticatedUser);
+      (this.onUserAuthenticatedCallback)?.(this.authenticatedUser);
     }
   }
 
   onUserAuthenticated(callback: UserAuthenticatedCallback): UnsubscribeCallback {
     this.onUserAuthenticatedCallback = callback;
     return () => {
-      this.onUserAuthenticatedCallback = () => {};
+      this.onUserAuthenticatedCallback = null;
     }
   }
 }

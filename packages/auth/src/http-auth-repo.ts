@@ -5,7 +5,8 @@ import { invariant } from './utils';
 import { NoAuthenticatedUserError } from './errors';
 
 export class HttpAuthRepo implements AuthRepo {
-  private onUserAuthenticatedCallback: (user: User | null) => void = () => {};
+  private onUserAuthenticatedCallback: UserAuthenticatedCallback | null = null;
+
 
   constructor(private config: AuthConfig) {}
 
@@ -39,14 +40,14 @@ export class HttpAuthRepo implements AuthRepo {
     const response = await fetch(getUserUrl);
 
     if (response.status !== 200) {
-      this.onUserAuthenticatedCallback(null);
+      (this.onUserAuthenticatedCallback)?.(null);
       invariant(response.status === 200, 'Could not get auth user');
     }
 
 
     const user = await response.json();
 
-    this.onUserAuthenticatedCallback(user);
+    (this.onUserAuthenticatedCallback)?.(user);
 
     return {
       id: user.sub,
@@ -82,7 +83,7 @@ export class HttpAuthRepo implements AuthRepo {
   onUserAuthenticated(callback: UserAuthenticatedCallback): UnsubscribeCallback {
     this.onUserAuthenticatedCallback = callback;
     return () => {
-      this.onUserAuthenticatedCallback = () => {};
+      this.onUserAuthenticatedCallback = null;
     }
   }
 }
