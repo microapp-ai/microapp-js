@@ -1,6 +1,6 @@
-import type { AuthRepo } from './auth-repo';
+import type {AuthRepo, UnsubscribeCallback, UserAuthenticatedCallback} from './auth-repo';
 import type { User } from './user';
-import { InvariantError, NoAuthenticatedUserError } from './errors';
+import { NoAuthenticatedUserError } from './errors';
 import { invariant, isProduction, warning } from './utils';
 
 export type SandboxAuthOptions =
@@ -13,6 +13,8 @@ export type SandboxAuthOptions =
 export class SandboxAuthRepo implements AuthRepo {
   private readonly enabled: boolean;
   private readonly _getUser: () => Promise<User | null>;
+  private onUserAuthenticatedCallback: UserAuthenticatedCallback | null = null;
+  private authenticatedUser: User | null = null;
 
   static parseOptions(options: SandboxAuthOptions): {
     enabled: boolean;
@@ -50,17 +52,14 @@ export class SandboxAuthRepo implements AuthRepo {
     );
   }
 
-  buildLoginUrl(): string {
-    throw new InvariantError('Sandbox auth does not support login');
-  }
-
   async getUser(): Promise<User> {
     this.throwIfNotEnabled();
-    const user = await this._getUser();
-    if (!user) {
-      throw new NoAuthenticatedUserError('Could not get sandbox user');
+    if (this.authenticatedUser === null) {
+      (this.onUserAuthenticatedCallback)?.(null);
+      throw new NoAuthenticatedUserError('Could not get auth user');
     }
-    return user;
+
+    return this.authenticatedUser;
   }
 
   private throwIfNotEnabled(): void {
@@ -69,7 +68,24 @@ export class SandboxAuthRepo implements AuthRepo {
 
   async isAuthenticated(): Promise<boolean> {
     this.throwIfNotEnabled();
+    if (this.authenticatedUser === null) {
+      return false;
+    }
     const user = await this.getUser();
     return user !== null;
+  }
+
+  async requestLogin(): Promise<void> {
+    this.authenticatedUser = await this._getUser();
+    if (this.authenticatedUser) {
+      (this.onUserAuthenticatedCallback)?.(this.authenticatedUser);
+    }
+  }
+
+  onUserAuthenticated(callback: UserAuthenticatedCallback): UnsubscribeCallback {
+    this.onUserAuthenticatedCallback = callback;
+    return () => {
+      this.onUserAuthenticatedCallback = null;
+    }
   }
 }

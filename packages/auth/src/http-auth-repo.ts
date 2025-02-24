@@ -1,13 +1,16 @@
-import type { AuthRepo, AuthRepoBuildLoginUrlParams } from './auth-repo';
+import type {AuthRepo, AuthRepoBuildLoginUrlParams, UnsubscribeCallback, UserAuthenticatedCallback} from './auth-repo';
 import type { User } from './user';
 import type { AuthConfig } from './auth-config';
 import { invariant } from './utils';
 import { NoAuthenticatedUserError } from './errors';
 
 export class HttpAuthRepo implements AuthRepo {
+  private onUserAuthenticatedCallback: UserAuthenticatedCallback | null = null;
+
+
   constructor(private config: AuthConfig) {}
 
-  buildLoginUrl(params?: AuthRepoBuildLoginUrlParams): string {
+  private buildLoginUrl(params?: AuthRepoBuildLoginUrlParams): string {
     invariant(
       typeof window !== 'undefined',
       'requestLogin can only be used in the browser'
@@ -35,9 +38,17 @@ export class HttpAuthRepo implements AuthRepo {
     });
 
     const response = await fetch(getUserUrl);
-    invariant(response.status === 200, 'Could not get auth user');
+
+    if (response.status !== 200) {
+      (this.onUserAuthenticatedCallback)?.(null);
+      invariant(response.status === 200, 'Could not get auth user');
+    }
+
 
     const user = await response.json();
+
+    (this.onUserAuthenticatedCallback)?.(user);
+
     return {
       id: user.sub,
       email: user.email,
@@ -57,6 +68,22 @@ export class HttpAuthRepo implements AuthRepo {
       }
 
       throw error;
+    }
+  }
+
+  requestLogin(): void {
+    invariant(
+      typeof window !== 'undefined',
+      'requestLogin can only be used in the browser'
+    );
+
+    window.location.href = this.buildLoginUrl();
+  }
+
+  onUserAuthenticated(callback: UserAuthenticatedCallback): UnsubscribeCallback {
+    this.onUserAuthenticatedCallback = callback;
+    return () => {
+      this.onUserAuthenticatedCallback = null;
     }
   }
 }

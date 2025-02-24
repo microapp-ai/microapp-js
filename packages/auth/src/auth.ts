@@ -1,6 +1,6 @@
 import type { AuthConfigParams } from './auth-config';
 import { AuthConfig } from './auth-config';
-import type { AuthRepo, AuthRepoBuildLoginUrlParams } from './auth-repo';
+import type {AuthRepo, UnsubscribeCallback, UserAuthenticatedCallback} from './auth-repo';
 import type { User } from './user';
 import { HttpAuthRepo } from './http-auth-repo';
 import type { SandboxAuthOptions } from './sandbox-auth-repo';
@@ -30,18 +30,13 @@ export class Auth {
     }
   }
 
-  buildLoginUrl(params?: AuthRepoBuildLoginUrlParams): string {
-    return this.repo.buildLoginUrl(params);
-  }
-
   requestLogin(): void {
     invariant(
       typeof window !== 'undefined',
       'requestLogin can only be used in the browser'
     );
 
-    const loginUrl = this.buildLoginUrl();
-    window.location.href = loginUrl;
+    this.repo.requestLogin();
   }
 
   isAuthenticated(): Promise<boolean> {
@@ -59,5 +54,9 @@ export class Auth {
   async getUser(): Promise<User> {
     this.user = await this.repo.getUser();
     return this.user;
+  }
+
+  onUserAuthenticated(callback: UserAuthenticatedCallback): UnsubscribeCallback{
+    return this.repo.onUserAuthenticated(callback);    
   }
 }

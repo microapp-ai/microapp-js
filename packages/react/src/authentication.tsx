@@ -1,8 +1,8 @@
 import * as React from 'react';
 import type {
   AuthOptions,
-  AuthRepoBuildLoginUrlParams,
-  User,
+  UnsubscribeCallback,
+  User, UserAuthenticatedCallback,
 } from '@microapp-io/auth';
 import { Auth } from '@microapp-io/auth';
 
@@ -14,7 +14,7 @@ export type AuthContextType =
       user?: undefined;
       refresh: () => void;
       requestLogin: () => void;
-      buildLoginUrl: (params?: { returnTo?: string }) => string;
+      onUserAuthenticated: (callback: UserAuthenticatedCallback) => UnsubscribeCallback;
     }
   | {
       isAuthenticated: true;
@@ -33,8 +33,8 @@ const INITIAL_AUTH_CONTEXT: AuthContextType = {
   user: undefined,
   refresh: () => {},
   requestLogin: () => {},
-  buildLoginUrl: (params?: { returnTo?: string }) => {
-    return '';
+  onUserAuthenticated: (callback: UserAuthenticatedCallback) => {
+    return () => {};
   },
 };
 
@@ -96,6 +96,7 @@ export function AuthProvider({
           isLoading: false,
           user: undefined,
           error,
+          onUserAuthenticated: callback => auth.onUserAuthenticated(callback),
         }));
       }
     },
@@ -107,8 +108,7 @@ export function AuthProvider({
       ...previousState,
       refresh: () => load({ shouldForceRefresh: true }),
       requestLogin: () => auth.requestLogin(),
-      buildLoginUrl: (params?: AuthRepoBuildLoginUrlParams) =>
-        auth.buildLoginUrl(params),
+      onUserAuthenticated: callback => auth.onUserAuthenticated(callback),
     }));
 
     load();
