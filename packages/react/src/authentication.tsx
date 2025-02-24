@@ -23,7 +23,7 @@ export type AuthContextType =
       user: User;
       refresh: () => void;
       requestLogin: () => void;
-      buildLoginUrl: (params?: { returnTo?: string }) => string;
+      onUserAuthenticated: (callback: UserAuthenticatedCallback) => UnsubscribeCallback;
     };
 
 const INITIAL_AUTH_CONTEXT: AuthContextType = {
