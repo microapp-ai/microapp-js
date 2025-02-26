@@ -1,96 +1,131 @@
 import * as React from 'react';
+import { useEffect, useRef } from 'react';
+import type { MicroappRuntimeOptions } from './microapp-runtime';
 import { MicroappRuntime } from './microapp-runtime';
-import { useEffect } from 'react';
 
 type MicroappProps = {
-  url: string;
-  theme?: string;
-  lang?: string;
-  height?: number | string;
   onLoad?: () => void;
   onError?: (error: Error) => void;
-  loadingComponent?: JSX.Element;
-} & Omit<React.IframeHTMLAttributes<HTMLIFrameElement>, 'src'>;
+  loadingComponent?: React.ReactNode;
+} & Pick<
+  MicroappRuntimeOptions,
+  'homeUrl' | 'baseUrl' | 'currentUrl' | 'targetOrigin' | 'theme' | 'lang'
+> &
+  Omit<React.IframeHTMLAttributes<HTMLIFrameElement>, 'src'>;
 
 export const Microapp: React.FC<MicroappProps> = ({
-  url,
-  title,
+  homeUrl,
+  baseUrl,
+  currentUrl,
+  targetOrigin,
   theme,
   lang,
   onLoad,
   onError,
   loadingComponent,
+  title,
   ...rest
 }) => {
   const iframeRef = React.useRef<HTMLIFrameElement>(null);
   const runtimeRef = React.useRef<MicroappRuntime | null>(null);
+  const runtimeOptions = React.useMemo(
+    () => ({
+      homeUrl,
+      baseUrl,
+      currentUrl,
+      targetOrigin,
+      theme,
+      lang,
+    }),
+    [homeUrl, baseUrl, currentUrl, targetOrigin, theme, lang]
+  );
+
+  const getChangedValues = useGetChangedValues(runtimeOptions);
   const [isLoading, setIsLoading] = React.useState(true);
 
   useEffect(() => {
-    if (iframeRef.current) {
-      try {
-        const runtime = runtimeRef.current;
-        if (!runtime) {
-          runtimeRef.current = new MicroappRuntime({
-            iframeElement: iframeRef.current,
-            url,
-            theme,
-            lang,
-          });
-        } else {
-          runtimeRef.current?.update({
-            url,
-            theme,
-            lang,
-          });
-        }
-      } catch (error) {
-        setIsLoading(false);
-        onError?.(
-          error instanceof Error
-            ? error
-            : new Error('Failed to initialize microapp')
-        );
-      }
+    const iframe = iframeRef.current;
+
+    if (!iframe) {
+      return;
     }
-  }, [url, theme, lang, onLoad, onError]);
+
+    try {
+      const changedValues = getChangedValues();
+      const runtime = runtimeRef.current;
+
+      if (runtime) {
+        runtime.update(changedValues);
+        return;
+      }
+
+      runtimeRef.current = new MicroappRuntime({
+        iframe,
+        ...runtimeOptions,
+      });
+    } catch (error) {
+      setIsLoading(false);
+      onError?.(
+        new MicroappInitializationError(
+          '[Microapp] Failed to initialize',
+          error
+        )
+      );
+    }
+  }, [getChangedValues, runtimeOptions, onError]);
+
+  const handleLoad = () => {
+    setIsLoading(false);
+    onLoad?.();
+  };
 
   return (
     <>
       <iframe
-        ref={iframeRef}
-        title={title}
-        style={{
-          border: 'none',
-        }}
-        seamless={true}
-        onLoad={() => setIsLoading(false)}
+        seamless
+        width="100%"
+        height="0"
+        frameBorder="0"
+        scrolling="no"
         {...rest}
+        title={title}
+        onLoad={handleLoad}
+        ref={iframeRef}
       />
-      {isLoading ? (
-        loadingComponent ? (
+      {isLoading &&
+        (loadingComponent ? (
           loadingComponent
         ) : (
-          <DefaultLoadingSpinner />
-        )
-      ) : null}
+          <DefaultLoadingSpinner theme={theme} />
+        ))}
     </>
   );
 };
 
-const DefaultLoadingSpinner = () => (
+type DefaultLoadingSpinnerProps = React.HTMLAttributes<HTMLDivElement> &
+  Pick<MicroappRuntimeOptions, 'theme'>;
+
+const DefaultLoadingSpinner = ({
+  theme,
+  ...props
+}: DefaultLoadingSpinnerProps) => (
   <div
+    {...props}
     style={{
+      ...props.style,
       position: 'absolute',
       top: '0',
+      left: '0',
+      right: '0',
+      bottom: '0',
       display: 'flex',
-      alignItems: 'flex-start',
+      alignItems: 'center',
       justifyContent: 'center',
-      background: 'rgba(255, 255, 255, 0.8)',
-      zIndex: 10000,
-      width: '100vw',
-      height: '100vh',
-      padding: '25%',
+      background:
+        theme === 'dark' ? 'rgba(0, 0, 0, 1)' : 'rgba(255, 255, 255, 1)',
+      zIndex: 999999,
+      width: '100%',
+      height: '100%',
     }}
   >
     <div
@@ -113,3 +148,42 @@ const DefaultLoadingSpinner = () => (
     </style>
   </div>
 );
+
+export class MicroappInitializationError extends Error {
+  readonly cause?: unknown;
+
+  constructor(message: string, cause?: unknown) {
+    super(message);
+    this.name = 'MicroappInitializationError';
+    this.cause = cause;
+
+    if (cause) {
+      this.stack = `${this.stack}\nCaused by: ${
+        cause instanceof Error ? cause.stack : cause
+      }`;
+    }
+  }
+}
+
+function useGetChangedValues<T extends Record<string, any>>(
+  values: T
+): () => Partial<T> {
+  const prevValuesRef = useRef<T>(values);
+  const getChangedValues = (): Partial<T> => {
+    const changedValues: Partial<T> = {};
+
+    Object.keys(values).forEach((key) => {
+      if (values[key] !== prevValuesRef.current[key]) {
+        changedValues[key as keyof T] = values[key];
+        prevValuesRef.current = {
+          ...prevValuesRef.current,
+          [key]: values[key],
+        };
+      }
+    });
+
+    return changedValues;
+  };
+
+  return getChangedValues;
+}

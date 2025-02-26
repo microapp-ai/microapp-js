@@ -1,5 +1,3 @@
-import { PRODUCTION_MARKETPLACE_HOST_URL } from './constants';
-
 export type WindowMessage<
   TType extends string,
   TPayload extends Record<string, unknown>
@@ -21,22 +19,14 @@ export class WindowPostMessageBus<
   #handlers: Map<string, Set<(payload: any) => void>> = new Map();
   #targetOrigin: string;
 
-  // NB: targetOrigin is required only for sending messages.
-  constructor({
-    targetOrigin = PRODUCTION_MARKETPLACE_HOST_URL,
-  }: { targetOrigin?: string } = {}) {
-    this.#targetOrigin = targetOrigin;
+  // NB: targetOrigin is required only for sending messages
+  constructor({ targetOrigin }: { targetOrigin?: string } = {}) {
+    this.#targetOrigin = targetOrigin ?? window.location.origin;
+
     if (typeof window !== 'undefined') {
       window.addEventListener('message', this.trigger);
     }
   }
-
-  destroy = () => {
-    if (typeof window !== 'undefined') {
-      window.removeEventListener('message', this.trigger);
-    }
-    this.#handlers.clear();
-  };
 
   on = <TType extends TMessage['type']>(
     type: TType,
@@ -45,6 +35,7 @@ export class WindowPostMessageBus<
     if (!this.#handlers.has(type)) {
       this.#handlers.set(type, new Set());
     }
+
     this.#handlers.get(type)!.add(handler);
 
     return () => {

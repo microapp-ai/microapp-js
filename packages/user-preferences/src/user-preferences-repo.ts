@@ -1,6 +1,10 @@
-import { UserPreferencesData } from './types';
+import type { MicroappUserPreferencesMessagePayload } from '@microapp-io/runtime';
+
+export type UserPreferencesUpdateCallback = (
+  preferences: MicroappUserPreferencesMessagePayload
+) => void;
 
 export interface UserPreferencesRepo {
-  getPreferences(): UserPreferencesData;
-  onUpdate(callback: (data?: UserPreferencesData) => void): () => void;
+  getPreferences(): MicroappUserPreferencesMessagePayload | null;
+  onUpdate(callback: UserPreferencesUpdateCallback): () => void;
 }

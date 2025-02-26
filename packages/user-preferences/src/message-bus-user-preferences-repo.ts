@@ -1,43 +1,50 @@
-import { MicroappMessageBus } from '@microapp-io/runtime';
-import { UserPreferencesData } from './types';
-import { UserPreferencesRepo } from './user-preferences-repo';
-import { DEFAULT_PREFERENCES } from './constants';
-
-export type PreferencesUpdateCallback = (data?: UserPreferencesData) => void;
+import type { MicroappUserPreferencesMessagePayload } from '@microapp-io/runtime';
+import {
+  MICROAPP_USER_PREFERENCES_EVENT_NAME,
+  MicroappMessageBus,
+  MicroappRuntime,
+} from '@microapp-io/runtime';
+import type {
+  UserPreferencesRepo,
+  UserPreferencesUpdateCallback,
+} from './user-preferences-repo';
+import { DEFAULT_MICROAPP_USER_PREFERENCES } from './constants';
 
 export class MessageBusUserPreferencesRepo implements UserPreferencesRepo {
-  preferences?: UserPreferencesData;
-  listeners: Set<PreferencesUpdateCallback> = new Set();
+  #preferences: MicroappUserPreferencesMessagePayload | null = null;
+  #listeners: Set<UserPreferencesUpdateCallback> = new Set();
   #messageBus: MicroappMessageBus;
 
   constructor() {
     this.#messageBus = new MicroappMessageBus();
 
     if (typeof window !== 'undefined') {
+      this.#preferences = Object.assign(
+        {},
+        DEFAULT_MICROAPP_USER_PREFERENCES,
+        MicroappRuntime.getUserPreferencesFromIframeSrc(window.location.href)
+      );
+
       this.#setupMessageListener();
     }
   }
 
   #setupMessageListener() {
     this.#messageBus.on(
-      '@microapp:userPreferences',
-      (payload: UserPreferencesData) => {
-        this.preferences = payload;
-        this.notifyListeners();
+      MICROAPP_USER_PREFERENCES_EVENT_NAME,
+      (preferences: MicroappUserPreferencesMessagePayload) => {
+        this.#preferences = preferences;
+        this.#listeners.forEach((callback) => callback(preferences));
       }
     );
   }
 
-  onUpdate(callback: PreferencesUpdateCallback): () => void {
-    this.listeners.add(callback);
-    return () => this.listeners.delete(callback);
+  onUpdate(callback: UserPreferencesUpdateCallback): () => void {
+    this.#listeners.add(callback);
+    return () => this.#listeners.delete(callback);
   }
 
-  notifyListeners() {
-    this.listeners.forEach((callback) => callback(this.preferences));
-  }
-
-  getPreferences(): UserPreferencesData {
-    return this.preferences || DEFAULT_PREFERENCES;
+  getPreferences(): MicroappUserPreferencesMessagePayload | null {
+    return this.#preferences;
   }
 }

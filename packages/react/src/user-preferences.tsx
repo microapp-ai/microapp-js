@@ -1,18 +1,24 @@
-import * as React from 'react';
 import type { PropsWithChildren } from 'react';
+import * as React from 'react';
+import type { SandboxUserPreferencesRepoOptions } from '@microapp-io/user-preferences';
 import { UserPreferences } from '@microapp-io/user-preferences';
-import type { UserPreferencesData } from '@microapp-io/user-preferences';
+import type {
+  MicroappLanguage,
+  MicroappTheme,
+  MicroappUserPreferencesMessagePayload,
+} from '@microapp-io/runtime';
 
-type UserPreferencesContextValue = {
-  preferences?: UserPreferencesData;
+type UserPreferencesContextType = {
+  preferences: MicroappUserPreferencesMessagePayload;
 };
 
 const UserPreferencesContext = React.createContext<
-  UserPreferencesContextValue | undefined
+  UserPreferencesContextType | undefined
 >(undefined);
 
-export const useUserPreferences = (): UserPreferencesContextValue => {
+export const useUserPreferences = (): UserPreferencesContextType => {
   const context = React.useContext(UserPreferencesContext);
+
   if (!context) {
     throw new Error(
       'useUserPreferences must be used within a UserPreferencesProvider'
@@ -22,19 +28,27 @@ export const useUserPreferences = (): UserPreferencesContextValue => {
   return context;
 };
 
-export const useTheme = () => useUserPreferences().preferences?.theme;
-export const useLang = () => useUserPreferences().preferences?.lang;
+export const useTheme = (): MicroappTheme => {
+  const { preferences } = useUserPreferences();
+  return preferences.theme!;
+};
+
+export const useLang = (): MicroappLanguage => {
+  const { preferences } = useUserPreferences();
+  return preferences.lang!;
+};
 
 type UserPreferencesProviderProps = PropsWithChildren<{
-  sandbox?: UserPreferencesData;
+  sandbox?: SandboxUserPreferencesRepoOptions;
 }>;
 
 export const UserPreferencesProvider: React.FC<
   UserPreferencesProviderProps
 > = ({ sandbox, children }) => {
-  const userPreferences = React.useMemo(() => {
-    return new UserPreferences({ sandbox });
-  }, [sandbox]);
+  const userPreferences = React.useMemo(
+    () => new UserPreferences({ sandbox }),
+    [sandbox]
+  );
 
   const preferences = React.useSyncExternalStore(
     (onChange) => userPreferences.onUpdate(onChange),

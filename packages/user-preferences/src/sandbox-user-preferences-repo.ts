@@ -1,32 +1,44 @@
-import { UserPreferencesRepo } from './user-preferences-repo';
-import { SandboxPreferencesOptions, type UserPreferencesData } from './types';
-import { DEFAULT_PREFERENCES } from './constants';
+import type {
+  UserPreferencesRepo,
+  UserPreferencesUpdateCallback,
+} from './user-preferences-repo';
+import type {
+  MicroappLanguage,
+  MicroappTheme,
+  MicroappUserPreferencesMessagePayload,
+} from '@microapp-io/runtime';
+import { DEFAULT_MICROAPP_USER_PREFERENCES } from './constants';
+
+export type SandboxUserPreferencesRepoOptions = {
+  theme?: MicroappTheme;
+  lang?: MicroappLanguage;
+};
 
 export class SandboxUserPreferencesRepo implements UserPreferencesRepo {
-  #mockPreferences: UserPreferencesData;
-  #listeners: Set<(data?: UserPreferencesData) => void> = new Set();
+  readonly #mockPreferences: MicroappUserPreferencesMessagePayload;
+  #listeners: Set<UserPreferencesUpdateCallback> = new Set();
 
-  constructor(options: SandboxPreferencesOptions) {
-    this.#mockPreferences = options;
+  constructor(options: SandboxUserPreferencesRepoOptions) {
+    this.#mockPreferences = Object.assign(
+      DEFAULT_MICROAPP_USER_PREFERENCES,
+      options
+    );
+
     this.#simulateInitialMessage();
   }
 
   #simulateInitialMessage() {
     setTimeout(() => {
-      this.notifyListeners();
+      this.#listeners.forEach((callback) => callback(this.#mockPreferences));
     }, 100);
   }
 
-  getPreferences(): UserPreferencesData {
-    return this.#mockPreferences || DEFAULT_PREFERENCES;
+  getPreferences(): MicroappUserPreferencesMessagePayload {
+    return this.#mockPreferences;
   }
 
-  onUpdate(callback: (data?: UserPreferencesData) => void): () => void {
+  onUpdate(callback: UserPreferencesUpdateCallback): () => void {
     this.#listeners.add(callback);
     return () => this.#listeners.delete(callback);
-  }
-
-  private notifyListeners() {
-    this.#listeners.forEach((callback) => callback(this.#mockPreferences));
   }
 }
