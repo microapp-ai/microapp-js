@@ -100,7 +100,6 @@ export function getResizingScriptBuilder(): MicroappScriptBuilder {
 		  const bodyRect = document.body.getBoundingClientRect();
 		  const widthInPixel = bodyRect.width;
 		  const heightInPixel = Math.max(
-		    bodyRect.height,
 		    document.body.scrollHeight,
         document.body.offsetHeight,
         document.documentElement.clientHeight,
@@ -109,10 +108,10 @@ export function getResizingScriptBuilder(): MicroappScriptBuilder {
       );
 
 			window.parent.postMessage({ type: '${MICROAPP_RESIZE_EVENT_NAME}', payload: { widthInPixel, heightInPixel }}, '__TARGET_ORIGIN__');
-		}, 100);
+		}, 500);
 
 		window.addEventListener('load', () => {
-      ['DOMContentLoaded', 'resize', 'orientationchange', 'fullscreenchange'].forEach(event => {
+      ['resize', 'orientationchange', 'fullscreenchange'].forEach(event => {
         window.addEventListener(event, notifyHeightChange);
       });
 
@@ -125,7 +124,7 @@ export function getResizingScriptBuilder(): MicroappScriptBuilder {
         subtree: true,
         attributes: true
       });
-      
+
       notifyHeightChange();
 		});
 	}

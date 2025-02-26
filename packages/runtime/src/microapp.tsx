@@ -43,6 +43,20 @@ export const Microapp: React.FC<MicroappProps> = ({
   const getChangedValues = useGetChangedValues(runtimeOptions);
   const [isLoading, setIsLoading] = React.useState(true);
 
+  const iframeSrc = React.useMemo(
+    () =>
+      targetOrigin
+        ? MicroappRuntime.buildIframeSrcFromUrl(homeUrl, {
+            baseUrl,
+            currentUrl,
+            targetOrigin,
+            theme,
+            lang,
+          })
+        : undefined,
+    [homeUrl, baseUrl, currentUrl, targetOrigin, theme, lang]
+  );
+
   useEffect(() => {
     const iframe = iframeRef.current;
 
@@ -82,6 +96,7 @@ export const Microapp: React.FC<MicroappProps> = ({
   return (
     <>
       <iframe
+        src={iframeSrc}
         seamless
         width="100%"
         height="0"
