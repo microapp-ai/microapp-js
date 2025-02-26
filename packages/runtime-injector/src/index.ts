@@ -4,31 +4,29 @@ import {
   getRoutingScriptBuilder,
   MICROAPP_URL_PARAM_NAMES,
 } from '@microapp-io/runtime';
+import type { HTMLRewriterElementContentHandlers } from '@cloudflare/workers-types/2023-07-01/index';
 
 const buildResizingScript = getResizingScriptBuilder();
 const buildRoutingScript = getRoutingScriptBuilder();
 
 export default {
-  async fetch(request, env, ctx): Promise<Response> {
+  async fetch(request: Request): Promise<Response> {
     const response = await fetch(request);
     const contentType = response.headers.get('content-type');
-    const isHtmlContentType =
-      !!contentType && contentType.includes('text/html');
+    const isHtmlContentType = contentType && contentType.includes('text/html');
 
     if (!isHtmlContentType) {
       return response;
     }
 
     const requestUrl = new URL(request.url);
-    const isUrlTargetedToInjectUrl =
-      ALLOWED_MICROAPP_ORIGIN_HOSTNAMES.filter(
-        (allowedHostname) =>
-          requestUrl.hostname === allowedHostname ||
-          requestUrl.hostname.endsWith(`.${allowedHostname}`)
-      ).length > 0;
+    const isUrlTargetedToInjectUrl = ALLOWED_MICROAPP_ORIGIN_HOSTNAMES.some(
+      (allowedHostname) =>
+        requestUrl.hostname === allowedHostname ||
+        requestUrl.hostname.endsWith(`.${allowedHostname}`)
+    );
 
-    const targetOriginUrl: URL | null =
-      getAllowedTargetOriginUrlByRequest(request);
+    const targetOriginUrl = getAllowedTargetOriginUrlByRequest(request);
 
     const isTargetOriginUrlAllowed =
       !!targetOriginUrl &&
@@ -54,28 +52,71 @@ export default {
       });
     }
 
+    headers.set('X-Robots-Tag', 'noindex, nofollow');
+
     const targetOrigin = targetOriginUrl.origin;
     const routingScript = buildRoutingScript({ targetOrigin });
     const resizingScript = buildResizingScript({ targetOrigin });
 
-    let html = await response.text();
-
-    html = html.replace(
-      '<head>',
-      `<head><script data-target-origin="${targetOrigin}">${routingScript}</script>`
-    );
-
-    html = html.replace(
-      '<body>',
-      `<body><script data-target-origin="${targetOrigin}">${resizingScript}</script>`
-    );
-
-    return new Response(html, {
+    const newResponse = new Response(response.body, {
       headers,
       status: response.status,
     });
+
+    return (
+      new HTMLRewriter()
+        // 1) Remove any existing <meta name="robots" ...>
+        .on('meta[name="robots"]', new RemoveElementHandler())
+        // 2) Add our <meta name="robots" content="noindex, nofollow"> inside <head>
+        .on('head', new InsertNoIndexNoFollowMetaRobotsHandler())
+        // 3) Inject scripts in <head> and <body> or wherever you like
+        .on(
+          'head',
+          new InjectScriptWithDataOriginHandler(routingScript, targetOrigin)
+        )
+        .on(
+          'body',
+          new InjectScriptWithDataOriginHandler(resizingScript, targetOrigin)
+        )
+        .transform(newResponse)
+    );
   },
-} satisfies ExportedHandler<Env>;
+};
+
+class RemoveElementHandler implements HTMLRewriterElementContentHandlers {
+  element(el: Element) {
+    el.remove();
+  }
+}
+
+class InsertNoIndexNoFollowMetaRobotsHandler
+  implements HTMLRewriterElementContentHandlers
+{
+  element(head: Element) {
+    head.prepend('<meta name="robots" content="noindex, nofollow">', {
+      html: true,
+    });
+  }
+}
+
+class InjectScriptWithDataOriginHandler
+  implements HTMLRewriterElementContentHandlers
+{
+  constructor(
+    private readonly scriptContent: string,
+    private readonly targetOrigin: string
+  ) {
+    this.scriptContent = scriptContent;
+    this.targetOrigin = targetOrigin;
+  }
+
+  element(el: Element) {
+    el.append(
+      `<script data-target-origin="${this.targetOrigin}">${this.scriptContent}</script>`,
+      { html: true }
+    );
+  }
+}
 
 function buildContentSecurityPolicyHeader({
   targetOriginUrl,
@@ -83,7 +124,7 @@ function buildContentSecurityPolicyHeader({
 }: {
   targetOriginUrl: URL | null;
   isTargetOriginUrlAllowed: boolean;
-}) {
+}): string {
   const allowedOrigins = [];
 
   if (targetOriginUrl && isTargetOriginUrlAllowed) {
@@ -107,8 +148,7 @@ function getAllowedTargetOriginUrlByRequest(request: Request): URL | null {
     return null;
   }
 
-  let targetOriginUrl: URL | null = null;
-
+  let targetOriginUrl = null;
   try {
     targetOriginUrl = new URL(decodeURIComponent(targetOrigin));
   } catch (e) {
