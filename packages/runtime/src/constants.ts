@@ -20,3 +20,5 @@ export const MICROAPP_ROUTE_CHANGE_EVENT_NAME = '@microapp:routeChange';
 export const MICROAPP_POP_STATE_EVENT_NAME = '@microapp:popState';
 export const MICROAPP_RESIZE_EVENT_NAME = '@microapp:resize';
 export const MICROAPP_USER_PREFERENCES_EVENT_NAME = '@microapp:userPreferences';
+export const MICROAPP_SET_VIEWPORT_SIZE_EVENT_NAME =
+  '@microapp:setViewportSize';

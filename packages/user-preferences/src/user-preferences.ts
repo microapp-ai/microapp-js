@@ -5,8 +5,11 @@ import type {
 import { MessageBusUserPreferencesRepo } from './message-bus-user-preferences-repo';
 import type { SandboxUserPreferencesRepoOptions } from './sandbox-user-preferences-repo';
 import { SandboxUserPreferencesRepo } from './sandbox-user-preferences-repo';
-import type { MicroappUserPreferencesMessagePayload } from '@microapp-io/runtime';
 import { DEFAULT_MICROAPP_USER_PREFERENCES } from './constants';
+import type {
+  MicroappMessagePayload,
+  MicroappUserPreferencesMessage,
+} from '@microapp-io/runtime';
 
 export class UserPreferences {
   #repo: UserPreferencesRepo;
@@ -21,7 +24,7 @@ export class UserPreferences {
       : new MessageBusUserPreferencesRepo();
   }
 
-  getPreferences(): MicroappUserPreferencesMessagePayload {
+  getPreferences(): MicroappMessagePayload<MicroappUserPreferencesMessage> {
     return this.#repo.getPreferences() ?? DEFAULT_MICROAPP_USER_PREFERENCES;
   }
 

@@ -40,6 +40,6 @@
     "access": "public"
   },
   "dependencies": {
-    "@microapp-io/runtime": "^0.2.15"
+    "@microapp-io/runtime": "0.2.22"
   }
 }

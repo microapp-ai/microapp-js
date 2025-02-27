@@ -4,16 +4,28 @@ import {
   DEFAULT_MICROAPP_THEME,
   MICROAPP_RESIZE_EVENT_NAME,
   MICROAPP_ROUTE_CHANGE_EVENT_NAME,
+  MICROAPP_SET_VIEWPORT_SIZE_EVENT_NAME,
   MICROAPP_URL_PARAM_NAMES,
   MICROAPP_USER_PREFERENCES_EVENT_NAME,
 } from './constants';
-import type {
-  MicroappResizeMessagePayload,
-  MicroappRouteChangeMessagePayload,
-  MicroappUserPreferencesMessagePayload,
-} from './microapp-message-bus';
 import { MicroappMessageBus } from './microapp-message-bus';
-import type { MicroappLanguage, MicroappTheme } from './types';
+import type {
+  MicroappLanguage,
+  MicroappMessagePayload,
+  MicroappResizeMessage,
+  MicroappRouteChangeMessage,
+  MicroappTheme,
+  MicroappUserPreferencesMessage,
+} from './types';
+
+import {
+  buildPathnameWithTrailingSlash,
+  buildUrlWithTrailingSlash,
+  removeTrailingSlashFromUrl,
+  throttle,
+} from './utils';
+import { buildMicroappUrl } from './build-microapp-url';
+import { buildUrlOrCurrentWindowLocation } from './utils/build-url-or-current-window-location';
 
 export type MicroappRuntimeOptions = {
   iframe: HTMLIFrameElement;
@@ -26,94 +38,6 @@ export type MicroappRuntimeOptions = {
 };
 
 export class MicroappRuntime {
-  static getUserPreferencesFromIframeSrc(
-    iframeSrc: string
-  ): MicroappUserPreferencesMessagePayload {
-    const urlSearchParams = new URLSearchParams(iframeSrc);
-    const theme = (urlSearchParams.get(MICROAPP_URL_PARAM_NAMES.THEME) ??
-      undefined) as MicroappTheme | undefined;
-    const lang = (urlSearchParams.get(MICROAPP_URL_PARAM_NAMES.LANGUAGE) ??
-      undefined) as MicroappLanguage | undefined;
-
-    return { theme, lang };
-  }
-
-  static buildIframeSrcFromUrl = (
-    microappUrl: URL | string,
-    {
-      baseUrl,
-      currentUrl,
-      targetOrigin,
-      theme,
-      lang,
-    }: {
-      baseUrl?: URL | string;
-      currentUrl?: URL | string;
-      targetOrigin: URL | string;
-      theme?: MicroappTheme;
-      lang?: MicroappLanguage;
-    }
-  ): string => {
-    const iframeUrl = MicroappRuntime.#buildUrl(microappUrl);
-    const searchParams = new URLSearchParams(iframeUrl.search);
-    searchParams.append(
-      MICROAPP_URL_PARAM_NAMES.TARGET_ORIGIN,
-      targetOrigin.toString()
-    );
-
-    if (theme) searchParams.append(MICROAPP_URL_PARAM_NAMES.THEME, theme);
-    if (lang) searchParams.append(MICROAPP_URL_PARAM_NAMES.LANGUAGE, lang);
-
-    const queryString = searchParams.toString();
-    iframeUrl.search = queryString;
-
-    if (!currentUrl && typeof window !== 'undefined') {
-      currentUrl = MicroappRuntime.#buildUrl(window.location.href);
-    }
-
-    if (baseUrl && currentUrl) {
-      baseUrl = MicroappRuntime.#buildUrl(baseUrl);
-      currentUrl = MicroappRuntime.#buildUrl(currentUrl);
-      const currentPath = currentUrl.pathname.replace(baseUrl.pathname, '/');
-      iframeUrl.pathname = currentPath;
-    }
-
-    return iframeUrl.toString();
-  };
-
-  static #buildUrl = (url: URL | string): URL => {
-    url = new URL(url.toString());
-    url.pathname = MicroappRuntime.#buildPathname(url.pathname);
-
-    return url;
-  };
-
-  static #buildPathname = (url: string): string => {
-    if (!url.endsWith('/')) {
-      url += '/';
-    }
-
-    return url;
-  };
-
-  static #removeTrailingSlashFromUrl = (url: string): string => {
-    return url.replace(/\/$/, '');
-  };
-
-  static #buildUrlOrCurrentWindowLocation = (
-    url?: URL | string
-  ): URL | undefined => {
-    if (url) {
-      return MicroappRuntime.#buildUrl(url);
-    }
-
-    if (typeof window !== 'undefined') {
-      return MicroappRuntime.#buildUrl(window.location.href);
-    }
-
-    return undefined;
-  };
-
   readonly #iframe: HTMLIFrameElement;
   readonly #messageBus: MicroappMessageBus;
   #homeUrl: URL;
@@ -135,7 +59,7 @@ export class MicroappRuntime {
     lang,
   }: MicroappRuntimeOptions) {
     this.#iframe = iframe;
-    this.#homeUrl = MicroappRuntime.#buildUrl(homeUrl);
+    this.#homeUrl = buildUrlWithTrailingSlash(homeUrl);
 
     this.#theme = theme ?? this.#theme;
     this.#lang = lang ?? this.#lang;
@@ -143,11 +67,10 @@ export class MicroappRuntime {
       ? this.#buildAllowedTargetOriginOrThrow(targetOrigin)
       : this.#getWindowAllowedTargetOriginOrThrow(iframe);
 
-    this.#baseUrl = MicroappRuntime.#buildUrlOrCurrentWindowLocation(baseUrl);
-    this.#currentUrl =
-      MicroappRuntime.#buildUrlOrCurrentWindowLocation(currentUrl);
+    this.#baseUrl = buildUrlOrCurrentWindowLocation(baseUrl);
+    this.#currentUrl = buildUrlOrCurrentWindowLocation(currentUrl);
 
-    this.#src = MicroappRuntime.buildIframeSrcFromUrl(this.#homeUrl, {
+    this.#src = buildMicroappUrl(this.#homeUrl, {
       baseUrl: this.#baseUrl,
       currentUrl: this.#currentUrl,
       targetOrigin: this.#targetOrigin,
@@ -160,6 +83,13 @@ export class MicroappRuntime {
       targetOrigin: this.#targetOrigin,
     });
 
+    this.#setUpMessageBus();
+
+    this.#updateUserPreferences();
+    this.#setUpWindowEventListeners();
+  }
+
+  #setUpMessageBus() {
     this.#messageBus.on(
       MICROAPP_ROUTE_CHANGE_EVENT_NAME,
       this.#handleRouteChange
@@ -169,16 +99,126 @@ export class MicroappRuntime {
       MICROAPP_USER_PREFERENCES_EVENT_NAME,
       this.#handlePreferencesChange
     );
+  }
+
+  #handleRouteChange = ({
+    url: urlString,
+  }: MicroappMessagePayload<MicroappRouteChangeMessage>) => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+    const url = buildUrlWithTrailingSlash(urlString);
+    const path = this.#buildHistoryPathFromUrl(url);
+    window.history.pushState({}, '', path);
+  };
+
+  #buildHistoryPathFromUrl = (url: URL): string => {
+    const urlSearchParams = new URLSearchParams(url.search);
+
+    for (const paramName of Object.values(MICROAPP_URL_PARAM_NAMES)) {
+      urlSearchParams.delete(paramName);
+    }
+
+    let path = buildPathnameWithTrailingSlash(url.pathname);
+
+    if (this.#baseUrl) {
+      path =
+        path === '/'
+          ? this.#baseUrl.pathname
+          : removeTrailingSlashFromUrl(this.#baseUrl.pathname) + url.pathname;
+      path = buildPathnameWithTrailingSlash(path);
+    }
+
+    const searchParams = urlSearchParams.toString();
+
+    if (searchParams) {
+      path += `?${searchParams}`;
+    }
+
+    if (url.hash) {
+      path += `#${url.hash}`;
+    }
+
+    return path;
+  };
+
+  #handleIframeResize = ({
+    heightInPixel,
+  }: MicroappMessagePayload<MicroappResizeMessage>) => {
+    if (this.#iframe) {
+      this.#iframe.style.height = `${heightInPixel}px`;
+    }
+  };
+
+  #handlePreferencesChange = ({
+    theme,
+    lang,
+  }: MicroappMessagePayload<MicroappUserPreferencesMessage>) => {
+    if (theme) this.#theme = theme;
+    if (lang) this.#lang = lang;
 
     this.#updateUserPreferences();
+  };
 
-    if (typeof window !== 'undefined') {
-      window.addEventListener('popstate', () => {
-        this.#messageBus.send(MICROAPP_ROUTE_CHANGE_EVENT_NAME, {
-          url: window.location.href,
-        });
-      });
+  #updateUserPreferences = () => {
+    this.#messageBus.send(
+      MICROAPP_USER_PREFERENCES_EVENT_NAME,
+      {
+        theme: this.#theme,
+        lang: this.#lang,
+      },
+      this.#iframe.contentWindow ?? undefined
+    );
+  };
+
+  #setUpWindowEventListeners() {
+    if (typeof window === 'undefined') {
+      return;
     }
+
+    window.addEventListener('popstate', () => {
+      this.#messageBus.send(MICROAPP_ROUTE_CHANGE_EVENT_NAME, {
+        trigger: 'popstate',
+        url: window.location.href,
+      });
+    });
+
+    const notifySetViewportSize = throttle(
+      (trigger: MicroappMessagePayload<MicroappResizeMessage>['trigger']) => {
+        this.#messageBus.send(MICROAPP_SET_VIEWPORT_SIZE_EVENT_NAME, {
+          trigger,
+          widthInPixel: window.innerWidth,
+          heightInPixel: window.innerHeight,
+        });
+      },
+      100
+    );
+
+    ['resize', 'orientationchange', 'fullscreenchange'].forEach((eventName) => {
+      window.addEventListener(eventName, () => {
+        notifySetViewportSize(
+          eventName as MicroappMessagePayload<MicroappResizeMessage>['trigger']
+        );
+      });
+    });
+
+    const resizeObserver = new ResizeObserver(() => {
+      notifySetViewportSize('resizeObserver');
+    });
+
+    resizeObserver.observe(document.body);
+
+    const mutationObserver = new MutationObserver(() => {
+      notifySetViewportSize('mutationObserver');
+    });
+
+    mutationObserver.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+    });
+
+    notifySetViewportSize('load');
   }
 
   update(
@@ -190,15 +230,15 @@ export class MicroappRuntime {
     >
   ): void {
     if (options.homeUrl) {
-      this.#homeUrl = MicroappRuntime.#buildUrl(options.homeUrl);
+      this.#homeUrl = buildUrlWithTrailingSlash(options.homeUrl);
     }
 
     if (options.baseUrl) {
-      this.#baseUrl = MicroappRuntime.#buildUrl(options.baseUrl);
+      this.#baseUrl = buildUrlWithTrailingSlash(options.baseUrl);
     }
 
     if (options.currentUrl) {
-      this.#currentUrl = MicroappRuntime.#buildUrl(options.currentUrl);
+      this.#currentUrl = buildUrlWithTrailingSlash(options.currentUrl);
     }
 
     if (options.targetOrigin) {
@@ -220,16 +260,13 @@ export class MicroappRuntime {
       'targetOrigin' in options;
 
     if (shouldUpdateIframeSrc) {
-      this.#src = MicroappRuntime.buildIframeSrcFromUrl(
-        options.homeUrl ?? this.#homeUrl,
-        {
-          baseUrl: this.#baseUrl,
-          currentUrl: this.#currentUrl,
-          targetOrigin: this.#targetOrigin,
-          theme: this.#theme,
-          lang: this.#lang,
-        }
-      );
+      this.#src = buildMicroappUrl(options.homeUrl ?? this.#homeUrl, {
+        baseUrl: this.#baseUrl,
+        currentUrl: this.#currentUrl,
+        targetOrigin: this.#targetOrigin,
+        theme: this.#theme,
+        lang: this.#lang,
+      });
 
       this.#iframe.src = this.#src;
     }
@@ -252,12 +289,12 @@ export class MicroappRuntime {
       );
     }
 
-    const parentUrl = MicroappRuntime.#buildUrl(parentWindow.origin);
+    const parentUrl = buildUrlWithTrailingSlash(parentWindow.origin);
     return this.#buildAllowedTargetOriginOrThrow(parentUrl);
   };
 
   #buildAllowedTargetOriginOrThrow = (targetOrigin: URL | string): string => {
-    targetOrigin = MicroappRuntime.#buildUrl(targetOrigin.toString());
+    targetOrigin = buildUrlWithTrailingSlash(targetOrigin.toString());
     const isParentUrlAllowed = ALLOWED_MICROAPP_ORIGIN_HOSTNAMES.includes(
       targetOrigin.hostname
     );
@@ -268,79 +305,8 @@ export class MicroappRuntime {
       );
     }
 
-    targetOrigin.pathname = MicroappRuntime.#removeTrailingSlashFromUrl(
-      targetOrigin.pathname
-    );
+    targetOrigin.pathname = removeTrailingSlashFromUrl(targetOrigin.pathname);
 
     return targetOrigin.toString();
-  };
-
-  #handlePreferencesChange = ({
-    theme,
-    lang,
-  }: MicroappUserPreferencesMessagePayload) => {
-    if (theme) this.#theme = theme;
-    if (lang) this.#lang = lang;
-
-    this.#updateUserPreferences();
-  };
-
-  #handleRouteChange = ({
-    url: urlString,
-  }: MicroappRouteChangeMessagePayload) => {
-    if (typeof window !== 'undefined') {
-      const url = MicroappRuntime.#buildUrl(urlString);
-      const path = this.#buildHistoryPathFromUrl(url);
-      window.history.pushState({}, '', path);
-    }
-  };
-
-  #buildHistoryPathFromUrl = (url: URL): string => {
-    const urlSearchParams = new URLSearchParams(url.search);
-
-    for (const paramName of Object.values(MICROAPP_URL_PARAM_NAMES)) {
-      urlSearchParams.delete(paramName);
-    }
-
-    let path = MicroappRuntime.#buildPathname(url.pathname);
-
-    if (this.#baseUrl) {
-      path = MicroappRuntime.#buildPathname(
-        path === '/'
-          ? this.#baseUrl.pathname
-          : MicroappRuntime.#removeTrailingSlashFromUrl(
-              this.#baseUrl.pathname
-            ) + url.pathname
-      );
-    }
-
-    const searchParams = urlSearchParams.toString();
-
-    if (searchParams) {
-      path += `?${searchParams}`;
-    }
-
-    if (url.hash) {
-      path += `#${url.hash}`;
-    }
-
-    return path;
-  };
-
-  #updateUserPreferences = () => {
-    this.#messageBus.send(
-      MICROAPP_USER_PREFERENCES_EVENT_NAME,
-      {
-        theme: this.#theme,
-        lang: this.#lang,
-      },
-      this.#iframe.contentWindow ?? undefined
-    );
-  };
-
-  #handleIframeResize = ({ heightInPixel }: MicroappResizeMessagePayload) => {
-    if (this.#iframe) {
-      this.#iframe.style.height = `${heightInPixel}px`;
-    }
   };
 }

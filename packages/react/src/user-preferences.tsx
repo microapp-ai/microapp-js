@@ -4,12 +4,13 @@ import type { SandboxUserPreferencesRepoOptions } from '@microapp-io/user-prefer
 import { UserPreferences } from '@microapp-io/user-preferences';
 import type {
   MicroappLanguage,
+  MicroappMessagePayload,
   MicroappTheme,
-  MicroappUserPreferencesMessagePayload,
+  MicroappUserPreferencesMessage,
 } from '@microapp-io/runtime';
 
 type UserPreferencesContextType = {
-  preferences: MicroappUserPreferencesMessagePayload;
+  preferences: MicroappMessagePayload<MicroappUserPreferencesMessage>;
 };
 
 const UserPreferencesContext = React.createContext<

@@ -4,8 +4,9 @@ import type {
 } from './user-preferences-repo';
 import type {
   MicroappLanguage,
+  MicroappMessagePayload,
   MicroappTheme,
-  MicroappUserPreferencesMessagePayload,
+  MicroappUserPreferencesMessage,
 } from '@microapp-io/runtime';
 import { DEFAULT_MICROAPP_USER_PREFERENCES } from './constants';
 
@@ -15,7 +16,7 @@ export type SandboxUserPreferencesRepoOptions = {
 };
 
 export class SandboxUserPreferencesRepo implements UserPreferencesRepo {
-  readonly #mockPreferences: MicroappUserPreferencesMessagePayload;
+  readonly #mockPreferences: MicroappMessagePayload<MicroappUserPreferencesMessage>;
   #listeners: Set<UserPreferencesUpdateCallback> = new Set();
 
   constructor(options: SandboxUserPreferencesRepoOptions) {
@@ -33,7 +34,7 @@ export class SandboxUserPreferencesRepo implements UserPreferencesRepo {
     }, 100);
   }
 
-  getPreferences(): MicroappUserPreferencesMessagePayload {
+  getPreferences(): MicroappMessagePayload<MicroappUserPreferencesMessage> {
     return this.#mockPreferences;
   }
 

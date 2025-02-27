@@ -1,8 +1,9 @@
-import type { MicroappUserPreferencesMessagePayload } from '@microapp-io/runtime';
 import {
+  buildUserPreferencesFromMicroappUrl,
   MICROAPP_USER_PREFERENCES_EVENT_NAME,
   MicroappMessageBus,
-  MicroappRuntime,
+  type MicroappMessagePayload,
+  type MicroappUserPreferencesMessage,
 } from '@microapp-io/runtime';
 import type {
   UserPreferencesRepo,
@@ -11,7 +12,8 @@ import type {
 import { DEFAULT_MICROAPP_USER_PREFERENCES } from './constants';
 
 export class MessageBusUserPreferencesRepo implements UserPreferencesRepo {
-  #preferences: MicroappUserPreferencesMessagePayload | null = null;
+  #preferences: MicroappMessagePayload<MicroappUserPreferencesMessage> | null =
+    null;
   #listeners: Set<UserPreferencesUpdateCallback> = new Set();
   #messageBus: MicroappMessageBus;
 
@@ -22,7 +24,7 @@ export class MessageBusUserPreferencesRepo implements UserPreferencesRepo {
       this.#preferences = Object.assign(
         {},
         DEFAULT_MICROAPP_USER_PREFERENCES,
-        MicroappRuntime.getUserPreferencesFromIframeSrc(window.location.href)
+        buildUserPreferencesFromMicroappUrl(window.location.href)
       );
 
       this.#setupMessageListener();
@@ -32,7 +34,7 @@ export class MessageBusUserPreferencesRepo implements UserPreferencesRepo {
   #setupMessageListener() {
     this.#messageBus.on(
       MICROAPP_USER_PREFERENCES_EVENT_NAME,
-      (preferences: MicroappUserPreferencesMessagePayload) => {
+      (preferences: MicroappMessagePayload<MicroappUserPreferencesMessage>) => {
         this.#preferences = preferences;
         this.#listeners.forEach((callback) => callback(preferences));
       }
@@ -44,7 +46,7 @@ export class MessageBusUserPreferencesRepo implements UserPreferencesRepo {
     return () => this.#listeners.delete(callback);
   }
 
-  getPreferences(): MicroappUserPreferencesMessagePayload | null {
+  getPreferences(): MicroappMessagePayload<MicroappUserPreferencesMessage> | null {
     return this.#preferences;
   }
 }

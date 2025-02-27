@@ -2,6 +2,7 @@ import * as React from 'react';
 import { useEffect, useRef } from 'react';
 import type { MicroappRuntimeOptions } from './microapp-runtime';
 import { MicroappRuntime } from './microapp-runtime';
+import { buildMicroappUrl } from './build-microapp-url';
 
 type MicroappProps = {
   onLoad?: () => void;
@@ -46,7 +47,7 @@ export const Microapp: React.FC<MicroappProps> = ({
   const iframeSrc = React.useMemo(
     () =>
       targetOrigin
-        ? MicroappRuntime.buildIframeSrcFromUrl(homeUrl, {
+        ? buildMicroappUrl(homeUrl, {
             baseUrl,
             currentUrl,
             targetOrigin,

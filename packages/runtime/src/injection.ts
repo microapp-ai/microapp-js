@@ -25,34 +25,34 @@ export function getRoutingScriptBuilder(): MicroappScriptBuilder {
       }
     });
 
-		function notifyRouteChange(method) {
+		function notifyRouteChange(trigger) {
 			const url = window.location.href;
 			window.parent.postMessage(
 				{
 					type: '${MICROAPP_ROUTE_CHANGE_EVENT_NAME}',
-					payload: { url }
+					payload: { trigger, url }
 				},
 				'__TARGET_ORIGIN__'
 			);
 		}
 
 		window.addEventListener('popstate', () => {
-			notifyRouteChange();
+			notifyRouteChange('popstate');
 		});
 
 		const originalPushState = history.pushState;
 		history.pushState = function(...args) {
 			originalPushState.apply(this, args);
-			notifyRouteChange();
+			notifyRouteChange('pushState');
 		};
 
 		const originalReplaceState = history.replaceState;
 		history.replaceState = function(...args) {
 			originalReplaceState.apply(this, args);
-			notifyRouteChange();
+			notifyRouteChange('replaceState');
 		};
 		
-		notifyRouteChange();
+		notifyRouteChange('load');
 	}
 }());`);
 
@@ -96,7 +96,7 @@ export function getResizingScriptBuilder(): MicroappScriptBuilder {
       next.style.setProperty('overflow', 'auto', 'important');
     }
 
-		const notifyHeightChange = throttle(() => {
+		const notifyHeightChange = throttle((trigger) => {
 		  const bodyRect = document.body.getBoundingClientRect();
 		  const widthInPixel = bodyRect.width;
 		  const heightInPixel = Math.max(
@@ -107,25 +107,34 @@ export function getResizingScriptBuilder(): MicroappScriptBuilder {
         document.documentElement.offsetHeight
       );
 
-			window.parent.postMessage({ type: '${MICROAPP_RESIZE_EVENT_NAME}', payload: { widthInPixel, heightInPixel }}, '__TARGET_ORIGIN__');
+			window.parent.postMessage({
+        type: '${MICROAPP_RESIZE_EVENT_NAME}',
+        payload: { trigger, widthInPixel, heightInPixel }
+      }, '__TARGET_ORIGIN__');
 		}, 500);
 
 		window.addEventListener('load', () => {
-      ['resize', 'orientationchange', 'fullscreenchange'].forEach(event => {
-        window.addEventListener(event, notifyHeightChange);
+      ['resize', 'orientationchange', 'fullscreenchange'].forEach(eventName => {
+        window.addEventListener(eventName, () => {
+          notifyHeightChange(eventName);
+        });
       });
 
-		  const resizeObserver = new ResizeObserver(notifyHeightChange);
+		  const resizeObserver = new ResizeObserver(() => {
+        notifyHeightChange('resizeObserver');
+      });
       resizeObserver.observe(document.body);
 
-      const mutationObserver = new MutationObserver(notifyHeightChange);
+      const mutationObserver = new MutationObserver(() => {
+        notifyHeightChange('mutationObserver');
+      });
       mutationObserver.observe(document.body, {
         childList: true,
         subtree: true,
-        attributes: true
+        attributes: true,
       });
 
-      notifyHeightChange();
+      notifyHeightChange('load');
 		});
 	}
 }());`);
