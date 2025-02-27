@@ -26,4 +26,35 @@ describe('SandboxAuthRepo', () => {
     const user = await repo.getUser();
     expect(user.email).toBe('hi@microapp.io');
   });
+
+  it('executes callback when the user is authenticated', async () => {
+    const repo = new SandboxAuthRepo({
+      enabled: true,
+      user: {
+        id: '1',
+        email: 'hi@microapp.io',
+        pictureUrl: 'https://example.com/avatar.png',
+      },
+    });
+
+    const mockCallback = jest.fn();
+    const unsubscribeCallback = repo.onUserAuthenticated(mockCallback);
+
+    await repo.requestLogin();
+
+    expect(mockCallback).toHaveBeenCalledTimes(1);
+    expect(mockCallback).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: '1',
+        email: 'hi@microapp.io',
+        pictureUrl: 'https://example.com/avatar.png',
+      })
+    );
+
+    unsubscribeCallback();
+
+    await repo.requestLogin();
+
+    expect(mockCallback).toHaveBeenCalledTimes(1);
+  });
 });
