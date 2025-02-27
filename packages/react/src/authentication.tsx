@@ -1,9 +1,5 @@
 import * as React from 'react';
-import type {
-  AuthOptions,
-  UnsubscribeCallback,
-  User, UserAuthenticatedCallback,
-} from '@microapp-io/auth';
+import type { AuthOptions, User } from '@microapp-io/auth';
 import { Auth } from '@microapp-io/auth';
 
 export type AuthContextType =
@@ -14,7 +10,6 @@ export type AuthContextType =
       user?: undefined;
       refresh: () => void;
       requestLogin: () => void;
-      onUserAuthenticated: (callback: UserAuthenticatedCallback) => UnsubscribeCallback;
     }
   | {
       isAuthenticated: true;
@@ -23,7 +18,6 @@ export type AuthContextType =
       user: User;
       refresh: () => void;
       requestLogin: () => void;
-      onUserAuthenticated: (callback: UserAuthenticatedCallback) => UnsubscribeCallback;
     };
 
 const INITIAL_AUTH_CONTEXT: AuthContextType = {
@@ -33,9 +27,6 @@ const INITIAL_AUTH_CONTEXT: AuthContextType = {
   user: undefined,
   refresh: () => {},
   requestLogin: () => {},
-  onUserAuthenticated: (callback: UserAuthenticatedCallback) => {
-    return () => {};
-  },
 };
 
 export const AuthContext = React.createContext<AuthContextType | undefined>(
@@ -96,7 +87,6 @@ export function AuthProvider({
           isLoading: false,
           user: undefined,
           error,
-          onUserAuthenticated: callback => auth.onUserAuthenticated(callback),
         }));
       }
     },
@@ -108,7 +98,6 @@ export function AuthProvider({
       ...previousState,
       refresh: () => load({ shouldForceRefresh: true }),
       requestLogin: () => auth.requestLogin(),
-      onUserAuthenticated: callback => auth.onUserAuthenticated(callback),
     }));
 
     load();
@@ -117,12 +106,22 @@ export function AuthProvider({
   return <AuthContext.Provider value={state}>{children}</AuthContext.Provider>;
 }
 
-export function useAuth(): AuthContextType {
+type UseAuthOptions = {
+  onChange?: (user?: User) => void;
+};
+
+export function useAuth(options?: UseAuthOptions): AuthContextType {
   const context = React.useContext(AuthContext);
 
   if (!context) {
     throw new MissingAuthProviderError();
   }
+
+  React.useEffect(() => {
+    if (options?.onChange) {
+      options.onChange(context.user);
+    }
+  }, [context.user, options]);
 
   return context;
 }
