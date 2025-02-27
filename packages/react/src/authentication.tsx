@@ -121,7 +121,7 @@ export function useAuth(options?: UseAuthOptions): AuthContextType {
     if (options?.onChange) {
       options.onChange(context.user);
     }
-  }, [context.user, options?.change]);
+  }, [context.user, options?.onChange]);
 
   return context;
 }
