@@ -3,13 +3,13 @@ import * as fs from 'fs';
 import * as path from 'path';
 import inquirer from 'inquirer';
 import {
-  InvalidConfigError,
-  MicroappConfigManager,
-  MicroappConfigValidator,
+  MicroappConfigError,
   MicroappSupportedFramework,
 } from '@microapp-io/scripts';
 import { execSync } from 'child_process';
 import * as pc from 'picocolors';
+import { MicroappNextConfigFileDetector } from '../file-detectors';
+import { MicroappNextConfigFileTransformer } from '../file-transformers';
 
 type SupportedPackageManager = 'yarn' | 'pnpm' | 'npm' | 'bun';
 const DEFAULT_PACKAGE_MANAGER: SupportedPackageManager = 'npm';
@@ -155,53 +155,17 @@ export class InitCommand extends Command {
   private async handleExistingFolder({
     folderPath,
     packageManager,
+    framework,
   }: {
     folderPath: string;
     packageManager: SupportedPackageManager;
     framework: MicroappSupportedFramework;
   }): Promise<void> {
-    const configManager = new MicroappConfigManager({ rootPath: folderPath });
-    const config = configManager.read();
-
-    const defaultName =
-      config?.name || this.generateDefaultNameByPath(folderPath);
-
-    const { name } = await inquirer.prompt([
-      {
-        type: 'input',
-        name: 'name',
-        message: 'Enter the name of the microapp:',
-        default: defaultName,
-        validate: (name: string) =>
-          this.validateConfig(() =>
-            MicroappConfigValidator.validateConfigName(name)
-          ),
-      },
-    ]);
-
-    configManager.write({ name });
+    if (framework.isEquals(MicroappSupportedFramework.NEXT)) {
+      await this.configureNextApp({ folderPath });
+    }
 
     this.installScripts({ folderPath, packageManager });
-  }
-
-  private generateDefaultNameByPath(folderPath: string): string {
-    return path
-      .basename(folderPath)
-      .toLowerCase()
-      .replace(/[^a-z0-9-_]/g, '-');
-  }
-
-  private validateConfig(validate: () => void): string | boolean {
-    try {
-      validate();
-      return true;
-    } catch (error) {
-      const isInvalidConfigError = error instanceof InvalidConfigError;
-      if (!isInvalidConfigError) {
-        throw error;
-      }
-      return error.message;
-    }
   }
 
   private installScripts({
@@ -270,6 +234,41 @@ export class InitCommand extends Command {
     }
 
     return installCommand[packageManager];
+  }
+
+  private async configureNextApp({
+    folderPath,
+  }: {
+    folderPath: string;
+  }): Promise<void> {
+    const nextConfigFileDetector = new MicroappNextConfigFileDetector();
+    const nextConfigFilePath =
+      nextConfigFileDetector.getExistingFilePathByFolderPathOrDefault(
+        folderPath,
+        MicroappNextConfigFileDetector.DEFAULT_CONFIG_FILENAME
+      );
+
+    const nextConfigFileTransformer = new MicroappNextConfigFileTransformer();
+
+    try {
+      await nextConfigFileTransformer.transformAndPersist(nextConfigFilePath);
+    } catch (error) {
+      const isConfigError = error instanceof MicroappConfigError;
+
+      if (!isConfigError) {
+        throw error;
+      }
+
+      this.log(
+        pc.red(
+          `\nCould not automatically modify the ${pc.bold(
+            nextConfigFilePath
+          )} file.\nPlease modify it manually:\n\n${pc.bold(
+            nextConfigFileTransformer.buildSampleFileContent()
+          )}\n`
+        )
+      );
+    }
   }
 
   private async handleNewFolder({
