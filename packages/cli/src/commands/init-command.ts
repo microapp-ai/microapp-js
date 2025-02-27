@@ -2,14 +2,9 @@ import { Args, Command, Flags } from '@oclif/core';
 import * as fs from 'fs';
 import * as path from 'path';
 import inquirer from 'inquirer';
-import {
-  MicroappConfigError,
-  MicroappSupportedFramework,
-} from '@microapp-io/scripts';
+import { MicroappSupportedFramework } from '@microapp-io/scripts';
 import { execSync } from 'child_process';
 import * as pc from 'picocolors';
-import { MicroappNextConfigFileDetector } from '../file-detectors';
-import { MicroappNextConfigFileTransformer } from '../file-transformers';
 
 type SupportedPackageManager = 'yarn' | 'pnpm' | 'npm' | 'bun';
 const DEFAULT_PACKAGE_MANAGER: SupportedPackageManager = 'npm';
@@ -161,10 +156,6 @@ export class InitCommand extends Command {
     packageManager: SupportedPackageManager;
     framework: MicroappSupportedFramework;
   }): Promise<void> {
-    if (framework.isEquals(MicroappSupportedFramework.NEXT)) {
-      await this.configureNextApp({ folderPath });
-    }
-
     this.installScripts({ folderPath, packageManager });
   }
 
@@ -234,41 +225,6 @@ export class InitCommand extends Command {
     }
 
     return installCommand[packageManager];
-  }
-
-  private async configureNextApp({
-    folderPath,
-  }: {
-    folderPath: string;
-  }): Promise<void> {
-    const nextConfigFileDetector = new MicroappNextConfigFileDetector();
-    const nextConfigFilePath =
-      nextConfigFileDetector.getExistingFilePathByFolderPathOrDefault(
-        folderPath,
-        MicroappNextConfigFileDetector.DEFAULT_CONFIG_FILENAME
-      );
-
-    const nextConfigFileTransformer = new MicroappNextConfigFileTransformer();
-
-    try {
-      await nextConfigFileTransformer.transformAndPersist(nextConfigFilePath);
-    } catch (error) {
-      const isConfigError = error instanceof MicroappConfigError;
-
-      if (!isConfigError) {
-        throw error;
-      }
-
-      this.log(
-        pc.red(
-          `\nCould not automatically modify the ${pc.bold(
-            nextConfigFilePath
-          )} file.\nPlease modify it manually:\n\n${pc.bold(
-            nextConfigFileTransformer.buildSampleFileContent()
-          )}\n`
-        )
-      );
-    }
   }
 
   private async handleNewFolder({
