@@ -1,7 +1,0 @@
-{
-  "name": "08-mismatching-shared-library-version",
-  "entryComponent": "./index.js",
-  "shared": {
-    "react": "^18.3.1"
-  }
-}

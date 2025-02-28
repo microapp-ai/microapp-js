@@ -24,7 +24,6 @@
     "access": "public"
   },
   "dependencies": {
-    "@module-federation/nextjs-mf": "^7.0.8",
     "semver": "^7.5.4"
   },
   "devDependencies": {
