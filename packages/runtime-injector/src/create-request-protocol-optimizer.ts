@@ -28,7 +28,7 @@ export function buildProtocolRequestOptimizer({
     debugLog('Processing request URL', { url: request.url });
 
     if (!shouldOptimizeRequestProtocol(request)) {
-      debugLog('Skipping optimization for non-http/https protocol', {
+      debugLog('Skipping optimization for protocol', {
         url: request.url,
       });
       return request.url;
@@ -82,7 +82,7 @@ export function buildProtocolRequestOptimizer({
 
   function shouldOptimizeRequestProtocol(request: Request | Response): boolean {
     const requestUrl = new URL(request.url);
-    return requestUrl.protocol === 'http:' || requestUrl.protocol === 'https:';
+    return requestUrl.protocol === 'https:';
   }
 
   function getRequestHostname(request: Request | Response): string {
@@ -196,12 +196,6 @@ export function buildProtocolRequestOptimizer({
     if (isSuccessful) {
       debugLog('HTTPS supported for hostname', { hostname });
       return true;
-    }
-
-    const isRedirect = response.status >= 300 && response.status < 400;
-
-    if (isRedirect) {
-      throw new Error('Redirect response received');
     }
 
     throw new Error(`Unexpected response status: ${response.status}`);
