@@ -9,9 +9,9 @@ import type { HTMLRewriterElementContentHandlers } from '@cloudflare/workers-typ
 const buildResizingScript = getResizingScriptBuilder();
 const buildRoutingScript = getRoutingScriptBuilder();
 
-export function buildRequestHandler(): {
-  shouldHandleRequest: (request: Request) => boolean;
-  handle: (request: Request, response: Response) => Response;
+export function buildRequestTransformer(): {
+  shouldTransformRequest: (request: Request) => boolean;
+  transform: (request: Request, response: Response) => Response;
 } {
   function handle(request: Request, response: Response): Response {
     const isHtmlContentType = doesRequestHaveContentType({
@@ -34,6 +34,7 @@ export function buildRequestHandler(): {
     const transformedResponse = new Response(response.body, {
       ...response,
       headers,
+      status: response.status,
     });
 
     return (
@@ -210,7 +211,7 @@ export function buildRequestHandler(): {
   }
 
   return {
-    shouldHandleRequest,
-    handle,
+    shouldTransformRequest: shouldHandleRequest,
+    transform: handle,
   };
 }

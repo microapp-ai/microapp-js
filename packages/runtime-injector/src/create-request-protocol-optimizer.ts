@@ -106,23 +106,28 @@ export function buildProtocolRequestOptimizer({
 
     debugLog('No cached protocol; checking HTTPS support', { hostname });
 
+    let protocol: SupportedProtocols | null = null;
+
     try {
       const supportsHttps = await doesHostNameSupportHttps(hostname);
-      const protocol: SupportedProtocols = supportsHttps ? 'https' : 'http';
+      protocol = supportsHttps ? 'https' : 'http';
       debugLog('Determined protocol based on HTTPS support', {
         hostname,
         supportsHttps,
         protocol,
       });
-      await cacheProtocol({ hostname, protocol });
-      return protocol;
     } catch (error) {
       console.error(
         '[runtime-injector] Could not determine optimal protocol for hostname',
         { hostname, error: buildErrorMessage(error) }
       );
-      return null;
     }
+
+    if (protocol) {
+      await cacheProtocol({ hostname, protocol });
+    }
+
+    return protocol;
   }
 
   async function getCachedProtocolByHostname(
