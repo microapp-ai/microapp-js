@@ -18,7 +18,7 @@
    * Smart Placement
    * Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
    */
-  // "placement": { "mode": "smart" },
+   "placement": { "mode": "smart" },
 
   /**
    * Bindings
@@ -28,8 +28,8 @@
    */
   "kv_namespaces": [
     {
-      "binding": "PROTOCOL_CACHE",
-      "id": "83048e976d704bfd9bc8ab7951b59713"
+      "binding": "CACHE",
+      "id": "8eacd4ee29184fa2b8fb4d86f929567a"
     }
   ]
 

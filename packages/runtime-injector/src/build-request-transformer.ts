@@ -1,19 +1,58 @@
+import { ALLOWED_MICROAPP_ORIGIN_HOSTNAMES } from '@microapp-io/runtime';
 import {
-  ALLOWED_MICROAPP_ORIGIN_HOSTNAMES,
-  getResizingScriptBuilder,
-  getRoutingScriptBuilder,
-  MICROAPP_URL_PARAM_NAMES,
-} from '@microapp-io/runtime';
-import type { HTMLRewriterElementContentHandlers } from '@cloudflare/workers-types/2023-07-01/index';
+  getAllowedTargetOriginUrlByRequest,
+  getAllowedTargetOriginUrlByRequestOrThrow,
+} from './utils';
+import type { Env } from './types';
 
-const buildResizingScript = getResizingScriptBuilder();
-const buildRoutingScript = getRoutingScriptBuilder();
+export type RequestTransformerInput = {
+  request: Request;
+  rewriter: HTMLRewriter;
+};
 
-export function buildRequestTransformer(): {
+export type RequestTransformerOutput = void | Promise<void>;
+
+export type RequestTransformer = {
+  transform: ({
+    request,
+    rewriter,
+  }: RequestTransformerInput) => RequestTransformerOutput;
+};
+
+export type RequestTransformerBuilderInput = {
+  env: Env;
+  debug?: boolean;
+};
+
+export type RequestTransformerBuilder = (
+  input: RequestTransformerBuilderInput
+) => RequestTransformer;
+
+export function buildRequestTransformer({ debug }: { debug?: boolean } = {}): {
   shouldTransformRequest: (request: Request) => boolean;
-  transform: (request: Request, response: Response) => Response;
+  transform: (
+    request: Request,
+    response: Response,
+    {
+      env,
+      transformers,
+    }: {
+      transformers?: RequestTransformerBuilder[];
+      env: Env;
+    }
+  ) => Promise<Response>;
 } {
-  function handle(request: Request, response: Response): Response {
+  async function handle(
+    request: Request,
+    response: Response,
+    {
+      env,
+      transformers = [],
+    }: {
+      env: Env;
+      transformers?: RequestTransformerBuilder[];
+    }
+  ): Promise<Response> {
     const isHtmlContentType = doesRequestHaveContentType({
       request: response,
       contentType: 'text/html',
@@ -28,41 +67,20 @@ export function buildRequestTransformer(): {
       response,
     });
 
-    const { origin: targetOrigin } =
-      getAllowedTargetOriginUrlByRequestOrThrow(request);
-
     const transformedResponse = new Response(response.body, {
       ...response,
       headers,
       status: response.status,
     });
 
-    return (
-      new HTMLRewriter()
-        // 0) Inject runtime comment element at the beginning of the HTML
-        .on('html', new InjectRuntimeCommentElementHandler())
-        // 1) Remove any existing <meta name="robots" ...>
-        .on('meta[name="robots"]', new RemoveElementHandler())
-        // 2) Add our <meta name="robots" content="noindex, nofollow"> at the beginning of <head>
-        .on('head', new InsertNoIndexNoFollowMetaRobotsHandler())
-        // 3) Inject routing script at the beginning of <head>
-        .on(
-          'head',
-          new InjectScriptWithDataOriginHandler(
-            buildRoutingScript({ targetOrigin }),
-            targetOrigin
-          )
-        )
-        // 4) Inject resizing script at the beginning of <body>
-        .on(
-          'body',
-          new InjectScriptWithDataOriginHandler(
-            buildResizingScript({ targetOrigin }),
-            targetOrigin
-          )
-        )
-        .transform(transformedResponse)
-    );
+    const rewriter = new HTMLRewriter();
+
+    for (const transformerBuilder of transformers) {
+      const transformer = transformerBuilder({ env, debug });
+      await transformer.transform({ request, rewriter });
+    }
+
+    return rewriter.transform(transformedResponse);
   }
 
   function shouldHandleRequest(request: Request): boolean {
@@ -82,29 +100,6 @@ export function buildRequestTransformer(): {
       !!targetOriginUrl &&
       ALLOWED_MICROAPP_ORIGIN_HOSTNAMES.includes(targetOriginUrl.hostname)
     );
-  }
-
-  function getAllowedTargetOriginUrlByRequest(request: Request): URL | null {
-    const requestUrl = new URL(request.url);
-    const targetOrigin = requestUrl.searchParams.get(
-      MICROAPP_URL_PARAM_NAMES.TARGET_ORIGIN
-    );
-
-    if (!targetOrigin) {
-      return null;
-    }
-
-    let targetOriginUrl = null;
-    try {
-      targetOriginUrl = new URL(decodeURIComponent(targetOrigin));
-    } catch (e) {
-      console.error(
-        '[runtime-injector] Invalid target origin URL:',
-        targetOrigin
-      );
-    }
-
-    return targetOriginUrl;
   }
 
   function doesRequestHaveContentType({
@@ -151,63 +146,6 @@ export function buildRequestTransformer(): {
     }
 
     return `frame-ancestors 'self' ${allowedOrigins.join(' ')}`;
-  }
-
-  function getAllowedTargetOriginUrlByRequestOrThrow(request: Request): URL {
-    const targetOriginUrl = getAllowedTargetOriginUrlByRequest(request);
-
-    if (!targetOriginUrl) {
-      throw new Error(
-        '[runtime-injector] Target origin URL not found in the request URL'
-      );
-    }
-
-    return targetOriginUrl;
-  }
-
-  class InjectRuntimeCommentElementHandler
-    implements HTMLRewriterElementContentHandlers
-  {
-    element(html: Element) {
-      html.prepend(`<!-- Injected by Microapp.io at ${new Date()} -->`, {
-        html: true,
-      });
-    }
-  }
-
-  class RemoveElementHandler implements HTMLRewriterElementContentHandlers {
-    element(el: Element) {
-      el.remove();
-    }
-  }
-
-  class InsertNoIndexNoFollowMetaRobotsHandler
-    implements HTMLRewriterElementContentHandlers
-  {
-    element(head: Element) {
-      head.prepend('<meta name="robots" content="noindex, nofollow">', {
-        html: true,
-      });
-    }
-  }
-
-  class InjectScriptWithDataOriginHandler
-    implements HTMLRewriterElementContentHandlers
-  {
-    constructor(
-      private readonly scriptContent: string,
-      private readonly targetOrigin: string
-    ) {
-      this.scriptContent = scriptContent;
-      this.targetOrigin = targetOrigin;
-    }
-
-    element(el: Element) {
-      el.append(
-        `<script data-target-origin="${this.targetOrigin}">${this.scriptContent}</script>`,
-        { html: true }
-      );
-    }
   }
 
   return {

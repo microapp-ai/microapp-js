@@ -1,4 +1,5 @@
 import type { Env } from './types';
+import { buildLogger } from './utils';
 
 const SUPPORTED_PROTOCOLS = ['http', 'https'] as const;
 type SupportedProtocols = (typeof SUPPORTED_PROTOCOLS)[number];
@@ -16,32 +17,30 @@ export function buildProtocolRequestOptimizer({
   buildRequestUrl: (request: Request) => Promise<string>;
   handleResponse: (response: Response) => Promise<void>;
 } {
-  function debugLog(message: string, data?: any) {
-    if (debug) {
-      console.info(`[runtime-injector] ${message}`, data);
-    }
-  }
+  const logger = buildLogger({
+    identifier: 'protocol-optimizer',
+  });
 
   async function buildRequestUrlWithOptimalProtocol(
     request: Request
   ): Promise<string> {
-    debugLog('Processing request URL', { url: request.url });
+    logger.debug('Processing request URL', { url: request.url });
 
     if (!shouldOptimizeRequestProtocol(request)) {
-      debugLog('Skipping optimization for protocol', {
+      logger.debug('Skipping optimization for protocol', {
         url: request.url,
       });
       return request.url;
     }
 
     const protocol = await getOptimalProtocolForHostname(request);
-    debugLog('Determined optimal protocol for request', {
+    logger.debug('Determined optimal protocol for request', {
       url: request.url,
       protocol,
     });
 
     if (!protocol) {
-      debugLog('No optimal protocol found, using original URL', {
+      logger.debug('No optimal protocol found, using original URL', {
         url: request.url,
       });
       return request.url;
@@ -51,7 +50,7 @@ export function buildProtocolRequestOptimizer({
       url: request.url,
       protocol,
     });
-    debugLog('Updated request URL with optimal protocol', {
+    logger.debug('Updated request URL with optimal protocol', {
       originalUrl: request.url,
       updatedUrl,
     });
@@ -61,21 +60,23 @@ export function buildProtocolRequestOptimizer({
 
   async function handleResponseProtocol(response: Response): Promise<void> {
     if (!shouldOptimizeRequestProtocol(response)) {
-      debugLog('Skipping response protocol handling', {
+      logger.debug('Skipping response protocol handling', {
         url: response.url,
       });
       return;
     }
 
     const isRedirectStatus = response.status >= 300 && response.status < 400;
-    debugLog('Handling response protocol', {
+    logger.debug('Handling response protocol', {
       status: response.status,
       isRedirectStatus,
     });
 
     if (isRedirectStatus) {
       const hostname = getRequestHostname(response);
-      debugLog('Response is redirect; clearing protocol cache', { hostname });
+      logger.debug('Response is redirect; clearing protocol cache', {
+        hostname,
+      });
       await clearProtocolCacheByHostname(hostname);
     }
   }
@@ -93,25 +94,25 @@ export function buildProtocolRequestOptimizer({
     request: Request
   ): Promise<SupportedProtocols | null> {
     const hostname = getRequestHostname(request);
-    debugLog('Determined hostname for request', { hostname });
+    logger.debug('Determined hostname for request', { hostname });
 
     const cachedProtocol = await getCachedProtocolByHostname(hostname);
     if (cachedProtocol) {
-      debugLog('Using cached protocol for hostname', {
+      logger.debug('Using cached protocol for hostname', {
         hostname,
         protocol: cachedProtocol,
       });
       return cachedProtocol;
     }
 
-    debugLog('No cached protocol; checking HTTPS support', { hostname });
+    logger.debug('No cached protocol; checking HTTPS support', { hostname });
 
     let protocol: SupportedProtocols | null = null;
 
     try {
       const supportsHttps = await doesHostNameSupportHttps(hostname);
       protocol = supportsHttps ? 'https' : 'http';
-      debugLog('Determined protocol based on HTTPS support', {
+      logger.debug('Determined protocol based on HTTPS support', {
         hostname,
         supportsHttps,
         protocol,
@@ -134,8 +135,8 @@ export function buildProtocolRequestOptimizer({
     hostname: string
   ): Promise<SupportedProtocols | null> {
     try {
-      const cached = await env.PROTOCOL_CACHE.get(hostname);
-      debugLog('Retrieved protocol from cache', { hostname, cached });
+      const cached = await env.CACHE.get(buildCacheKeyByHostname(hostname));
+      logger.debug('Retrieved protocol from cache', { hostname, cached });
       return cached === 'https' ? 'https' : cached === 'http' ? 'http' : null;
     } catch (error) {
       console.error(
@@ -144,6 +145,10 @@ export function buildProtocolRequestOptimizer({
       );
       return null;
     }
+  }
+
+  function buildCacheKeyByHostname(hostname: string): string {
+    return `protocol:${hostname}`;
   }
 
   function buildErrorMessage(error: any): string {
@@ -158,8 +163,8 @@ export function buildProtocolRequestOptimizer({
     protocol: SupportedProtocols;
   }): Promise<void> {
     try {
-      debugLog('Caching protocol for hostname', { hostname, protocol });
-      await env.PROTOCOL_CACHE.put(hostname, protocol, {
+      logger.debug('Caching protocol for hostname', { hostname, protocol });
+      await env.CACHE.put(buildCacheKeyByHostname(hostname), protocol, {
         expirationTtl: PROTOCOL_CACHE_EXPIRATION_IN_SECONDS,
       });
     } catch (error) {
@@ -172,8 +177,8 @@ export function buildProtocolRequestOptimizer({
 
   async function clearProtocolCacheByHostname(hostname: string): Promise<void> {
     try {
-      debugLog('Clearing protocol cache for hostname', { hostname });
-      await env.PROTOCOL_CACHE.delete(hostname);
+      logger.debug('Clearing protocol cache for hostname', { hostname });
+      await env.CACHE.delete(buildCacheKeyByHostname(hostname));
     } catch (error) {
       console.error(
         '[runtime-injector] Could not clear protocol cache for hostname',
@@ -183,7 +188,7 @@ export function buildProtocolRequestOptimizer({
   }
 
   async function doesHostNameSupportHttps(hostname: string): Promise<boolean> {
-    debugLog('Checking HTTPS support for hostname', { hostname });
+    logger.debug('Checking HTTPS support for hostname', { hostname });
     const response = await fetch(`https://${hostname}/`, {
       method: 'HEAD',
       cf: { timeout: HTTPS_CHECK_REQUEST_TIMEOUT },
@@ -192,14 +197,14 @@ export function buildProtocolRequestOptimizer({
     const isHandshakeError = response.status === 525;
 
     if (isHandshakeError) {
-      debugLog('HTTPS not supported for hostname', { hostname });
+      logger.debug('HTTPS not supported for hostname', { hostname });
       return false;
     }
 
     const isSuccessful = response.status >= 200 && response.status < 300;
 
     if (isSuccessful) {
-      debugLog('HTTPS supported for hostname', { hostname });
+      logger.debug('HTTPS supported for hostname', { hostname });
       return true;
     }
 
@@ -216,7 +221,7 @@ export function buildProtocolRequestOptimizer({
     const urlObj = new URL(url);
     const oldProtocol = urlObj.protocol;
     urlObj.protocol = `${protocol}:`;
-    debugLog('Updated URL protocol', {
+    logger.debug('Updated URL protocol', {
       originalUrl: url,
       oldProtocol,
       newProtocol: protocol,
