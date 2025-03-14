@@ -1,4 +1,7 @@
-import { ALLOWED_MICROAPP_ORIGIN_HOSTNAMES } from '@microapp-io/runtime';
+import {
+  ALLOWED_MICROAPP_ORIGIN_HOSTNAMES,
+  MICROAPP_URL_PARAM_NAMES,
+} from '@microapp-io/runtime';
 import {
   getAllowedTargetOriginUrlByRequest,
   getAllowedTargetOriginUrlByRequestOrThrow,
@@ -121,31 +124,30 @@ export function buildRequestTransformer({ debug }: { debug?: boolean } = {}): {
     response: Response;
   }): Headers {
     const headers = new Headers(response.headers);
+
+    // Remove the X-Frame-Options header to allow the microapp to be embedded in an iframe
     headers.delete('X-Frame-Options');
+    headers.set('Content-Security-Policy', buildContentSecurityPolicyHeader());
+
+    // Set the target origin as a cookie to allow the microapp to communicate with the parent window
+    const { origin: targetOrigin } =
+      getAllowedTargetOriginUrlByRequestOrThrow(request);
     headers.set(
-      'Content-Security-Policy',
-      buildContentSecurityPolicyHeader(request)
+      'Set-Cookie',
+      `${MICROAPP_URL_PARAM_NAMES.TARGET_ORIGIN}=${encodeURIComponent(
+        targetOrigin
+      )}; Path=/; Max-Age=3600; SameSite=None; Secure`
     );
 
+    // Prevent search engines from indexing the microapp
     headers.set('X-Robots-Tag', 'noindex, nofollow');
+
     return headers;
   }
 
-  function buildContentSecurityPolicyHeader(request: Request): string {
-    const allowedOrigins = [];
-
-    if (isTargetOriginOfRequestAllowed(request)) {
-      const { origin: targetOrigin } =
-        getAllowedTargetOriginUrlByRequestOrThrow(request);
-
-      allowedOrigins.push(targetOrigin);
-    }
-
-    if (allowedOrigins.length === 0) {
-      return `frame-ancestors 'self'`;
-    }
-
-    return `frame-ancestors 'self' ${allowedOrigins.join(' ')}`;
+  function buildContentSecurityPolicyHeader(): string {
+    // NB: We are allowing all origins to embed the microapp in an iframe
+    return `frame-ancestors *`;
   }
 
   return {

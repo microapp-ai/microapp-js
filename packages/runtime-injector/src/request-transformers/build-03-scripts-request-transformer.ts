@@ -23,7 +23,8 @@ export function build03ScriptsRequestTransformer(): RequestTransformer {
         'head',
         new InjectScriptWithDataOriginHandler(
           buildRoutingScript({ targetOrigin }),
-          targetOrigin
+          targetOrigin,
+          true
         )
       )
       // 2) Inject resizing script at the beginning of <body>
@@ -31,7 +32,8 @@ export function build03ScriptsRequestTransformer(): RequestTransformer {
         'body',
         new InjectScriptWithDataOriginHandler(
           buildResizingScript({ targetOrigin }),
-          targetOrigin
+          targetOrigin,
+          false
         )
       );
   }
@@ -46,16 +48,21 @@ class InjectScriptWithDataOriginHandler
 {
   constructor(
     private readonly scriptContent: string,
-    private readonly targetOrigin: string
+    private readonly targetOrigin: string,
+    private readonly prepend: boolean
   ) {
     this.scriptContent = scriptContent;
     this.targetOrigin = targetOrigin;
   }
 
   element(el: Element) {
-    el.append(
-      `<script data-target-origin="${this.targetOrigin}">${this.scriptContent}</script>`,
-      { html: true }
-    );
+    const script = `<script data-target-origin="${this.targetOrigin}">${this.scriptContent}</script>`;
+
+    if (this.prepend) {
+      el.prepend(script, { html: true });
+      return;
+    }
+
+    el.append(script, { html: true });
   }
 }

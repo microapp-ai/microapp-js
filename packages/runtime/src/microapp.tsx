@@ -43,20 +43,7 @@ export const Microapp: React.FC<MicroappProps> = ({
 
   const getChangedValues = useGetChangedValues(runtimeOptions);
   const [isLoading, setIsLoading] = React.useState(true);
-
-  const iframeSrc = React.useMemo(
-    () =>
-      targetOrigin
-        ? buildMicroappUrl(homeUrl, {
-            baseUrl,
-            currentUrl,
-            targetOrigin,
-            theme,
-            lang,
-          })
-        : undefined,
-    [homeUrl, baseUrl, currentUrl, targetOrigin, theme, lang]
-  );
+  const iframeSrc = useMicroappUrl(runtimeOptions);
 
   useEffect(() => {
     const iframe = iframeRef.current;
@@ -202,4 +189,27 @@ function useGetChangedValues<T extends Record<string, any>>(
   };
 
   return getChangedValues;
+}
+
+export function useMicroappUrl({
+  homeUrl,
+  baseUrl,
+  currentUrl,
+  targetOrigin,
+  theme,
+  lang,
+}: Omit<MicroappRuntimeOptions, 'iframe'>): string | undefined {
+  return React.useMemo(
+    () =>
+      targetOrigin
+        ? buildMicroappUrl(homeUrl, {
+            baseUrl,
+            currentUrl,
+            targetOrigin,
+            theme,
+            lang,
+          })
+        : undefined,
+    [homeUrl, baseUrl, currentUrl, targetOrigin, theme, lang]
+  );
 }

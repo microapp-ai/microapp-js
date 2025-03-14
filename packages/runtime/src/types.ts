@@ -12,8 +12,15 @@ export type MicroappTheme = 'light' | 'dark';
 export type MicroappRouteChangeMessage = WindowMessage<
   typeof MICROAPP_ROUTE_CHANGE_EVENT_NAME,
   {
-    trigger: 'load' | 'popstate' | 'pushState' | 'replaceState';
+    trigger:
+      | 'DOMContentLoaded'
+      | 'load'
+      | 'popstate'
+      | 'pushState'
+      | 'replaceState'
+      | 'polling';
     url: string;
+    title: string;
   }
 >;
 

@@ -19,7 +19,7 @@ import type {
 } from './types';
 
 import {
-  buildPathnameWithTrailingSlash,
+  buildPathnameWithBeginningAndTrailingSlash,
   buildUrlWithTrailingSlash,
   removeTrailingSlashFromUrl,
   throttle,
@@ -109,7 +109,8 @@ export class MicroappRuntime {
     }
     const url = buildUrlWithTrailingSlash(urlString);
     const path = this.#buildHistoryPathFromUrl(url);
-    window.history.pushState({}, '', path);
+    // NB: We use replaceState instead of pushState to avoid adding to the history stack twice
+    window.history.replaceState({}, '', path);
   };
 
   #buildHistoryPathFromUrl = (url: URL): string => {
@@ -119,14 +120,25 @@ export class MicroappRuntime {
       urlSearchParams.delete(paramName);
     }
 
-    let path = buildPathnameWithTrailingSlash(url.pathname);
+    let path = buildPathnameWithBeginningAndTrailingSlash(url.pathname);
 
     if (this.#baseUrl) {
+      // Extract relative path if needed and format it properly
+      path = path.startsWith(this.#baseUrl.pathname)
+        ? buildPathnameWithBeginningAndTrailingSlash(
+            path.slice(this.#baseUrl.pathname.length)
+          )
+        : path;
+
+      // Handle special case for root path or concatenate paths
       path =
         path === '/'
           ? this.#baseUrl.pathname
-          : removeTrailingSlashFromUrl(this.#baseUrl.pathname) + url.pathname;
-      path = buildPathnameWithTrailingSlash(path);
+          : removeTrailingSlashFromUrl(this.#baseUrl.pathname) +
+            buildPathnameWithBeginningAndTrailingSlash(path);
+
+      // Ensure consistent formatting
+      path = buildPathnameWithBeginningAndTrailingSlash(path);
     }
 
     const searchParams = urlSearchParams.toString();
@@ -175,13 +187,6 @@ export class MicroappRuntime {
     if (typeof window === 'undefined') {
       return;
     }
-
-    window.addEventListener('popstate', () => {
-      this.#messageBus.send(MICROAPP_ROUTE_CHANGE_EVENT_NAME, {
-        trigger: 'popstate',
-        url: window.location.href,
-      });
-    });
 
     const notifySetViewportSize = throttle(
       (trigger: MicroappMessagePayload<MicroappResizeMessage>['trigger']) => {
@@ -254,7 +259,7 @@ export class MicroappRuntime {
     }
 
     const shouldUpdateIframeSrc =
-      'url' in options ||
+      'homeUrl' in options ||
       'baseUrl' in options ||
       'currentUrl' in options ||
       'targetOrigin' in options;

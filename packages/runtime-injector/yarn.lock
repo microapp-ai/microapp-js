@@ -351,8 +351,10 @@
     "@jridgewell/resolve-uri" "^3.0.3"
     "@jridgewell/sourcemap-codec" "^1.4.10"
 
-"@microapp-io/runtime@file:../runtime":
-  version "0.2.22"
+"@microapp-io/runtime@0.2.23":
+  version "0.2.23"
+  resolved "https://registry.yarnpkg.com/@microapp-io/runtime/-/runtime-0.2.23.tgz#23b9536710a6d0669f34603ee032b5d0b93ac3ba"
+  integrity sha512-AYdiKGhKs7zdRsQEWGEZZ/n0hJTiSGkddjjrkv96/K/D9jeCuSXtrC5dodxdC15Hr4J8cfFCVmPKpR02kMJmaw==
   dependencies:
     "@types/react" "^19.0.8"
     rollup "^4.34.3"

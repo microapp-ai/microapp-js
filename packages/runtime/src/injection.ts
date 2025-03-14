@@ -1,5 +1,4 @@
 import {
-  MICROAPP_POP_STATE_EVENT_NAME,
   MICROAPP_RESIZE_EVENT_NAME,
   MICROAPP_ROUTE_CHANGE_EVENT_NAME,
 } from './constants';
@@ -9,82 +8,109 @@ export type MicroappScriptBuilder = (
   options: MicroappScriptVariables
 ) => string;
 
-export function getRoutingScriptBuilder(): MicroappScriptBuilder {
-  const script = minifyAndObfuscateScript(`
+const ROUTING_POLLING_INTERVAL_IN_MS = 200;
+
+const script = minifyAndObfuscateScript(`
 (function() {
-	if (!window.__microappRouting) {
-		window.__microappRouting = true;
+  // Prevent double initialization
+  if (window.__microappRouting) {
+    return;
+  }
 
-		window.addEventListener('message', (event) => {
-		  if (event.origin !== '__TARGET_ORIGIN__') {
-		    return;
-      }
+  window.__microappRouting = true;
 
-      if (event.data.type === '${MICROAPP_POP_STATE_EVENT_NAME}') {
-        history.back();
-      }
-    });
+  // Track the current URL and title
+  let lastRoute = null;
 
-		function notifyRouteChange(trigger) {
-			const url = window.location.href;
-			window.parent.postMessage(
-				{
-					type: '${MICROAPP_ROUTE_CHANGE_EVENT_NAME}',
-					payload: { trigger, url }
-				},
-				'__TARGET_ORIGIN__'
-			);
-		}
+  // Notify parent about route changes
+  function notifyRouteChange(trigger) {
+    // Only notify if URL or title has actually changed
+    if (canNotifyRouteChange()) {
+      lastRoute = getCurrentData();
+      window.parent.postMessage(
+        {
+          type: '${MICROAPP_ROUTE_CHANGE_EVENT_NAME}',
+          payload: { trigger, ...lastRoute }
+        },
+        '__TARGET_ORIGIN__'
+      );
+    }
+  }
 
-		window.addEventListener('popstate', () => {
-			notifyRouteChange('popstate');
-		});
+  function canNotifyRouteChange() {
+    const { url, title } = getCurrentData();
+    return lastRoute === null || lastRoute.url !== url || lastRoute.title !== title;
+  }
 
-		const originalPushState = history.pushState;
-		history.pushState = function(...args) {
-			originalPushState.apply(this, args);
-			notifyRouteChange('pushState');
-		};
+  function getCurrentData() {
+    return {
+      url: window.location.href,
+      title: document.title
+    };
+  }
 
-		const originalReplaceState = history.replaceState;
-		history.replaceState = function(...args) {
-			originalReplaceState.apply(this, args);
-			notifyRouteChange('replaceState');
-		};
-		
-		notifyRouteChange('load');
-	}
+  // Basic history API interception
+  window.addEventListener('popstate', () => {
+    notifyRouteChange('popstate');
+  });
+
+  // Override history methods
+  const originalPushState = history.pushState;
+  window.history.pushState = function(...args) {
+    originalPushState.apply(this, args);
+    // Use requestAnimationFrame to ensure DOM has updated
+    requestAnimationFrame(() => notifyRouteChange('pushState'));
+  };
+
+  const originalReplaceState = history.replaceState;
+  window.history.replaceState = function(...args) {
+    originalReplaceState.apply(this, args);
+    requestAnimationFrame(() => notifyRouteChange('replaceState'));
+  };
+
+  // Reliable URL polling fallback - the key to universal compatibility
+  function pollRouteChange() {
+    const currentRoute = getCurrentData();
+    if (canNotifyRouteChange()) {
+      lastRoute = currentRoute;
+      notifyRouteChange('polling');
+    }
+    setTimeout(pollRouteChange, ${ROUTING_POLLING_INTERVAL_IN_MS});
+  }
+
+  setTimeout(pollRouteChange, ${ROUTING_POLLING_INTERVAL_IN_MS});
+  notifyRouteChange('init');
 }());`);
-
+export function getRoutingScriptBuilder(): MicroappScriptBuilder {
   return (variables) => replaceScriptVariables(script, variables);
 }
 
 export function getResizingScriptBuilder(): MicroappScriptBuilder {
   const script = minifyAndObfuscateScript(`
 (function() {
-	if (!window.__microappResizing) {
-		window.__microappResizing = true;
+  if (!window.__microappResizing) {
+    window.__microappResizing = true;
 
-		function throttle(callback, delay) {
-			let last;
-			let timer;
-			return function() {
-				const context = this;
-				const now = +new Date();
-				const args = arguments;
-				if (last && now < last + delay) {
-					clearTimeout(timer);
-					timer = setTimeout(() => {
-						last = now;
-						callback.apply(context, args);
-					}, delay);
-				} else {
-					last = now;
-					callback.apply(context, args);
-				}
-			};
-		}
-		
+    function throttle(callback, delay) {
+      let last;
+      let timer;
+      return function() {
+        const context = this;
+        const now = +new Date();
+        const args = arguments;
+        if (last && now < last + delay) {
+          clearTimeout(timer);
+          timer = setTimeout(() => {
+            last = now;
+            callback.apply(context, args);
+          }, delay);
+        } else {
+          last = now;
+          callback.apply(context, args);
+        }
+      };
+    }
+
     // NB: This is a workaround to fix the issue with the height of the iframe
     document.body.style.setProperty('overflow', 'auto', 'important');
     document.body.style.setProperty('height', 'auto', 'important');
@@ -96,31 +122,31 @@ export function getResizingScriptBuilder(): MicroappScriptBuilder {
       next.style.setProperty('overflow', 'auto', 'important');
     }
 
-		const notifyHeightChange = throttle((trigger) => {
-		  const bodyRect = document.body.getBoundingClientRect();
-		  const widthInPixel = bodyRect.width;
-		  const heightInPixel = Math.max(
-		    document.body.scrollHeight,
+    const notifyHeightChange = throttle((trigger) => {
+      const bodyRect = document.body.getBoundingClientRect();
+      const widthInPixel = bodyRect.width;
+      const heightInPixel = Math.max(
+        document.body.scrollHeight,
         document.body.offsetHeight,
         document.documentElement.clientHeight,
         document.documentElement.scrollHeight,
         document.documentElement.offsetHeight
       );
 
-			window.parent.postMessage({
+      window.parent.postMessage({
         type: '${MICROAPP_RESIZE_EVENT_NAME}',
         payload: { trigger, widthInPixel, heightInPixel }
       }, '__TARGET_ORIGIN__');
-		}, 500);
+    }, 500);
 
-		window.addEventListener('load', () => {
+    window.addEventListener('load', () => {
       ['resize', 'orientationchange', 'fullscreenchange'].forEach(eventName => {
         window.addEventListener(eventName, () => {
           notifyHeightChange(eventName);
         });
       });
 
-		  const resizeObserver = new ResizeObserver(() => {
+      const resizeObserver = new ResizeObserver(() => {
         notifyHeightChange('resizeObserver');
       });
       resizeObserver.observe(document.body);
@@ -135,33 +161,63 @@ export function getResizingScriptBuilder(): MicroappScriptBuilder {
       });
 
       notifyHeightChange('load');
-		});
-	}
-}());`);
+    });
+  }
+}())`);
 
   return (variables) => replaceScriptVariables(script, variables);
 }
 
 function minifyAndObfuscateScript(script: string): string {
-  // Remove multi-line comments
-  let minified = script.replace(/\/\*[\s\S]*?\*\//g, '');
+  // Transformers array
+  const transformers = [
+    preserveStrings,
+    removeComments,
+    removeBlankLines,
+    removeAllWhitespace,
+    restoreStrings,
+  ];
 
-  // Remove single-line comments
-  minified = minified.replace(/\/\/.*$/gm, '');
+  // String literals storage
+  const stringLiterals: string[] = [];
 
-  // Remove whitespace at the beginning and end of each line
-  minified = minified.replace(/^\s+|\s+$/gm, '');
+  // Transformer 1: Preserve string literals
+  function preserveStrings(script: string): string {
+    return script.replace(/(["'])((?:\\[\s\S]|(?!\1)[^\\])*)\1/g, (match) => {
+      stringLiterals.push(match);
+      return `__STRING_${stringLiterals.length - 1}__`;
+    });
+  }
 
-  // Remove newline characters
-  minified = minified.replace(/\n+/g, '');
+  // Transformer 2: Remove comments
+  function removeComments(script: string): string {
+    return script
+      .replace(/\/\*[\s\S]*?\*\//g, '') // Multi-line comments
+      .replace(/\/\/.*/g, ''); // Single-line comments
+  }
 
-  // Replace multiple spaces with a single space
-  minified = minified.replace(/\s+/g, ' ');
+  // Transformer 3: Remove blank lines
+  function removeBlankLines(script: string): string {
+    return script.replace(/^\s*[\r\n]/gm, '');
+  }
 
-  // Optionally remove spaces around certain punctuation characters
-  minified = minified.replace(/\s*([=+\-*/{}();,:<>])\s*/g, '$1');
+  // Transformer 4: Remove ALL whitespace (not just collapse)
+  function removeAllWhitespace(script: string): string {
+    return script.replace(/\s+/g, ' ');
+  }
 
-  return minified.trim();
+  // Transformer 5: Restore preserved strings
+  function restoreStrings(script: string): string {
+    return script.replace(/__STRING_(\d+)__/g, (_, index) => {
+      return stringLiterals[parseInt(index)];
+    });
+  }
+
+  // Apply transformers in sequence using reducer pattern
+  return transformers.reduce(
+    (result, transformer) => transformer(result),
+    script
+  );
 }
 
 function replaceScriptVariables(
