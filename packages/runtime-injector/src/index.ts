@@ -9,7 +9,7 @@ import {
   build04AnalyticsRequestTransformer,
 } from './request-transformers';
 
-export default {
+const worker = {
   async fetch(request: Request, env: Env): Promise<Response> {
     // NB: This is a debug flag that can be used to force optimization for a specific IP address.
     // const ip = request.headers.get('cf-connecting-ip');
@@ -44,3 +44,5 @@ export default {
     });
   },
 };
+
+export default worker;

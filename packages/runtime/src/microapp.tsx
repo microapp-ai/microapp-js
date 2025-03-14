@@ -1,8 +1,10 @@
 import * as React from 'react';
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import type { MicroappRuntimeOptions } from './microapp-runtime';
 import { MicroappRuntime } from './microapp-runtime';
 import { buildMicroappUrl } from './build-microapp-url';
+import { MicroappRouteState } from './microapp-route-state';
+import { buildMicroappIframeId } from './utils';
 
 type MicroappProps = {
   onLoad?: () => void;
@@ -14,7 +16,35 @@ type MicroappProps = {
 > &
   Omit<React.IframeHTMLAttributes<HTMLIFrameElement>, 'src'>;
 
-export const Microapp: React.FC<MicroappProps> = ({
+const MicroappContext = React.createContext<{
+  __MICROAPP_CONTEXT__: true;
+} | null>(null);
+
+export function MicroappProvider({ children }: { children?: any }) {
+  useEffect(() => {
+    const handlePopState = (event: Event) => {
+      const routeState = MicroappRouteState.fromEvent(event);
+
+      if (routeState) {
+        routeState.reloadOnPopStateEventIfIframeIsNotVisible(event);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, []);
+
+  return (
+    <MicroappContext.Provider value={{ __MICROAPP_CONTEXT__: true }}>
+      {children}
+    </MicroappContext.Provider>
+  );
+}
+
+export function Microapp({
   homeUrl,
   baseUrl,
   currentUrl,
@@ -26,7 +56,13 @@ export const Microapp: React.FC<MicroappProps> = ({
   loadingComponent,
   title,
   ...rest
-}) => {
+}: MicroappProps) {
+  if ('id' in rest) {
+    console.warn(
+      '[Microapp] The "id" prop is not supported. Use "title" instead.'
+    );
+  }
+
   const iframeRef = React.useRef<HTMLIFrameElement>(null);
   const runtimeRef = React.useRef<MicroappRuntime | null>(null);
   const runtimeOptions = React.useMemo(
@@ -81,6 +117,16 @@ export const Microapp: React.FC<MicroappProps> = ({
     onLoad?.();
   };
 
+  const iframeId = useMemo(() => buildMicroappIframeId({ homeUrl }), [homeUrl]);
+  const isMicroappContext = React.useContext(MicroappContext);
+
+  if (!isMicroappContext) {
+    console.error(
+      '[Microapp] The "Microapp" component must be a child of "MicroappProvider".'
+    );
+    return null;
+  }
+
   return (
     <>
       <iframe
@@ -91,6 +137,7 @@ export const Microapp: React.FC<MicroappProps> = ({
         frameBorder="0"
         scrolling="no"
         {...rest}
+        data-microapp-id={iframeId}
         title={title}
         onLoad={handleLoad}
         ref={iframeRef}
@@ -103,7 +150,7 @@ export const Microapp: React.FC<MicroappProps> = ({
         ))}
     </>
   );
-};
+}
 
 type DefaultLoadingSpinnerProps = React.HTMLAttributes<HTMLDivElement> &
   Pick<MicroappRuntimeOptions, 'theme'>;

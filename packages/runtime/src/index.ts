@@ -4,6 +4,7 @@ export * from './constants';
 export * from './injection';
 export * from './microapp';
 export * from './microapp-message-bus';
+export * from './microapp-route-state';
 export * from './microapp-runtime';
 export * from './types';
 export * from './window-post-message-bus';

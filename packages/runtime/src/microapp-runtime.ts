@@ -20,12 +20,13 @@ import type {
 
 import {
   buildPathnameWithBeginningAndTrailingSlash,
+  buildUrlOrCurrentWindowLocation,
   buildUrlWithTrailingSlash,
   removeTrailingSlashFromUrl,
   throttle,
 } from './utils';
 import { buildMicroappUrl } from './build-microapp-url';
-import { buildUrlOrCurrentWindowLocation } from './utils/build-url-or-current-window-location';
+import { MicroappRouteState } from './microapp-route-state';
 
 export type MicroappRuntimeOptions = {
   iframe: HTMLIFrameElement;
@@ -110,7 +111,14 @@ export class MicroappRuntime {
     const url = buildUrlWithTrailingSlash(urlString);
     const path = this.#buildHistoryPathFromUrl(url);
     // NB: We use replaceState instead of pushState to avoid adding to the history stack twice
-    window.history.replaceState({}, '', path);
+    window.history.replaceState(
+      new MicroappRouteState({
+        homeUrl: this.#homeUrl.toString(),
+        path,
+      }),
+      '',
+      path
+    );
   };
 
   #buildHistoryPathFromUrl = (url: URL): string => {
