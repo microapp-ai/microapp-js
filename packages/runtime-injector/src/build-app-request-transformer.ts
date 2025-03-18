@@ -1,16 +1,16 @@
 import { buildLogger } from './utils';
-import type { Env, MicroappApp } from './types';
+import type { Env, MicroappApp, RequestTransformer } from './types';
 
 const FIVE_MINUTES_IN_SECONDS = 60 * 5;
 const APP_CACHE_EXPIRATION_IN_SECONDS = FIVE_MINUTES_IN_SECONDS;
 
-export function buildAppFetcher({
+export function buildAppRequestTransformer({
   env,
   debug,
 }: {
   env: Env;
   debug?: boolean;
-}): {
+}): RequestTransformer & {
   getAppByRequest: (request: Request) => Promise<MicroappApp | null>;
 } {
   const logger = buildLogger({
@@ -74,7 +74,11 @@ export function buildAppFetcher({
     });
 
     if (!response.ok) {
-      logger.error('Failed to fetch app data', response);
+      const body = await response.text();
+      logger.error('Failed to fetch app data', {
+        status: response.status,
+        body,
+      });
       return null;
     }
 
@@ -82,7 +86,27 @@ export function buildAppFetcher({
     return appData;
   }
 
+  async function buildRequestWithAppHostname(
+    request: Request
+  ): Promise<Request> {
+    const app = await getAppByRequest(request);
+    const requestUrl = new URL(request.url);
+
+    if (!app) {
+      logger.error('App not found', requestUrl.hostname);
+      return request;
+    }
+
+    // TODO: Change domainName to publicUrl when API is updated.
+    requestUrl.hostname = app.domainName;
+    logger.debug('App host URL', requestUrl.hostname);
+
+    const updatedRequest = new Request(requestUrl, request);
+    return updatedRequest;
+  }
+
   return {
     getAppByRequest,
+    transform: buildRequestWithAppHostname,
   };
 }

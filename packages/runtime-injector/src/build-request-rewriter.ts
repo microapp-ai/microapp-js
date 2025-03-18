@@ -6,42 +6,18 @@ import {
   getAllowedTargetOriginUrlByRequest,
   getAllowedTargetOriginUrlByRequestOrThrow,
 } from './utils';
-import type { Env, MicroappApp } from './types';
+import type { Env, MicroappApp, RequestHTMLRewriterBuilder } from './types';
 
-export type RequestTransformerInput = {
-  request: Request;
-  rewriter: HTMLRewriter;
-};
-
-export type RequestTransformerOutput = void | Promise<void>;
-
-export type RequestTransformer = {
-  transform: ({
-    request,
-    rewriter,
-  }: RequestTransformerInput) => RequestTransformerOutput;
-};
-
-export type RequestTransformerBuilderInput = {
-  env: Env;
-  debug?: boolean;
-  app: MicroappApp | null;
-};
-
-export type RequestTransformerBuilder = (
-  input: RequestTransformerBuilderInput
-) => RequestTransformer;
-
-export function buildRequestTransformer({ debug }: { debug?: boolean } = {}): {
-  shouldTransformRequest: (request: Request) => boolean;
-  transform: (
+export function buildRequestRewriter({ debug }: { debug?: boolean } = {}): {
+  shouldRewrite: (request: Request) => boolean;
+  rewrite: (
     request: Request,
     response: Response,
     {
       env,
-      transformers,
+      rewriters,
     }: {
-      transformers?: RequestTransformerBuilder[];
+      rewriters?: RequestHTMLRewriterBuilder[];
       env: Env;
       app: MicroappApp | null;
     }
@@ -52,11 +28,11 @@ export function buildRequestTransformer({ debug }: { debug?: boolean } = {}): {
     response: Response,
     {
       env,
-      transformers = [],
+      rewriter = [],
       app,
     }: {
       env: Env;
-      transformers?: RequestTransformerBuilder[];
+      rewriter?: RequestHTMLRewriterBuilder[];
       app: MicroappApp | null;
     }
   ): Promise<Response> {
@@ -74,20 +50,20 @@ export function buildRequestTransformer({ debug }: { debug?: boolean } = {}): {
       response,
     });
 
-    const transformedResponse = new Response(response.body, {
+    const rewrittenResponse = new Response(response.body, {
       ...response,
       headers,
       status: response.status,
     });
 
-    const rewriter = new HTMLRewriter();
+    const htmlRewriter = new HTMLRewriter();
 
-    for (const transformerBuilder of transformers) {
-      const transformer = transformerBuilder({ env, debug, app });
-      await transformer.transform({ request, rewriter });
+    for (const rewriterBuilder of rewriter) {
+      const rewriter = rewriterBuilder({ env, debug, app });
+      await rewriter.rewrite({ request, htmlRewriter });
     }
 
-    return rewriter.transform(transformedResponse);
+    return htmlRewriter.transform(rewrittenResponse);
   }
 
   function shouldHandleRequest(request: Request): boolean {
@@ -155,7 +131,7 @@ export function buildRequestTransformer({ debug }: { debug?: boolean } = {}): {
   }
 
   return {
-    shouldTransformRequest: shouldHandleRequest,
-    transform: handle,
+    shouldRewrite: shouldHandleRequest,
+    rewrite: handle,
   };
 }

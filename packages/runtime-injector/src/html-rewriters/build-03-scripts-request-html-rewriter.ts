@@ -1,23 +1,20 @@
-import type {
-  RequestTransformer,
-  RequestTransformerInput,
-} from '../build-request-transformer';
 import type { HTMLRewriterElementContentHandlers } from '@cloudflare/workers-types/2023-07-01/index';
 import {
   getResizingScriptBuilder,
   getRoutingScriptBuilder,
 } from '@microapp-io/runtime';
 import { getAllowedTargetOriginUrlByRequestOrThrow } from '../utils';
+import type { RequestHTMLRewriter, RequestHTMLRewriterInput } from '../types';
 
 const buildResizingScript = getResizingScriptBuilder();
 const buildRoutingScript = getRoutingScriptBuilder();
 
-export function build03ScriptsRequestTransformer(): RequestTransformer {
-  function transform({ request, rewriter }: RequestTransformerInput): void {
+export function build03ScriptsRequestHtmlRewriter(): RequestHTMLRewriter {
+  function rewrite({ request, htmlRewriter }: RequestHTMLRewriterInput): void {
     const { origin: targetOrigin } =
       getAllowedTargetOriginUrlByRequestOrThrow(request);
 
-    rewriter
+    htmlRewriter
       // 1) Inject routing script at the beginning of <head>
       .on(
         'head',
@@ -39,7 +36,7 @@ export function build03ScriptsRequestTransformer(): RequestTransformer {
   }
 
   return {
-    transform,
+    rewrite,
   };
 }
 

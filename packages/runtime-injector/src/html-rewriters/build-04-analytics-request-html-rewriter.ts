@@ -1,17 +1,16 @@
 import type {
-  RequestTransformer,
-  RequestTransformerBuilderInput,
-  RequestTransformerInput,
-} from '../build-request-transformer';
+  RequestHTMLRewriter,
+  RequestHTMLRewriterBuilderInput,
+  RequestHTMLRewriterInput,
+} from '../types';
 
-export function build04AnalyticsRequestTransformer({
+export function build04AnalyticsRequestHtmlRewriter({
   env,
-  debug,
   app,
-}: RequestTransformerBuilderInput): RequestTransformer {
-  async function transform({
-    rewriter,
-  }: RequestTransformerInput): Promise<void> {
+}: RequestHTMLRewriterBuilderInput): RequestHTMLRewriter {
+  async function rewrite({
+    htmlRewriter,
+  }: RequestHTMLRewriterInput): Promise<void> {
     const websiteId = app?.analyticsWebsiteId;
 
     if (!websiteId) {
@@ -20,7 +19,7 @@ export function build04AnalyticsRequestTransformer({
 
     const analyticsScript = getAnalyticsScript(websiteId);
 
-    rewriter.on('head', {
+    htmlRewriter.on('head', {
       element(element) {
         element.append(analyticsScript, { html: true });
       },
@@ -32,6 +31,6 @@ export function build04AnalyticsRequestTransformer({
   }
 
   return {
-    transform,
+    rewrite,
   };
 }

@@ -1,4 +1,4 @@
-import type { Env } from './types';
+import type { Env, RequestTransformer } from './types';
 import { buildLogger } from './utils';
 
 const SUPPORTED_PROTOCOLS = ['http', 'https'] as const;
@@ -8,14 +8,13 @@ const ONE_HOUR_IN_SECONDS = 60 * 60;
 const PROTOCOL_CACHE_EXPIRATION_IN_SECONDS = ONE_HOUR_IN_SECONDS;
 const HTTPS_CHECK_REQUEST_TIMEOUT_IN_MS = 3000 as const;
 
-export function buildProtocolRequestOptimizer({
+export function buildProtocolRequestTransformer({
   env,
   debug,
 }: {
   env: Env;
   debug?: boolean;
-}): {
-  buildRequestUrl: (request: Request) => Promise<string>;
+}): RequestTransformer & {
   handleResponse: (response: Response) => Promise<void>;
 } {
   const logger = buildLogger({
@@ -23,16 +22,16 @@ export function buildProtocolRequestOptimizer({
     debug,
   });
 
-  async function buildRequestUrlWithOptimalProtocol(
+  async function buildRequestWithOptimalProtocol(
     request: Request
-  ): Promise<string> {
+  ): Promise<Request> {
     logger.debug('Processing request URL', { url: request.url });
 
     if (!shouldOptimizeRequestProtocol(request)) {
       logger.debug('Skipping optimization for protocol', {
         url: request.url,
       });
-      return request.url;
+      return request;
     }
 
     const protocol = await getOptimalProtocolForHostname(request);
@@ -45,7 +44,7 @@ export function buildProtocolRequestOptimizer({
       logger.debug('No optimal protocol found, using original URL', {
         url: request.url,
       });
-      return request.url;
+      return request;
     }
 
     const updatedUrl = updateUrlProtocol({
@@ -57,7 +56,8 @@ export function buildProtocolRequestOptimizer({
       updatedUrl,
     });
 
-    return updatedUrl;
+    const updatedRequest = new Request(updatedUrl, request);
+    return updatedRequest;
   }
 
   async function handleResponseProtocol(response: Response): Promise<void> {
@@ -232,7 +232,7 @@ export function buildProtocolRequestOptimizer({
   }
 
   return {
-    buildRequestUrl: buildRequestUrlWithOptimalProtocol,
+    transform: buildRequestWithOptimalProtocol,
     handleResponse: handleResponseProtocol,
   };
 }

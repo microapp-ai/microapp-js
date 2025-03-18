@@ -1,18 +1,15 @@
-import type {
-  RequestTransformer,
-  RequestTransformerInput,
-} from '../build-request-transformer';
 import type { HTMLRewriterElementContentHandlers } from '@cloudflare/workers-types/2023-07-01/index';
+import type { RequestHTMLRewriter, RequestHTMLRewriterInput } from '../types';
 
-export function build01MetaRequestTransformer(): RequestTransformer {
-  function transform({ rewriter }: RequestTransformerInput): void {
-    rewriter
+export function build01MetaRequestHtmlRewriter(): RequestHTMLRewriter {
+  function rewrite({ htmlRewriter }: RequestHTMLRewriterInput): void {
+    htmlRewriter
       // 0) Inject runtime comment element at the beginning of the HTML
       .on('html', new InjectRuntimeCommentElementHandler());
   }
 
   return {
-    transform,
+    rewrite,
   };
 }
 
