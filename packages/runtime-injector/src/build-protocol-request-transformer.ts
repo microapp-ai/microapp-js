@@ -18,7 +18,7 @@ export function buildProtocolRequestTransformer({
   handleResponse: (response: Response) => Promise<void>;
 } {
   const logger = buildLogger({
-    identifier: 'protocol-optimizer',
+    identifier: 'protocol-request-transformer',
     debug,
   });
 

@@ -14,7 +14,7 @@ export function buildAppRequestTransformer({
   getAppByRequest: (request: Request) => Promise<MicroappApp | null>;
 } {
   const logger = buildLogger({
-    identifier: 'get-app-info',
+    identifier: 'app-request-transformer',
     debug,
   });
 
