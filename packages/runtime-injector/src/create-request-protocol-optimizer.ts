@@ -4,12 +4,13 @@ import { buildLogger } from './utils';
 const SUPPORTED_PROTOCOLS = ['http', 'https'] as const;
 type SupportedProtocols = (typeof SUPPORTED_PROTOCOLS)[number];
 
-const PROTOCOL_CACHE_EXPIRATION_IN_SECONDS = 3600 as const;
-const HTTPS_CHECK_REQUEST_TIMEOUT = 3000 as const;
+const ONE_HOUR_IN_SECONDS = 60 * 60;
+const PROTOCOL_CACHE_EXPIRATION_IN_SECONDS = ONE_HOUR_IN_SECONDS;
+const HTTPS_CHECK_REQUEST_TIMEOUT_IN_MS = 3000 as const;
 
 export function buildProtocolRequestOptimizer({
   env,
-  debug = false,
+  debug,
 }: {
   env: Env;
   debug?: boolean;
@@ -19,6 +20,7 @@ export function buildProtocolRequestOptimizer({
 } {
   const logger = buildLogger({
     identifier: 'protocol-optimizer',
+    debug,
   });
 
   async function buildRequestUrlWithOptimalProtocol(
@@ -148,7 +150,7 @@ export function buildProtocolRequestOptimizer({
   }
 
   function buildCacheKeyByHostname(hostname: string): string {
-    return `protocol:${hostname}`;
+    return `hostnames/${hostname}/protocol`;
   }
 
   function buildErrorMessage(error: any): string {
@@ -191,7 +193,7 @@ export function buildProtocolRequestOptimizer({
     logger.debug('Checking HTTPS support for hostname', { hostname });
     const response = await fetch(`https://${hostname}/`, {
       method: 'HEAD',
-      cf: { timeout: HTTPS_CHECK_REQUEST_TIMEOUT },
+      cf: { timeout: HTTPS_CHECK_REQUEST_TIMEOUT_IN_MS },
     });
 
     const isHandshakeError = response.status === 525;

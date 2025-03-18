@@ -8,5 +8,10 @@ export interface Env {
 export type MicroappApp = {
   id: string;
   slug: string;
+
+  // TODO: Replace domainName with publicUrl when the API is updated.
+  domainName: string;
+  // publicUrl: string;
+
   analyticsWebsiteId: string;
 };

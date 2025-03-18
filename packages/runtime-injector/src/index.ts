@@ -8,12 +8,13 @@ import {
   build03ScriptsRequestTransformer,
   build04AnalyticsRequestTransformer,
 } from './request-transformers';
+import { buildAppFetcher } from './build-app-fetcher';
 
 const worker = {
   async fetch(request: Request, env: Env): Promise<Response> {
     // NB: This is a debug flag that can be used to force optimization for a specific IP address.
     // const ip = request.headers.get('cf-connecting-ip');
-    // const debug = ip === '2804:d45:3719:2300:9073:a958:1207:cc52';
+    // const debug = ip === '2804:d45:3719:2300:2133:ae1:10ce:87bf';
     const debug = false;
 
     const protocolRequestOptimizer = buildProtocolRequestOptimizer({
@@ -31,6 +32,9 @@ const worker = {
       return response;
     }
 
+    const appFetcher = buildAppFetcher({ env, debug });
+    const app = await appFetcher.getAppByRequest(request);
+
     const transformers: RequestTransformerBuilder[] = [
       build01MetaRequestTransformer,
       build02SeoRequestTransformer,
@@ -41,6 +45,7 @@ const worker = {
     return requestTransformer.transform(request, response, {
       env,
       transformers,
+      app,
     });
   },
 };

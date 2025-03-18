@@ -6,7 +6,7 @@ import {
   getAllowedTargetOriginUrlByRequest,
   getAllowedTargetOriginUrlByRequestOrThrow,
 } from './utils';
-import type { Env } from './types';
+import type { Env, MicroappApp } from './types';
 
 export type RequestTransformerInput = {
   request: Request;
@@ -25,6 +25,7 @@ export type RequestTransformer = {
 export type RequestTransformerBuilderInput = {
   env: Env;
   debug?: boolean;
+  app: MicroappApp | null;
 };
 
 export type RequestTransformerBuilder = (
@@ -42,6 +43,7 @@ export function buildRequestTransformer({ debug }: { debug?: boolean } = {}): {
     }: {
       transformers?: RequestTransformerBuilder[];
       env: Env;
+      app: MicroappApp | null;
     }
   ) => Promise<Response>;
 } {
@@ -51,9 +53,11 @@ export function buildRequestTransformer({ debug }: { debug?: boolean } = {}): {
     {
       env,
       transformers = [],
+      app,
     }: {
       env: Env;
       transformers?: RequestTransformerBuilder[];
+      app: MicroappApp | null;
     }
   ): Promise<Response> {
     const isHtmlContentType = doesRequestHaveContentType({
@@ -79,7 +83,7 @@ export function buildRequestTransformer({ debug }: { debug?: boolean } = {}): {
     const rewriter = new HTMLRewriter();
 
     for (const transformerBuilder of transformers) {
-      const transformer = transformerBuilder({ env, debug });
+      const transformer = transformerBuilder({ env, debug, app });
       await transformer.transform({ request, rewriter });
     }
 
