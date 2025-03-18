@@ -9,7 +9,7 @@ export function buildAppRequestTransformer({
   debug,
 }: {
   env: Env;
-  debug?: boolean;
+  debug: boolean;
 }): RequestTransformer & {
   getAppByRequest: (request: Request) => Promise<MicroappApp | null>;
 } {

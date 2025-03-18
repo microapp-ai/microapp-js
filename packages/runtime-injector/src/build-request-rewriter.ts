@@ -8,7 +8,7 @@ import {
 } from './utils';
 import type { Env, MicroappApp, RequestHTMLRewriterBuilder } from './types';
 
-export function buildRequestRewriter({ debug }: { debug?: boolean } = {}): {
+export function buildRequestRewriter({ debug }: { debug: boolean }): {
   shouldRewrite: (request: Request) => boolean;
   rewrite: (
     request: Request,
@@ -17,7 +17,7 @@ export function buildRequestRewriter({ debug }: { debug?: boolean } = {}): {
       env,
       rewriters,
     }: {
-      rewriters?: RequestHTMLRewriterBuilder[];
+      rewriters: RequestHTMLRewriterBuilder[];
       env: Env;
       app: MicroappApp | null;
     }
@@ -28,11 +28,11 @@ export function buildRequestRewriter({ debug }: { debug?: boolean } = {}): {
     response: Response,
     {
       env,
-      rewriter = [],
+      rewriters = [],
       app,
     }: {
       env: Env;
-      rewriter?: RequestHTMLRewriterBuilder[];
+      rewriters: RequestHTMLRewriterBuilder[];
       app: MicroappApp | null;
     }
   ): Promise<Response> {
@@ -58,7 +58,7 @@ export function buildRequestRewriter({ debug }: { debug?: boolean } = {}): {
 
     const htmlRewriter = new HTMLRewriter();
 
-    for (const rewriterBuilder of rewriter) {
+    for (const rewriterBuilder of rewriters) {
       const rewriter = rewriterBuilder({ env, debug, app });
       await rewriter.rewrite({ request, htmlRewriter });
     }

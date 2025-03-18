@@ -13,7 +13,7 @@ export function buildProtocolRequestTransformer({
   debug,
 }: {
   env: Env;
-  debug?: boolean;
+  debug: boolean;
 }): RequestTransformer & {
   handleResponse: (response: Response) => Promise<void>;
 } {

@@ -29,7 +29,7 @@ export type RequestHTMLRewriter = {
 
 export type RequestHTMLRewriterBuilderInput = {
   env: Env;
-  debug?: boolean;
+  debug: boolean;
   app: MicroappApp | null;
 };
 
