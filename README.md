@@ -12,6 +12,7 @@ This repository is a monorepo containing the following packages:
 - [`create-microapp`](/packages/create-microapp)
 - [`react`](/packages/react)
 - [`scripts`](/packages/scripts)
+- [`payments`](/packages/payments)
 
 ## About
 
