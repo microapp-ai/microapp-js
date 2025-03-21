@@ -33,12 +33,10 @@
     "node": ">=14.0.0"
   },
   "devDependencies": {
+    "eslint": "^8.57.1",
     "rollup": "^4.34.3"
   },
   "publishConfig": {
     "access": "public"
-  },
-  "dependencies": {
-    "@microapp-io/runtime": "0.2.22"
   }
 }

@@ -27,28 +27,33 @@ export class SandboxPaymentsRepo implements PaymentsRepository {
 
   static parseOptions(options: SandboxPaymentsOptions): {
     enabled: boolean;
-    getSubscription: () => Promise<UserSubscription | null>;
-    subscription: UserSubscription | null;
+    getSubscription: UserSubscription | null | (() => Promise<UserSubscription | null>);
   } {
     if (typeof options === 'boolean') {
-      return { enabled: options, getSubscription: async () => null, subscription: null };
+      return { enabled: options, getSubscription: null};
     }
 
     const { enabled = true, subscription } = options;
     return {
       enabled,
       getSubscription:
-        typeof subscription === 'function' ? async () => subscription() : async () => subscription,
-      subscription:
-        typeof subscription === 'function' ? null : subscription,
+        typeof subscription === 'function'
+          ? async () => subscription()
+          : subscription,
     };
   }
 
   constructor(options: SandboxPaymentsOptions) {
-    const { enabled, getSubscription, subscription } = SandboxPaymentsRepo.parseOptions(options);
+    const { enabled, getSubscription } = SandboxPaymentsRepo.parseOptions(options);
     this.enabled = enabled;
-    this._getSubscription = getSubscription;
-    this.internalSubscription = subscription;
+
+    this._getSubscription = typeof getSubscription === 'function'
+      ? async () => getSubscription()
+      : async () =>  getSubscription;
+
+    this.internalSubscription = typeof getSubscription !== 'function'
+      ? getSubscription
+      : null;
 
     warning(
       isProduction() && enabled,

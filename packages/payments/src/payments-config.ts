@@ -14,7 +14,7 @@ export class PaymentsConfig {
     query,
   }: {
     path?: string;
-    query?: { [key: string]: any };
+    query?: { [key: string]: string };
   }): string {
     const parsedUrl = new URL(this.config.baseUrl);
 

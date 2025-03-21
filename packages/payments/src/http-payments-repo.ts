@@ -60,7 +60,7 @@ export class HttpPaymentsRepo implements PaymentsRepository {
     const appId = this.getAppId();
 
     const getUserSubscriptionUrl = this.config.buildUrl({
-      path: `apps/${appId}/user-subscriptions`,
+      path: `/apps/${appId}/user-subscriptions`,
     });
 
     const response = await fetch(getUserSubscriptionUrl);
@@ -85,7 +85,7 @@ export class HttpPaymentsRepo implements PaymentsRepository {
     const appId = this.getAppId();
 
     const getSubscriptionPlanDetailsUrl = this.config.buildUrl({
-      path: `apps/${appId}/plans/${subscriptionPlanId}`,
+      path: `/apps/${appId}/plans/${subscriptionPlanId}`,
     });
 
     const response = await fetch(getSubscriptionPlanDetailsUrl);
