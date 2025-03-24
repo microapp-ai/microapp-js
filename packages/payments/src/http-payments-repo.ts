@@ -105,7 +105,7 @@ export class HttpPaymentsRepo implements PaymentsRepository {
   }
 
   private getAppId(): string | null {
-    return (window as any).__MICROAPP__?.id ?? null;
+    return window.__MICROAPP__?.id ?? null;
   }
 
 }
