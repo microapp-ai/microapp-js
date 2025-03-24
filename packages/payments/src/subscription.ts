@@ -9,10 +9,10 @@ export type SubscriptionPlan = {
   name?: string;
   priceInCents?: number;
   cycle?: SubscriptionPlanCycle;
-}
+};
 
 export type UserSubscription = {
   id: string;
   subscriptionPlan: SubscriptionPlan;
   createdAt: Date;
-}
+};

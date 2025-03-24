@@ -1,11 +1,15 @@
-import type {UserSubscription} from "./subscription";
-import type {SandboxPaymentsOptions} from "./sandbox-payments-repo";
-import { SandboxPaymentsRepo} from "./sandbox-payments-repo";
-import type { PaymentsConfigParams} from "./payments-config";
-import {PaymentsConfig} from "./payments-config";
-import type {PaymentsRepository, UnsubscribeCallback, UserSubscribedCallback} from "./payments-repo";
-import {HttpPaymentsRepo} from "./http-payments-repo";
-import {invariant} from "./utils";
+import type { UserSubscription } from './subscription';
+import type { SandboxPaymentsOptions } from './sandbox-payments-repo';
+import { SandboxPaymentsRepo } from './sandbox-payments-repo';
+import type { PaymentsConfigParams } from './payments-config';
+import { PaymentsConfig } from './payments-config';
+import type {
+  PaymentsRepository,
+  UnsubscribeCallback,
+  UserSubscribedCallback,
+} from './payments-repo';
+import { HttpPaymentsRepo } from './http-payments-repo';
+import { invariant } from './utils';
 
 export type PaymentsOptions = {
   config?: Partial<PaymentsConfigParams>;

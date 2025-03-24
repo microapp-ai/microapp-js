@@ -1,7 +1,16 @@
-import type {PaymentsRepository, UnsubscribeCallback, UserSubscribedCallback} from "./payments-repo";
-import type {SubscriptionPlan, SubscriptionPlanCycle, UserSubscription} from "./subscription";
-import type {PaymentsConfig} from "./payments-config";
-import {invariant} from "./utils";
+import type {
+  PaymentsRepository,
+  UnsubscribeCallback,
+  UserSubscribedCallback,
+} from './payments-repo';
+import type {
+  SubscriptionPlan,
+  SubscriptionPlanCycle,
+  UserSubscription,
+} from './subscription';
+import type { PaymentsConfig } from './payments-config';
+import { invariant } from './utils';
+import { MissingGlobalVariableError } from './errors';
 
 export class HttpPaymentsRepo implements PaymentsRepository {
   private onUserSubscribedCallback: UserSubscribedCallback | null = null;
@@ -18,11 +27,13 @@ export class HttpPaymentsRepo implements PaymentsRepository {
     const userSubscription = await this.getUserSubscription();
 
     if (userSubscription === null) {
-      (this.onUserSubscribedCallback)?.(null);
+      this.onUserSubscribedCallback?.(null);
       return null;
     }
 
-    const subscriptionPlanDetails = await this.getSubscriptionPlanDetails(userSubscription.subscriptionPlan.id);
+    const subscriptionPlanDetails = await this.getSubscriptionPlanDetails(
+      userSubscription.subscriptionPlan.id
+    );
 
     return {
       id: userSubscription.id,
@@ -32,7 +43,7 @@ export class HttpPaymentsRepo implements PaymentsRepository {
   }
 
   buildSubscriptionPageUrl(): string {
-    const appId = this.getAppId();
+    const appId = this.getAppIdOrThrow();
 
     return this.config.buildUrl({
       //TODO: replace here with the correct url
@@ -53,11 +64,11 @@ export class HttpPaymentsRepo implements PaymentsRepository {
     this.onUserSubscribedCallback = callback;
     return () => {
       this.onUserSubscribedCallback = null;
-    }
+    };
   }
 
   private async getUserSubscription(): Promise<UserSubscription | null> {
-    const appId = this.getAppId();
+    const appId = this.getAppIdOrThrow();
 
     const getUserSubscriptionUrl = this.config.buildUrl({
       path: `/apps/${appId}/user-subscriptions`,
@@ -66,7 +77,7 @@ export class HttpPaymentsRepo implements PaymentsRepository {
     const response = await fetch(getUserSubscriptionUrl);
 
     if (response.status !== 200) {
-      (this.onUserSubscribedCallback)?.(null);
+      this.onUserSubscribedCallback?.(null);
       return null;
     }
 
@@ -77,12 +88,14 @@ export class HttpPaymentsRepo implements PaymentsRepository {
       createdAt: userSubscription.createdAt,
       subscriptionPlan: {
         id: userSubscription.subscriptionPlanId,
-      }
+      },
     };
   }
 
-  private async getSubscriptionPlanDetails(subscriptionPlanId: string): Promise<SubscriptionPlan> {
-    const appId = this.getAppId();
+  private async getSubscriptionPlanDetails(
+    subscriptionPlanId: string
+  ): Promise<SubscriptionPlan> {
+    const appId = this.getAppIdOrThrow();
 
     const getSubscriptionPlanDetailsUrl = this.config.buildUrl({
       path: `/apps/${appId}/plans/${subscriptionPlanId}`,
@@ -91,7 +104,10 @@ export class HttpPaymentsRepo implements PaymentsRepository {
     const response = await fetch(getSubscriptionPlanDetailsUrl);
 
     if (response.status !== 200) {
-      invariant(response.status === 200, 'Could not get subscription plan details');
+      invariant(
+        response.status === 200,
+        'Could not get subscription plan details'
+      );
     }
 
     const subscriptionPlan = await response.json();
@@ -104,8 +120,16 @@ export class HttpPaymentsRepo implements PaymentsRepository {
     };
   }
 
-  private getAppId(): string | null {
-    return window.__MICROAPP__?.id ?? null;
-  }
+  private getAppIdOrThrow(): string | null {
+    const id =
+      '__MICROAPP__' in window && !!window.__MICROAPP__.id
+        ? window.__MICROAPP__.id
+        : null;
 
+    if (!id) {
+      throw new MissingGlobalVariableError('__MICROAPP__ must be defined');
+    }
+
+    return id;
+  }
 }

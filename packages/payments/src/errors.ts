@@ -20,3 +20,10 @@ export class InvariantError extends NoSubscriptionError {
     this.name = 'InvariantError';
   }
 }
+
+export class MissingGlobalVariableError extends MicroappPaymentsError {
+  constructor(message: string) {
+    super(message);
+    this.name = 'MissingGlobalVariableError';
+  }
+}

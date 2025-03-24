@@ -1,5 +1,5 @@
-export * from "./errors";
-export * from "./global";
+export * from './errors';
+export * from './global.d';
 export * from './http-payments-repo';
 export * from './payments';
 export * from './payments-config';

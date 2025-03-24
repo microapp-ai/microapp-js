@@ -1,7 +1,7 @@
 declare global {
   interface Window {
-    __MICROAPP__: { id: string }
+    __MICROAPP__: { id: string };
   }
 }
 
-export {}
+export {};

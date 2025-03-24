@@ -1,19 +1,19 @@
-import {SandboxPaymentsRepo, SubscriptionPlanCycle} from '../src';
+import { SandboxPaymentsRepo, SubscriptionPlanCycle } from '../src';
 
 describe('SandboxPaymentsRepo', () => {
   it('does not have subscription until requested', async () => {
     const repo = new SandboxPaymentsRepo({
       enabled: true,
       subscription: () => ({
-       id: 'some-subscription',
-       createdAt: new Date(),
-       subscriptionPlan: {
-         id: 'some-subscription-plan',
-         name: 'free',
-         priceInCents: 0,
-         cycle: SubscriptionPlanCycle.ONE_TIME,
-       }
-      })
+        id: 'some-subscription',
+        createdAt: new Date(),
+        subscriptionPlan: {
+          id: 'some-subscription-plan',
+          name: 'free',
+          priceInCents: 0,
+          cycle: SubscriptionPlanCycle.ONE_TIME,
+        },
+      }),
     });
 
     let hasSubscription = await repo.hasSubscription();
@@ -32,7 +32,9 @@ describe('SandboxPaymentsRepo', () => {
     expect(subscription.id).toBe('some-subscription');
     expect(subscription.subscriptionPlan.name).toBe('free');
     expect(subscription.subscriptionPlan.priceInCents).toBe(0);
-    expect(subscription.subscriptionPlan.cycle).toBe(SubscriptionPlanCycle.ONE_TIME);
+    expect(subscription.subscriptionPlan.cycle).toBe(
+      SubscriptionPlanCycle.ONE_TIME
+    );
   });
 
   it('returns provided subscription', async () => {
@@ -46,8 +48,8 @@ describe('SandboxPaymentsRepo', () => {
           name: 'free',
           priceInCents: 0,
           cycle: SubscriptionPlanCycle.ONE_TIME,
-        }
-      }
+        },
+      },
     });
 
     const hasSubscription = await repo.hasSubscription();
@@ -57,9 +59,10 @@ describe('SandboxPaymentsRepo', () => {
     expect(subscription.id).toBe('some-subscription');
     expect(subscription.subscriptionPlan.name).toBe('free');
     expect(subscription.subscriptionPlan.priceInCents).toBe(0);
-    expect(subscription.subscriptionPlan.cycle).toBe(SubscriptionPlanCycle.ONE_TIME);
+    expect(subscription.subscriptionPlan.cycle).toBe(
+      SubscriptionPlanCycle.ONE_TIME
+    );
   });
-
 
   it('executes callback when user is subscribed', async () => {
     const createdAt = new Date();
@@ -74,8 +77,8 @@ describe('SandboxPaymentsRepo', () => {
           name: 'free',
           priceInCents: 0,
           cycle: SubscriptionPlanCycle.ONE_TIME,
-        }
-      })
+        },
+      }),
     });
 
     const mockCallback = jest.fn();
@@ -93,7 +96,7 @@ describe('SandboxPaymentsRepo', () => {
           name: 'free',
           priceInCents: 0,
           cycle: SubscriptionPlanCycle.ONE_TIME,
-        }
+        },
       })
     );
 

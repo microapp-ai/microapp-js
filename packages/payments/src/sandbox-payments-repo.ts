@@ -1,14 +1,22 @@
-import type {PaymentsRepository, UnsubscribeCallback, UserSubscribedCallback} from "./payments-repo";
-import type { UserSubscription } from "./subscription";
-import {NoSubscriptionError} from "./errors";
-import {invariant, isProduction, warning} from "./utils";
+import type {
+  PaymentsRepository,
+  UnsubscribeCallback,
+  UserSubscribedCallback,
+} from './payments-repo';
+import type { UserSubscription } from './subscription';
+import { NoSubscriptionError } from './errors';
+import { invariant, isProduction, warning } from './utils';
 
 export type SandboxPaymentsOptions =
   | boolean
   | {
-  enabled?: boolean;
-  subscription: UserSubscription | null | (() => UserSubscription | null) | (() => Promise<UserSubscription | null>);
-};
+      enabled?: boolean;
+      subscription:
+        | UserSubscription
+        | null
+        | (() => UserSubscription | null)
+        | (() => Promise<UserSubscription | null>);
+    };
 
 export class SandboxPaymentsRepo implements PaymentsRepository {
   private readonly enabled: boolean;
@@ -27,10 +35,13 @@ export class SandboxPaymentsRepo implements PaymentsRepository {
 
   static parseOptions(options: SandboxPaymentsOptions): {
     enabled: boolean;
-    getSubscription: UserSubscription | null | (() => Promise<UserSubscription | null>);
+    getSubscription:
+      | UserSubscription
+      | null
+      | (() => Promise<UserSubscription | null>);
   } {
     if (typeof options === 'boolean') {
-      return { enabled: options, getSubscription: null};
+      return { enabled: options, getSubscription: null };
     }
 
     const { enabled = true, subscription } = options;
@@ -44,16 +55,17 @@ export class SandboxPaymentsRepo implements PaymentsRepository {
   }
 
   constructor(options: SandboxPaymentsOptions) {
-    const { enabled, getSubscription } = SandboxPaymentsRepo.parseOptions(options);
+    const { enabled, getSubscription } =
+      SandboxPaymentsRepo.parseOptions(options);
     this.enabled = enabled;
 
-    this._getSubscription = typeof getSubscription === 'function'
-      ? async () => getSubscription()
-      : async () =>  getSubscription;
+    this._getSubscription =
+      typeof getSubscription === 'function'
+        ? async () => getSubscription()
+        : async () => getSubscription;
 
-    this.internalSubscription = typeof getSubscription !== 'function'
-      ? getSubscription
-      : null;
+    this.internalSubscription =
+      typeof getSubscription !== 'function' ? getSubscription : null;
 
     warning(
       isProduction() && enabled,
@@ -77,7 +89,7 @@ export class SandboxPaymentsRepo implements PaymentsRepository {
   async getSubscription(): Promise<UserSubscription | null> {
     this.throwIfNotEnabled();
     if (this.internalSubscription === null) {
-      (this.onUserSubscribedCallback)?.(null);
+      this.onUserSubscribedCallback?.(null);
       throw new NoSubscriptionError('Could not get subscription');
     }
 
@@ -87,7 +99,7 @@ export class SandboxPaymentsRepo implements PaymentsRepository {
   async requestSubscription(): Promise<void> {
     this.internalSubscription = await this._getSubscription();
     if (this.internalSubscription) {
-      (this.onUserSubscribedCallback)?.(this.internalSubscription);
+      this.onUserSubscribedCallback?.(this.internalSubscription);
     }
   }
 
@@ -95,6 +107,6 @@ export class SandboxPaymentsRepo implements PaymentsRepository {
     this.onUserSubscribedCallback = callback;
     return () => {
       this.onUserSubscribedCallback = null;
-    }
+    };
   }
 }
