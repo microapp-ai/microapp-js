@@ -15,6 +15,6 @@
     "wrangler": "^3.109.2"
   },
   "dependencies": {
-    "@microapp-io/runtime": "0.2.23"
+    "@microapp-io/runtime": "0.2.25"
   }
 }

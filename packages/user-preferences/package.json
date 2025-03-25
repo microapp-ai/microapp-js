@@ -1,6 +1,6 @@
 {
   "name": "@microapp-io/user-preferences",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "repository": {
     "type": "git",
     "url": "https://github.com/microapp-io/microapp-js",
@@ -33,13 +33,10 @@
   "engines": {
     "node": ">=14.0.0"
   },
-  "devDependencies": {
-    "rollup": "^4.34.3"
-  },
   "publishConfig": {
     "access": "public"
   },
   "dependencies": {
-    "@microapp-io/runtime": "0.2.22"
+    "@microapp-io/runtime": "0.2.25"
   }
 }
