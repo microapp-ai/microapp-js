@@ -29,13 +29,35 @@ export const useUserPreferences = (): UserPreferencesContextType => {
   return context;
 };
 
-export const useTheme = (): MicroappTheme => {
+type UseThemeOptions = {
+  onChange?: (theme: MicroappTheme) => void;
+};
+
+export const useTheme = (options?: UseThemeOptions): MicroappTheme => {
   const { preferences } = useUserPreferences();
+
+  React.useEffect(() => {
+    if (options?.onChange) {
+      options.onChange(preferences.theme!);
+    }
+  }, [preferences.theme, options]);
+
   return preferences.theme!;
 };
 
-export const useLang = (): MicroappLanguage => {
+type UseLangOptions = {
+  onChange?: (lang: MicroappLanguage) => void;
+};
+
+export const useLang = (options?: UseLangOptions): MicroappLanguage => {
   const { preferences } = useUserPreferences();
+
+  React.useEffect(() => {
+    if (options?.onChange) {
+      options.onChange(preferences.lang!);
+    }
+  }, [preferences.lang, options]);
+
   return preferences.lang!;
 };
 
