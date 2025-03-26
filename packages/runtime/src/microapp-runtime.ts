@@ -15,10 +15,10 @@ import type {
   MicroappResizeMessage,
   MicroappRouteChangeMessage,
   MicroappTheme,
-  MicroappUserPreferencesMessage,
 } from './types';
 
 import {
+  buildOriginUrl,
   buildPathnameWithBeginningAndTrailingSlash,
   buildUrlOrCurrentWindowLocation,
   buildUrlWithTrailingSlash,
@@ -81,7 +81,8 @@ export class MicroappRuntime {
 
     this.#iframe.src = this.#src;
     this.#messageBus = new MicroappMessageBus({
-      targetOrigin: this.#targetOrigin,
+      // NB: targetOrigin is required only for sending messages
+      targetOrigin: buildOriginUrl(this.#src),
     });
 
     this.#setUpMessageBus();
@@ -96,10 +97,6 @@ export class MicroappRuntime {
       this.#handleRouteChange
     );
     this.#messageBus.on(MICROAPP_RESIZE_EVENT_NAME, this.#handleIframeResize);
-    this.#messageBus.on(
-      MICROAPP_USER_PREFERENCES_EVENT_NAME,
-      this.#handlePreferencesChange
-    );
   }
 
   #handleRouteChange = ({
@@ -170,24 +167,18 @@ export class MicroappRuntime {
     }
   };
 
-  #handlePreferencesChange = ({
-    theme,
-    lang,
-  }: MicroappMessagePayload<MicroappUserPreferencesMessage>) => {
-    if (theme) this.#theme = theme;
-    if (lang) this.#lang = lang;
-
-    this.#updateUserPreferences();
-  };
-
   #updateUserPreferences = () => {
+    if (!this.#iframe.contentWindow) {
+      return;
+    }
+
     this.#messageBus.send(
       MICROAPP_USER_PREFERENCES_EVENT_NAME,
       {
         theme: this.#theme,
         lang: this.#lang,
       },
-      this.#iframe.contentWindow ?? undefined
+      this.#iframe.contentWindow
     );
   };
 
@@ -198,11 +189,19 @@ export class MicroappRuntime {
 
     const notifySetViewportSize = throttle(
       (trigger: MicroappMessagePayload<MicroappResizeMessage>['trigger']) => {
-        this.#messageBus.send(MICROAPP_SET_VIEWPORT_SIZE_EVENT_NAME, {
-          trigger,
-          widthInPixel: window.innerWidth,
-          heightInPixel: window.innerHeight,
-        });
+        if (!this.#iframe.contentWindow) {
+          return;
+        }
+
+        this.#messageBus.send(
+          MICROAPP_SET_VIEWPORT_SIZE_EVENT_NAME,
+          {
+            trigger,
+            widthInPixel: window.innerWidth,
+            heightInPixel: window.innerHeight,
+          },
+          this.#iframe.contentWindow
+        );
       },
       100
     );
@@ -282,6 +281,7 @@ export class MicroappRuntime {
       });
 
       this.#iframe.src = this.#src;
+      this.#messageBus.targetOrigin = buildOriginUrl(this.#src);
     }
 
     const shouldUpdateUserPreferences = 'theme' in options || 'lang' in options;

@@ -28,6 +28,10 @@ export class WindowPostMessageBus<
     }
   }
 
+  set targetOrigin(targetOrigin: string) {
+    this.#targetOrigin = targetOrigin;
+  }
+
   on = <TType extends TMessage['type']>(
     type: TType,
     handler: (payload: ExtractPayload<TMessage, TType>) => void
@@ -55,6 +59,10 @@ export class WindowPostMessageBus<
   };
 
   private trigger = (event: MessageEvent) => {
+    if (event.origin !== this.#targetOrigin) {
+      return;
+    }
+
     if (!event.data || typeof event.data !== 'object') {
       return;
     }

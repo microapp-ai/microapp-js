@@ -1,5 +1,4 @@
 import * as React from 'react';
-import { useEffect, useMemo, useRef } from 'react';
 import type { MicroappRuntimeOptions } from './microapp-runtime';
 import { MicroappRuntime } from './microapp-runtime';
 import { buildMicroappUrl } from './build-microapp-url';
@@ -14,14 +13,17 @@ type MicroappProps = {
   MicroappRuntimeOptions,
   'homeUrl' | 'baseUrl' | 'currentUrl' | 'targetOrigin' | 'theme' | 'lang'
 > &
-  Omit<React.IframeHTMLAttributes<HTMLIFrameElement>, 'src'>;
+  Omit<
+    React.IframeHTMLAttributes<HTMLIFrameElement>,
+    'src' | 'onError' | 'onLoad'
+  >;
 
 const MicroappContext = React.createContext<{
   __MICROAPP_CONTEXT__: true;
 } | null>(null);
 
 export function MicroappProvider({ children }: { children?: any }) {
-  useEffect(() => {
+  React.useEffect(() => {
     const handlePopState = (event: Event) => {
       const routeState = MicroappRouteState.fromEvent(event);
 
@@ -63,7 +65,7 @@ export function Microapp({
     );
   }
 
-  const iframeRef = React.useRef<HTMLIFrameElement>(null);
+  const iframeRef = React.useRef<HTMLIFrameElement | null>(null);
   const runtimeRef = React.useRef<MicroappRuntime | null>(null);
   const runtimeOptions = React.useMemo(
     () => ({
@@ -81,7 +83,7 @@ export function Microapp({
   const [isLoading, setIsLoading] = React.useState(true);
   const iframeSrc = useMicroappUrl(runtimeOptions);
 
-  useEffect(() => {
+  React.useEffect(() => {
     const iframe = iframeRef.current;
 
     if (!iframe) {
@@ -117,7 +119,10 @@ export function Microapp({
     onLoad?.();
   };
 
-  const iframeId = useMemo(() => buildMicroappIframeId({ homeUrl }), [homeUrl]);
+  const iframeId = React.useMemo(
+    () => buildMicroappIframeId({ homeUrl }),
+    [homeUrl]
+  );
   const isMicroappContext = React.useContext(MicroappContext);
 
   if (!isMicroappContext) {
@@ -183,7 +188,8 @@ const DefaultLoadingSpinner = ({
         width: '40px',
         height: '40px',
         border: '4px solid #f3f3f3',
-        borderTop: '4px solid #3498db',
+        borderTop: '4px solid',
+        borderTopColor: theme === 'dark' ? '#000' : '#fff',
         borderRadius: '50%',
         animation: 'spin 1s linear infinite',
       }}
@@ -218,9 +224,9 @@ export class MicroappInitializationError extends Error {
 function useGetChangedValues<T extends Record<string, any>>(
   values: T
 ): () => Partial<T> {
-  const prevValuesRef = useRef<T>(values);
+  const prevValuesRef = React.useRef<T>(values);
   const getChangedValues = (): Partial<T> => {
-    const changedValues: Partial<T> = {};
+    const changedValues: Partial<T> = {} as Partial<T>;
 
     Object.keys(values).forEach((key) => {
       if (values[key] !== prevValuesRef.current[key]) {
@@ -246,6 +252,10 @@ export function useMicroappUrl({
   theme,
   lang,
 }: Omit<MicroappRuntimeOptions, 'iframe'>): string | undefined {
+  // NB: We don't want to trigger a re-render when the theme or lang changes
+  const initialThemeRef = React.useRef(theme);
+  const initialLangRef = React.useRef(lang);
+
   return React.useMemo(
     () =>
       targetOrigin
@@ -253,10 +263,10 @@ export function useMicroappUrl({
             baseUrl,
             currentUrl,
             targetOrigin,
-            theme,
-            lang,
+            theme: initialThemeRef.current,
+            lang: initialLangRef.current,
           })
         : undefined,
-    [homeUrl, baseUrl, currentUrl, targetOrigin, theme, lang]
+    [homeUrl, baseUrl, currentUrl, targetOrigin]
   );
 }

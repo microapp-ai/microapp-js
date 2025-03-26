@@ -73,10 +73,15 @@ export const UserPreferencesProvider: React.FC<
     [sandbox]
   );
 
-  const preferences = React.useSyncExternalStore(
-    (onChange) => userPreferences.onUpdate(onChange),
-    () => userPreferences.getPreferences()
+  const [preferences, setPreferences] = React.useState(
+    userPreferences.getPreferences()
   );
+
+  React.useEffect(() => {
+    return userPreferences.onUpdate((newPreferences) => {
+      setPreferences(newPreferences);
+    });
+  }, [userPreferences]);
 
   return (
     <UserPreferencesContext.Provider value={{ preferences }}>

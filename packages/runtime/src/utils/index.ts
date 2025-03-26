@@ -5,3 +5,4 @@ export * from './build-url-with-trailing-slash';
 export * from './get-microapp-iframe-element';
 export * from './remove-trailing-slash-from-url';
 export * from './throttle';
+export * from './build-origin-url';
