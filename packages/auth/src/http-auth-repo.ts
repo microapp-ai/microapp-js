@@ -41,7 +41,9 @@ export class HttpAuthRepo implements AuthRepo {
       path: '/api/auth/me/',
     });
 
-    const response = await fetch(getUserUrl);
+    const response = await fetch(getUserUrl, {
+      credentials: 'include',
+    });
 
     if (response.status !== 200) {
       this.onUserAuthenticatedCallback?.(null);
