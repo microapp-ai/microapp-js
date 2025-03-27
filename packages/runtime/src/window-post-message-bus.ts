@@ -1,3 +1,5 @@
+import { ALLOWED_MICROAPP_ORIGIN_HOSTNAMES } from './constants';
+
 export type WindowMessage<
   TType extends string,
   TPayload extends Record<string, unknown>
@@ -17,11 +19,11 @@ export class WindowPostMessageBus<
   TMessage extends WindowMessage<string, Record<string, unknown>>
 > {
   #handlers: Map<string, Set<(payload: any) => void>> = new Map();
-  #targetOrigin: string;
+  #targetOrigin?: string;
 
   // NB: targetOrigin is required only for sending messages
   constructor({ targetOrigin }: { targetOrigin?: string } = {}) {
-    this.#targetOrigin = targetOrigin ?? window.location.origin;
+    this.#targetOrigin = targetOrigin;
 
     if (typeof window !== 'undefined') {
       window.addEventListener('message', this.trigger);
@@ -54,12 +56,12 @@ export class WindowPostMessageBus<
   ) => {
     if (typeof window !== 'undefined') {
       const targetWindow = target || window.parent;
-      targetWindow.postMessage({ type, payload }, this.#targetOrigin);
+      targetWindow.postMessage({ type, payload }, this.#targetOrigin || '*');
     }
   };
 
   private trigger = (event: MessageEvent) => {
-    if (event.origin !== this.#targetOrigin) {
+    if (!this.#isEventOriginAllowed(event.origin)) {
       return;
     }
 
@@ -79,4 +81,17 @@ export class WindowPostMessageBus<
 
     handlers.forEach((handler) => handler(message.payload));
   };
+
+  #isEventOriginAllowed(origin: string): boolean {
+    if (this.#targetOrigin) {
+      return origin === this.#targetOrigin;
+    }
+
+    return (
+      ALLOWED_MICROAPP_ORIGIN_HOSTNAMES.find((allowedOriginHostname) => {
+        const eventOriginUrl = new URL(origin);
+        return allowedOriginHostname === eventOriginUrl.hostname;
+      }) !== undefined
+    );
+  }
 }

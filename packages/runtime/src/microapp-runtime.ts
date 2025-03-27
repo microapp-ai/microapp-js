@@ -40,7 +40,8 @@ export type MicroappRuntimeOptions = {
 
 export class MicroappRuntime {
   readonly #iframe: HTMLIFrameElement;
-  readonly #messageBus: MicroappMessageBus;
+  readonly #messageBusReceiver: MicroappMessageBus;
+  readonly #messageBusSender: MicroappMessageBus;
   #homeUrl: URL;
   #baseUrl: URL | undefined;
   #currentUrl: URL | undefined;
@@ -80,8 +81,10 @@ export class MicroappRuntime {
     });
 
     this.#iframe.src = this.#src;
-    this.#messageBus = new MicroappMessageBus({
-      // NB: targetOrigin is required only for sending messages
+    this.#messageBusReceiver = new MicroappMessageBus({
+      targetOrigin: this.#targetOrigin,
+    });
+    this.#messageBusSender = new MicroappMessageBus({
       targetOrigin: buildOriginUrl(this.#src),
     });
 
@@ -92,11 +95,14 @@ export class MicroappRuntime {
   }
 
   #setUpMessageBus() {
-    this.#messageBus.on(
+    this.#messageBusReceiver.on(
       MICROAPP_ROUTE_CHANGE_EVENT_NAME,
       this.#handleRouteChange
     );
-    this.#messageBus.on(MICROAPP_RESIZE_EVENT_NAME, this.#handleIframeResize);
+    this.#messageBusReceiver.on(
+      MICROAPP_RESIZE_EVENT_NAME,
+      this.#handleIframeResize
+    );
   }
 
   #handleRouteChange = ({
@@ -172,7 +178,7 @@ export class MicroappRuntime {
       return;
     }
 
-    this.#messageBus.send(
+    this.#messageBusSender.send(
       MICROAPP_USER_PREFERENCES_EVENT_NAME,
       {
         theme: this.#theme,
@@ -193,7 +199,7 @@ export class MicroappRuntime {
           return;
         }
 
-        this.#messageBus.send(
+        this.#messageBusSender.send(
           MICROAPP_SET_VIEWPORT_SIZE_EVENT_NAME,
           {
             trigger,
@@ -281,7 +287,7 @@ export class MicroappRuntime {
       });
 
       this.#iframe.src = this.#src;
-      this.#messageBus.targetOrigin = buildOriginUrl(this.#src);
+      this.#messageBusSender.targetOrigin = buildOriginUrl(this.#src);
     }
 
     const shouldUpdateUserPreferences = 'theme' in options || 'lang' in options;
@@ -298,7 +304,7 @@ export class MicroappRuntime {
 
     if (!parentWindow) {
       throw new Error(
-        '[MicroappRuntime] The iframe does not have a parent window.'
+        '[@microapp-io/runtime] The iframe does not have a parent window'
       );
     }
 
@@ -314,7 +320,7 @@ export class MicroappRuntime {
 
     if (!isParentUrlAllowed) {
       throw new Error(
-        '[MicroappRuntime] The parent window origin is only allowed to be the production or staging marketplace URLs.'
+        '[@microapp-io/runtime] The parent window origin is only allowed to be the production or staging marketplace URLs'
       );
     }
 

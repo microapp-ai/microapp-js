@@ -9,9 +9,8 @@ import type {
   MicroappUserPreferencesMessage,
 } from '@microapp-io/runtime';
 
-type UserPreferencesContextType = {
-  preferences: MicroappMessagePayload<MicroappUserPreferencesMessage>;
-};
+type UserPreferencesContextType =
+  MicroappMessagePayload<MicroappUserPreferencesMessage>;
 
 const UserPreferencesContext = React.createContext<
   UserPreferencesContextType | undefined
@@ -22,7 +21,7 @@ export const useUserPreferences = (): UserPreferencesContextType => {
 
   if (!context) {
     throw new Error(
-      'useUserPreferences must be used within a UserPreferencesProvider'
+      '[@microapp-io/react] useUserPreferences must be used within a UserPreferencesProvider'
     );
   }
 
@@ -33,32 +32,34 @@ type UseThemeOptions = {
   onChange?: (theme: MicroappTheme) => void;
 };
 
-export const useTheme = (options?: UseThemeOptions): MicroappTheme => {
-  const { preferences } = useUserPreferences();
+export const useTheme = ({ onChange }: UseThemeOptions = {}): MicroappTheme => {
+  const { theme } = useUserPreferences();
 
   React.useEffect(() => {
-    if (options?.onChange) {
-      options.onChange(preferences.theme!);
+    if (onChange) {
+      onChange(theme);
     }
-  }, [preferences.theme, options]);
+  }, [theme, onChange]);
 
-  return preferences.theme!;
+  return theme;
 };
 
 type UseLangOptions = {
   onChange?: (lang: MicroappLanguage) => void;
 };
 
-export const useLang = (options?: UseLangOptions): MicroappLanguage => {
-  const { preferences } = useUserPreferences();
+export const useLang = ({
+  onChange,
+}: UseLangOptions = {}): MicroappLanguage => {
+  const { lang } = useUserPreferences();
 
   React.useEffect(() => {
-    if (options?.onChange) {
-      options.onChange(preferences.lang!);
+    if (onChange) {
+      onChange(lang);
     }
-  }, [preferences.lang, options]);
+  }, [lang, onChange]);
 
-  return preferences.lang!;
+  return lang;
 };
 
 type UserPreferencesProviderProps = PropsWithChildren<{
@@ -84,7 +85,7 @@ export const UserPreferencesProvider: React.FC<
   }, [userPreferences]);
 
   return (
-    <UserPreferencesContext.Provider value={{ preferences }}>
+    <UserPreferencesContext.Provider value={preferences}>
       {children}
     </UserPreferencesContext.Provider>
   );

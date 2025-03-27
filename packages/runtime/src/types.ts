@@ -41,7 +41,7 @@ export type MicroappResizeMessage = WindowMessage<
 
 export type MicroappUserPreferencesMessage = WindowMessage<
   typeof MICROAPP_USER_PREFERENCES_EVENT_NAME,
-  { theme?: MicroappTheme; lang?: MicroappLanguage }
+  { theme: MicroappTheme; lang: MicroappLanguage }
 >;
 
 export type MicroappSetViewportSizeMessage = WindowMessage<
