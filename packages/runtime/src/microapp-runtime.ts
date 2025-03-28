@@ -40,8 +40,7 @@ export type MicroappRuntimeOptions = {
 
 export class MicroappRuntime {
   readonly #iframe: HTMLIFrameElement;
-  readonly #messageBusReceiver: MicroappMessageBus;
-  readonly #messageBusSender: MicroappMessageBus;
+  readonly #messageBus: MicroappMessageBus;
   #homeUrl: URL;
   #baseUrl: URL | undefined;
   #currentUrl: URL | undefined;
@@ -65,6 +64,9 @@ export class MicroappRuntime {
 
     this.#theme = theme ?? this.#theme;
     this.#lang = lang ?? this.#lang;
+
+    // TODO: We are not using the targetOrigin in the runtime, so we can remove this
+    // and simplify the other attributes as well
     this.#targetOrigin = targetOrigin
       ? this.#buildAllowedTargetOriginOrThrow(targetOrigin)
       : this.#getWindowAllowedTargetOriginOrThrow(iframe);
@@ -81,10 +83,7 @@ export class MicroappRuntime {
     });
 
     this.#iframe.src = this.#src;
-    this.#messageBusReceiver = new MicroappMessageBus({
-      targetOrigin: this.#targetOrigin,
-    });
-    this.#messageBusSender = new MicroappMessageBus({
+    this.#messageBus = new MicroappMessageBus({
       targetOrigin: buildOriginUrl(this.#src),
     });
 
@@ -95,14 +94,11 @@ export class MicroappRuntime {
   }
 
   #setUpMessageBus() {
-    this.#messageBusReceiver.on(
+    this.#messageBus.on(
       MICROAPP_ROUTE_CHANGE_EVENT_NAME,
       this.#handleRouteChange
     );
-    this.#messageBusReceiver.on(
-      MICROAPP_RESIZE_EVENT_NAME,
-      this.#handleIframeResize
-    );
+    this.#messageBus.on(MICROAPP_RESIZE_EVENT_NAME, this.#handleIframeResize);
   }
 
   #handleRouteChange = ({
@@ -178,7 +174,7 @@ export class MicroappRuntime {
       return;
     }
 
-    this.#messageBusSender.send(
+    this.#messageBus.send(
       MICROAPP_USER_PREFERENCES_EVENT_NAME,
       {
         theme: this.#theme,
@@ -199,7 +195,7 @@ export class MicroappRuntime {
           return;
         }
 
-        this.#messageBusSender.send(
+        this.#messageBus.send(
           MICROAPP_SET_VIEWPORT_SIZE_EVENT_NAME,
           {
             trigger,
@@ -287,7 +283,7 @@ export class MicroappRuntime {
       });
 
       this.#iframe.src = this.#src;
-      this.#messageBusSender.targetOrigin = buildOriginUrl(this.#src);
+      this.#messageBus.targetOrigin = buildOriginUrl(this.#src);
     }
 
     const shouldUpdateUserPreferences = 'theme' in options || 'lang' in options;

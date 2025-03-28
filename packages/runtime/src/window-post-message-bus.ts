@@ -87,6 +87,7 @@ export class WindowPostMessageBus<
       return origin === this.#targetOrigin;
     }
 
+    // NB: This is a temporary solution to allow microapps to communicate with the host
     return (
       ALLOWED_MICROAPP_ORIGIN_HOSTNAMES.find((allowedOriginHostname) => {
         const eventOriginUrl = new URL(origin);
