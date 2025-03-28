@@ -16,6 +16,9 @@ export const MICROAPP_URL_PARAM_NAMES = {
   LANGUAGE: '__microappLanguage',
 };
 
+export const MICROAPP_INIT_EVENT_NAME = '@microapp:init';
+export const MICROAPP_INIT_ACKNOWLEDGEMENT_EVENT_NAME =
+  '@microapp:initAcknowledgement';
 export const MICROAPP_ROUTE_CHANGE_EVENT_NAME = '@microapp:routeChange';
 export const MICROAPP_POP_STATE_EVENT_NAME = '@microapp:popState';
 export const MICROAPP_RESIZE_EVENT_NAME = '@microapp:resize';

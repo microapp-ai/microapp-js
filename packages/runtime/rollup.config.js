@@ -30,7 +30,7 @@ module.exports = function rollup() {
         sourcemap: !PRETTY,
         banner,
       },
-      external: ['react'],
+      external: ['react', 'react-dom'],
       plugins: [
         extensions({ extensions: ['.ts', '.tsx'] }),
         babel({
@@ -72,7 +72,7 @@ module.exports = function rollup() {
         sourcemap: !PRETTY,
         banner,
       },
-      external: ['react'],
+      external: ['react', 'react-dom'],
       plugins: [
         extensions({ extensions: ['.ts', '.tsx'] }),
         babel({
@@ -102,7 +102,7 @@ module.exports = function rollup() {
         sourcemap: !PRETTY,
         banner,
       },
-      external: ['react'],
+      external: ['react', 'react-dom'],
       plugins: [
         extensions({ extensions: ['.ts', '.tsx'] }),
         babel({
@@ -140,7 +140,7 @@ module.exports = function rollup() {
         },
         name: 'MicroappRuntime',
       },
-      external: ['react'],
+      external: ['react', 'react-dom'],
       plugins: [
         extensions({ extensions: ['.ts', '.tsx'] }),
         babel({
@@ -174,7 +174,7 @@ module.exports = function rollup() {
         },
         name: 'MicroappRuntime',
       },
-      external: ['react'],
+      external: ['react', 'react-dom'],
       plugins: [
         extensions({ extensions: ['.ts', '.tsx'] }),
         babel({

@@ -4,22 +4,31 @@ import {
   getRoutingScriptBuilder,
 } from '@microapp-io/runtime';
 import { getAllowedTargetOriginUrlByRequestOrThrow } from '../utils';
-import type { RequestHTMLRewriter, RequestHTMLRewriterInput } from '../types';
+import type {
+  RequestHTMLRewriter,
+  RequestHTMLRewriterBuilderInput,
+  RequestHTMLRewriterInput,
+} from '../types';
 
 const buildResizingScript = getResizingScriptBuilder();
 const buildRoutingScript = getRoutingScriptBuilder();
 
-export function build03ScriptsRequestHtmlRewriter(): RequestHTMLRewriter {
+export function build03ScriptsRequestHtmlRewriter({
+  app,
+}: RequestHTMLRewriterBuilderInput): RequestHTMLRewriter {
   function rewrite({ request, htmlRewriter }: RequestHTMLRewriterInput): void {
     const { origin: targetOrigin } =
       getAllowedTargetOriginUrlByRequestOrThrow(request);
+
+    // TODO: Throw error if app is not defined when we add all missing apps to the API
+    const appId = app?.id || '__MICROAPP_NOT_FOUND__';
 
     htmlRewriter
       // 1) Inject routing script at the beginning of <head>
       .on(
         'head',
         new InjectScriptWithDataOriginHandler(
-          buildRoutingScript({ targetOrigin }),
+          buildRoutingScript({ appId, targetOrigin }),
           targetOrigin,
           true
         )
@@ -28,7 +37,7 @@ export function build03ScriptsRequestHtmlRewriter(): RequestHTMLRewriter {
       .on(
         'body',
         new InjectScriptWithDataOriginHandler(
-          buildResizingScript({ targetOrigin }),
+          buildResizingScript({ appId, targetOrigin }),
           targetOrigin,
           false
         )

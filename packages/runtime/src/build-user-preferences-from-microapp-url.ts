@@ -8,16 +8,14 @@ import { MICROAPP_URL_PARAM_NAMES } from './constants';
 
 export const buildUserPreferencesFromMicroappUrl = (
   iframeSrc: string
-): MicroappMessagePayload<MicroappUserPreferencesMessage> | null => {
+): MicroappMessagePayload<MicroappUserPreferencesMessage> | undefined => {
   const urlSearchParams = new URLSearchParams(iframeSrc);
   const theme = (urlSearchParams.get(MICROAPP_URL_PARAM_NAMES.THEME) ??
     undefined) as MicroappTheme | undefined;
   const lang = (urlSearchParams.get(MICROAPP_URL_PARAM_NAMES.LANGUAGE) ??
     undefined) as MicroappLanguage | undefined;
 
-  if (!theme || !lang) {
-    return null;
+  if (theme && lang) {
+    return { theme, lang };
   }
-
-  return { theme, lang };
 };

@@ -33,12 +33,7 @@ module.exports = function rollup() {
         sourcemap: !PRETTY,
         banner,
       },
-      external: [
-        'react',
-        'react-dom',
-        '@microapp-io/auth',
-        '@microapp-io/user-preferences',
-      ],
+      external: ['react', 'react-dom'],
       plugins: [
         extensions({ extensions: ['.ts', '.tsx'] }),
         babel({
@@ -81,7 +76,7 @@ module.exports = function rollup() {
         sourcemap: !PRETTY,
         banner,
       },
-      external: ['react', '@microapp-io/auth', '@microapp-io/user-preferences'],
+      external: ['react', 'react-dom'],
       plugins: [
         extensions({ extensions: ['.ts', '.tsx'] }),
         babel({
@@ -113,7 +108,7 @@ module.exports = function rollup() {
         sourcemap: !PRETTY,
         banner,
       },
-      external: ['react', '@microapp-io/auth', '@microapp-io/user-preferences'],
+      external: ['react', 'react-dom'],
       plugins: [
         extensions({ extensions: ['.ts', '.tsx'] }),
         babel({
@@ -163,12 +158,13 @@ module.exports = function rollup() {
         banner,
         globals: {
           react: 'React',
+          'react-dom': 'ReactDOM',
           '@microapp-io/auth': 'MicroappAuth',
           '@microapp-io/user-preferences': 'MicroappUserPreferences',
         },
         name: 'MicroappReact',
       },
-      external: ['react', '@microapp-io/auth', '@microapp-io/user-preferences'],
+      external: ['react', 'react-dom'],
       plugins: [
         extensions({ extensions: ['.ts', '.tsx'] }),
         babel({
@@ -201,12 +197,13 @@ module.exports = function rollup() {
         banner,
         globals: {
           react: 'React',
+          'react-dom': 'ReactDOM',
           '@microapp-io/auth': 'MicroappAuth',
           '@microapp-io/user-preferences': 'MicroappUserPreferences',
         },
         name: 'MicroappReact',
       },
-      external: ['react', '@microapp-io/auth', '@microapp-io/user-preferences'],
+      external: ['react', 'react-dom'],
       plugins: [
         extensions({ extensions: ['.ts', '.tsx'] }),
         babel({
@@ -242,6 +239,7 @@ module.exports = function rollup() {
         format: 'cjs',
         banner,
       },
+      external: ['react', 'react-dom'],
       plugins: [].concat(PRETTY ? prettier({ parser: 'babel' }) : []),
     },
   ];

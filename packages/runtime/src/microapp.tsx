@@ -90,27 +90,29 @@ export function Microapp({
       return;
     }
 
-    try {
-      const changedValues = getChangedValues();
-      const runtime = runtimeRef.current;
+    const changedValues = getChangedValues();
+    const runtime = runtimeRef.current;
 
-      if (runtime) {
-        runtime.update(changedValues);
-        return;
+    if (!runtime) {
+      try {
+        runtimeRef.current = new MicroappRuntime({
+          iframe,
+          ...runtimeOptions,
+        });
+      } catch (error) {
+        setIsLoading(false);
+        onError?.(
+          new MicroappInitializationError(
+            '[Microapp] Failed to initialize',
+            error
+          )
+        );
       }
+      return;
+    }
 
-      runtimeRef.current = new MicroappRuntime({
-        iframe,
-        ...runtimeOptions,
-      });
-    } catch (error) {
-      setIsLoading(false);
-      onError?.(
-        new MicroappInitializationError(
-          '[Microapp] Failed to initialize',
-          error
-        )
-      );
+    if (Object.keys(changedValues).length > 0) {
+      runtime.update(changedValues);
     }
   }, [getChangedValues, runtimeOptions, onError]);
 

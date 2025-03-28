@@ -41,7 +41,6 @@ function getRollupConfig(
           }
         : {}),
     },
-    external: ['@microapp-io/runtime'],
     plugins: [
       extensions({ extensions: ['.ts'] }),
       babel({

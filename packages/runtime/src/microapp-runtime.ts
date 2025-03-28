@@ -2,6 +2,8 @@ import {
   ALLOWED_MICROAPP_ORIGIN_HOSTNAMES,
   DEFAULT_MICROAPP_LANGUAGE,
   DEFAULT_MICROAPP_THEME,
+  MICROAPP_INIT_ACKNOWLEDGEMENT_EVENT_NAME,
+  MICROAPP_INIT_EVENT_NAME,
   MICROAPP_RESIZE_EVENT_NAME,
   MICROAPP_ROUTE_CHANGE_EVENT_NAME,
   MICROAPP_SET_VIEWPORT_SIZE_EVENT_NAME,
@@ -12,6 +14,7 @@ import { MicroappMessageBus } from './microapp-message-bus';
 import type {
   MicroappLanguage,
   MicroappMessagePayload,
+  MicroappMessages,
   MicroappResizeMessage,
   MicroappRouteChangeMessage,
   MicroappTheme,
@@ -49,6 +52,9 @@ export class MicroappRuntime {
 
   #theme: MicroappTheme = DEFAULT_MICROAPP_THEME;
   #lang: MicroappLanguage = DEFAULT_MICROAPP_LANGUAGE;
+
+  #hasInitialized = false;
+  #pendingMessages: MicroappMessages[] = [];
 
   constructor({
     iframe,
@@ -94,12 +100,42 @@ export class MicroappRuntime {
   }
 
   #setUpMessageBus() {
+    this.#messageBus.on(MICROAPP_INIT_EVENT_NAME, this.#handleInit);
+
     this.#messageBus.on(
       MICROAPP_ROUTE_CHANGE_EVENT_NAME,
       this.#handleRouteChange
     );
+
     this.#messageBus.on(MICROAPP_RESIZE_EVENT_NAME, this.#handleIframeResize);
   }
+
+  #handleInit = () => {
+    const iframeContentWindow = this.#getIframeContentWindowOrThrow();
+
+    this.#messageBus.send(
+      MICROAPP_INIT_ACKNOWLEDGEMENT_EVENT_NAME,
+      {},
+      iframeContentWindow
+    );
+
+    for (const message of this.#pendingMessages) {
+      this.#messageBus.send(message.type, message.payload, iframeContentWindow);
+    }
+
+    this.#hasInitialized = true;
+    this.#pendingMessages = [];
+  };
+
+  #getIframeContentWindowOrThrow = (): Window => {
+    const contentWindow = this.#iframe.contentWindow;
+    if (!contentWindow) {
+      throw new Error(
+        '[@microapp-io/runtime] The iframe does not have a content window'
+      );
+    }
+    return contentWindow;
+  };
 
   #handleRouteChange = ({
     url: urlString,
@@ -170,18 +206,25 @@ export class MicroappRuntime {
   };
 
   #updateUserPreferences = () => {
-    if (!this.#iframe.contentWindow) {
+    this.#sendMessageIfInitialized(MICROAPP_USER_PREFERENCES_EVENT_NAME, {
+      theme: this.#theme,
+      lang: this.#lang,
+    });
+  };
+
+  #sendMessageIfInitialized = (
+    type: MicroappMessages['type'],
+    payload: MicroappMessages['payload']
+  ) => {
+    if (this.#hasInitialized) {
+      this.#messageBus.send(
+        type,
+        payload,
+        this.#getIframeContentWindowOrThrow()
+      );
       return;
     }
-
-    this.#messageBus.send(
-      MICROAPP_USER_PREFERENCES_EVENT_NAME,
-      {
-        theme: this.#theme,
-        lang: this.#lang,
-      },
-      this.#iframe.contentWindow
-    );
+    this.#pendingMessages.push({ type, payload } as MicroappMessages);
   };
 
   #setUpWindowEventListeners() {
@@ -191,19 +234,11 @@ export class MicroappRuntime {
 
     const notifySetViewportSize = throttle(
       (trigger: MicroappMessagePayload<MicroappResizeMessage>['trigger']) => {
-        if (!this.#iframe.contentWindow) {
-          return;
-        }
-
-        this.#messageBus.send(
-          MICROAPP_SET_VIEWPORT_SIZE_EVENT_NAME,
-          {
-            trigger,
-            widthInPixel: window.innerWidth,
-            heightInPixel: window.innerHeight,
-          },
-          this.#iframe.contentWindow
-        );
+        this.#sendMessageIfInitialized(MICROAPP_SET_VIEWPORT_SIZE_EVENT_NAME, {
+          trigger,
+          widthInPixel: window.innerWidth,
+          heightInPixel: window.innerHeight,
+        });
       },
       100
     );

@@ -1,9 +1,13 @@
 import {
+  MICROAPP_INIT_ACKNOWLEDGEMENT_EVENT_NAME,
+  MICROAPP_INIT_EVENT_NAME,
   MICROAPP_RESIZE_EVENT_NAME,
   MICROAPP_ROUTE_CHANGE_EVENT_NAME,
+  MICROAPP_URL_PARAM_NAMES,
+  MICROAPP_USER_PREFERENCES_EVENT_NAME,
 } from './constants';
 
-export type MicroappScriptVariables = { targetOrigin: string };
+export type MicroappScriptVariables = { appId: string; targetOrigin: string };
 export type MicroappScriptBuilder = (
   options: MicroappScriptVariables
 ) => string;
@@ -12,12 +16,71 @@ const ROUTING_POLLING_INTERVAL_IN_MS = 200;
 
 const script = minifyAndObfuscateScript(`
 (function() {
-  // Prevent double initialization
-  if (window.__microappRouting) {
+  // Initialize the microapp object
+  if (!window.__MICROAPP__) {
+    const { theme, lang } = buildUserPreferencesFromUrl();
+    window.__MICROAPP__ = {
+      id: '__MICROAPP_ID__',
+      hasRouting: false,
+      hasResizing: false,
+      hasParentAcknowledgedInit: false,
+      theme,
+      lang,
+    };
+
+    function buildUserPreferencesFromUrl() {
+      const url = new URL(window.location.href);
+      return {
+        theme: url.searchParams.get('${MICROAPP_URL_PARAM_NAMES['THEME']}'),
+        lang: url.searchParams.get('${MICROAPP_URL_PARAM_NAMES['LANGUAGE']}'),
+      };
+    }
+
+    function sendInitUntilAcknowledge() {
+      if (window.__MICROAPP__.hasParentAcknowledgedInit) {
+        return;
+      }
+      window.parent.postMessage(
+        {
+          type: '${MICROAPP_INIT_EVENT_NAME}',
+          payload: getCurrentData(),
+        },
+        '__TARGET_ORIGIN__'
+      );
+      setTimeout(sendInitUntilAcknowledge, 100);
+    }
+
+    window.addEventListener('message', (event) => {
+      const isOriginAllowed = event.origin === '__TARGET_ORIGIN__';
+
+      if (!isOriginAllowed) {
+        return;
+      }
+
+      const isInitAcknowledgementEvent = event.data.type === '${MICROAPP_INIT_ACKNOWLEDGEMENT_EVENT_NAME}';
+
+      if (isInitAcknowledgementEvent) {
+        window.__MICROAPP__.hasParentAcknowledgedInit = true;
+        return;
+      }
+
+      const isUserPreferencesEvent = event.data.type === '${MICROAPP_USER_PREFERENCES_EVENT_NAME}';
+
+      if (isUserPreferencesEvent) {
+        const { theme, lang } = event.data.payload;
+        window.__MICROAPP__.theme = theme;
+        window.__MICROAPP__.lang = lang;
+      }
+    });
+
+    sendInitUntilAcknowledge();
+  }
+
+  if (window.__MICROAPP__.hasRouting) {
     return;
   }
 
-  window.__microappRouting = true;
+  window.__MICROAPP__.hasRouting = true;
 
   // Track the current URL and title
   let lastRoute = null;
@@ -88,81 +151,83 @@ export function getRoutingScriptBuilder(): MicroappScriptBuilder {
 export function getResizingScriptBuilder(): MicroappScriptBuilder {
   const script = minifyAndObfuscateScript(`
 (function() {
-  if (!window.__microappResizing) {
-    window.__microappResizing = true;
+  if (window.__MICROAPP__.hasResizing) {
+    return;
+  }
 
-    function throttle(callback, delay) {
-      let last;
-      let timer;
-      return function() {
-        const context = this;
-        const now = +new Date();
-        const args = arguments;
-        if (last && now < last + delay) {
-          clearTimeout(timer);
-          timer = setTimeout(() => {
-            last = now;
-            callback.apply(context, args);
-          }, delay);
-        } else {
+  window.__MICROAPP__.hasResizing = true;
+
+  function throttle(callback, delay) {
+    let last;
+    let timer;
+    return function() {
+      const context = this;
+      const now = +new Date();
+      const args = arguments;
+      if (last && now < last + delay) {
+        clearTimeout(timer);
+        timer = setTimeout(() => {
           last = now;
           callback.apply(context, args);
-        }
-      };
-    }
-
-    // NB: This is a workaround to fix the issue with the height of the iframe
-    document.body.style.setProperty('overflow', 'auto', 'important');
-    document.body.style.setProperty('height', 'auto', 'important');
-    document.documentElement.style.setProperty('height', 'auto', 'important');
-    document.documentElement.style.setProperty('overflow', 'auto', 'important');
-    const next = document.getElementById('__next');
-    if (next) {
-      next.style.setProperty('height', 'auto', 'important');
-      next.style.setProperty('overflow', 'auto', 'important');
-    }
-
-    const notifyHeightChange = throttle((trigger) => {
-      const bodyRect = document.body.getBoundingClientRect();
-      const widthInPixel = bodyRect.width;
-      const heightInPixel = Math.max(
-        document.body.scrollHeight,
-        document.body.offsetHeight,
-        document.documentElement.clientHeight,
-        document.documentElement.scrollHeight,
-        document.documentElement.offsetHeight
-      );
-
-      window.parent.postMessage({
-        type: '${MICROAPP_RESIZE_EVENT_NAME}',
-        payload: { trigger, widthInPixel, heightInPixel }
-      }, '__TARGET_ORIGIN__');
-    }, 500);
-
-    window.addEventListener('load', () => {
-      ['resize', 'orientationchange', 'fullscreenchange'].forEach(eventName => {
-        window.addEventListener(eventName, () => {
-          notifyHeightChange(eventName);
-        });
-      });
-
-      const resizeObserver = new ResizeObserver(() => {
-        notifyHeightChange('resizeObserver');
-      });
-      resizeObserver.observe(document.body);
-
-      const mutationObserver = new MutationObserver(() => {
-        notifyHeightChange('mutationObserver');
-      });
-      mutationObserver.observe(document.body, {
-        childList: true,
-        subtree: true,
-        attributes: true,
-      });
-
-      notifyHeightChange('load');
-    });
+        }, delay);
+      } else {
+        last = now;
+        callback.apply(context, args);
+      }
+    };
   }
+
+  // NB: This is a workaround to fix the issue with the height of the iframe
+  document.body.style.setProperty('overflow', 'auto', 'important');
+  document.body.style.setProperty('height', 'auto', 'important');
+  document.documentElement.style.setProperty('height', 'auto', 'important');
+  document.documentElement.style.setProperty('overflow', 'auto', 'important');
+  const next = document.getElementById('__next');
+  if (next) {
+    next.style.setProperty('height', 'auto', 'important');
+    next.style.setProperty('overflow', 'auto', 'important');
+  }
+
+  const notifyHeightChange = throttle((trigger) => {
+    const bodyRect = document.body.getBoundingClientRect();
+    const widthInPixel = bodyRect.width;
+    const heightInPixel = Math.max(
+      document.body.scrollHeight,
+      document.body.offsetHeight,
+      document.documentElement.clientHeight,
+      document.documentElement.scrollHeight,
+      document.documentElement.offsetHeight
+    );
+
+    window.parent.postMessage({
+      type: '${MICROAPP_RESIZE_EVENT_NAME}',
+      payload: { trigger, widthInPixel, heightInPixel }
+    }, '__TARGET_ORIGIN__');
+  }, 500);
+
+  window.addEventListener('load', () => {
+    ['resize', 'orientationchange', 'fullscreenchange'].forEach(eventName => {
+      window.addEventListener(eventName, () => {
+        notifyHeightChange(eventName);
+      });
+    });
+
+    const resizeObserver = new ResizeObserver(() => {
+      notifyHeightChange('resizeObserver');
+    });
+    resizeObserver.observe(document.body);
+
+    const mutationObserver = new MutationObserver(() => {
+      notifyHeightChange('mutationObserver');
+    });
+    mutationObserver.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+    });
+
+    notifyHeightChange('load');
+  });
 }())`);
 
   return (variables) => replaceScriptVariables(script, variables);
@@ -224,5 +289,7 @@ function replaceScriptVariables(
   script: string,
   variables: MicroappScriptVariables
 ): string {
-  return script.replace(/__TARGET_ORIGIN__/g, variables.targetOrigin);
+  return script
+    .replace(/__MICROAPP_ID__/g, variables.appId)
+    .replace(/__TARGET_ORIGIN__/g, variables.targetOrigin);
 }

@@ -19,16 +19,71 @@ export class MessageBusUserPreferencesRepo implements UserPreferencesRepo {
 
   constructor() {
     this.#messageBus = new MicroappMessageBus();
+    this.#preferences = this.#getInitialPreferences();
+    this.#setupMessageListener();
+  }
 
-    if (typeof window !== 'undefined') {
-      this.#preferences = Object.assign(
-        {},
-        DEFAULT_MICROAPP_USER_PREFERENCES,
-        buildUserPreferencesFromMicroappUrl(window.location.href)
-      );
+  #getInitialPreferences(): MicroappMessagePayload<MicroappUserPreferencesMessage> {
+    const getPreferences: Array<
+      () => MicroappMessagePayload<MicroappUserPreferencesMessage> | undefined
+    > = [
+      () => {
+        if (
+          typeof window !== 'undefined' &&
+          '__MICROAPP__' in window &&
+          typeof window.__MICROAPP__ === 'object' &&
+          window.__MICROAPP__ !== null &&
+          'theme' in window.__MICROAPP__ &&
+          typeof window.__MICROAPP__.theme === 'string' &&
+          'lang' in window.__MICROAPP__ &&
+          typeof window.__MICROAPP__.lang === 'string'
+        ) {
+          console.info(
+            '[@microapp-io/user-preferences] Using preferences from window.__MICROAPP__',
+            window.__MICROAPP__
+          );
+          return {
+            theme: window.__MICROAPP__.theme,
+            lang: window.__MICROAPP__.lang,
+          } as MicroappMessagePayload<MicroappUserPreferencesMessage>;
+        }
+      },
+      () => {
+        if (typeof window === 'undefined') {
+          return;
+        }
 
-      this.#setupMessageListener();
+        const preferences = buildUserPreferencesFromMicroappUrl(
+          window.location.href
+        );
+
+        if (preferences) {
+          console.info(
+            '[@microapp-io/user-preferences] Using preferences from microapp URL',
+            preferences
+          );
+          return preferences;
+        }
+      },
+      () => {
+        console.info(
+          '[@microapp-io/user-preferences] Using default preferences',
+          DEFAULT_MICROAPP_USER_PREFERENCES
+        );
+        return DEFAULT_MICROAPP_USER_PREFERENCES;
+      },
+    ];
+
+    for (const getPreference of getPreferences) {
+      const preferences = getPreference();
+      if (preferences) {
+        return preferences;
+      }
     }
+
+    throw new Error(
+      '[@microapp-io/user-preferences] Could not get initial preferences'
+    );
   }
 
   #setupMessageListener() {

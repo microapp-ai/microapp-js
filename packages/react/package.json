@@ -1,6 +1,6 @@
 {
   "name": "@microapp-io/react",
-  "version": "1.1.5",
+  "version": "1.1.8",
   "repository": {
     "type": "git",
     "url": "https://github.com/microapp-io/microapp-js",
@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "@microapp-io/auth": "^2.0.3",
-    "@microapp-io/user-preferences": "0.1.10"
+    "@microapp-io/user-preferences": "0.1.15"
   },
   "devDependencies": {
     "@types/react": "^18.2.0",
