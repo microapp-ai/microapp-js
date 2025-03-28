@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useCallback } from 'react';
 import type { MicroappRuntimeOptions } from './microapp-runtime';
 import { MicroappRuntime } from './microapp-runtime';
 import { buildMicroappUrl } from './build-microapp-url';
@@ -74,56 +75,71 @@ export function Microapp({
     [id, homeUrl, baseUrl, currentUrl, targetOrigin, theme, lang]
   );
 
-  const getChangedValues = useGetChangedValues(runtimeOptions);
   const [isLoading, setIsLoading] = React.useState(true);
-  const iframeSrc = useMicroappUrl(runtimeOptions);
+
+  React.useEffect(
+    () => {
+      const iframe = iframeRef.current;
+
+      if (!iframe) {
+        return;
+      }
+
+      const runtime = runtimeRef.current;
+
+      if (!runtime) {
+        try {
+          runtimeRef.current = new MicroappRuntime({
+            iframe,
+            ...runtimeOptions,
+          });
+        } catch (error) {
+          setIsLoading(false);
+          onError?.(
+            new MicroappInitializationError(
+              '[@microapp-io/runtime] Failed to initialize',
+              error
+            )
+          );
+        }
+      }
+
+      return () => {
+        runtimeRef.current?.tearDown();
+        runtimeRef.current = null;
+      };
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
+
+  const getChangedValues = useGetChangedValues(runtimeOptions);
 
   React.useEffect(() => {
-    const iframe = iframeRef.current;
+    const runtime = runtimeRef.current;
 
-    if (!iframe) {
+    if (!runtime) {
       return;
     }
 
     const changedValues = getChangedValues();
-    const runtime = runtimeRef.current;
 
-    if (!runtime) {
-      try {
-        runtimeRef.current = new MicroappRuntime({
-          iframe,
-          ...runtimeOptions,
-        });
-      } catch (error) {
-        setIsLoading(false);
-        onError?.(
-          new MicroappInitializationError(
-            '[@microapp-io/runtime] Failed to initialize',
-            error
-          )
-        );
-      }
-    }
-
-    if (runtime && Object.keys(changedValues).length > 0) {
+    if (Object.keys(changedValues).length > 0) {
       runtime.update(changedValues);
     }
+  }, [getChangedValues]);
 
-    return () => {
-      runtimeRef.current?.tearDown();
-      runtimeRef.current = null;
-    };
-  }, [getChangedValues, runtimeOptions, onError]);
-
-  const handleLoad = () => {
+  const handleLoad = useCallback(() => {
     setIsLoading(false);
     onLoad?.();
-  };
+  }, [onLoad]);
 
+  const iframeSrc = useMicroappUrl(runtimeOptions);
   const iframeId = React.useMemo(
     () => buildMicroappIframeId({ homeUrl }),
     [homeUrl]
   );
+
   const isMicroappContext = React.useContext(MicroappContext);
 
   if (!isMicroappContext) {
