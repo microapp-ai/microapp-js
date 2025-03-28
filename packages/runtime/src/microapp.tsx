@@ -6,6 +6,7 @@ import { MicroappRouteState } from './microapp-route-state';
 import { buildMicroappIframeId } from './utils';
 
 type MicroappProps = {
+  id: string;
   onLoad?: () => void;
   onError?: (error: Error) => void;
   loadingComponent?: React.ReactNode;
@@ -47,6 +48,7 @@ export function MicroappProvider({ children }: { children?: any }) {
 }
 
 export function Microapp({
+  id,
   homeUrl,
   baseUrl,
   currentUrl,
@@ -68,15 +70,8 @@ export function Microapp({
   const iframeRef = React.useRef<HTMLIFrameElement | null>(null);
   const runtimeRef = React.useRef<MicroappRuntime | null>(null);
   const runtimeOptions = React.useMemo(
-    () => ({
-      homeUrl,
-      baseUrl,
-      currentUrl,
-      targetOrigin,
-      theme,
-      lang,
-    }),
-    [homeUrl, baseUrl, currentUrl, targetOrigin, theme, lang]
+    () => ({ id, homeUrl, baseUrl, currentUrl, targetOrigin, theme, lang }),
+    [id, homeUrl, baseUrl, currentUrl, targetOrigin, theme, lang]
   );
 
   const getChangedValues = useGetChangedValues(runtimeOptions);
@@ -136,19 +131,21 @@ export function Microapp({
 
   return (
     <>
-      <iframe
-        src={iframeSrc}
-        seamless
-        width="100%"
-        height="0"
-        frameBorder="0"
-        scrolling="no"
-        {...rest}
-        data-microapp-id={iframeId}
-        title={title}
-        onLoad={handleLoad}
-        ref={iframeRef}
-      />
+      {iframeSrc && (
+        <iframe
+          src={iframeSrc}
+          seamless
+          width="100%"
+          height="0"
+          frameBorder="0"
+          scrolling="no"
+          {...rest}
+          data-microapp-id={iframeId}
+          title={title}
+          onLoad={handleLoad}
+          ref={iframeRef}
+        />
+      )}
       {isLoading &&
         (loadingComponent ? (
           loadingComponent

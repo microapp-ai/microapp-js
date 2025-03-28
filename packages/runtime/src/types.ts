@@ -21,7 +21,11 @@ export type MicroappInitMessage = WindowMessage<
 
 export type MicroappInitAcknowledgementMessage = WindowMessage<
   typeof MICROAPP_INIT_ACKNOWLEDGEMENT_EVENT_NAME,
-  {}
+  {
+    id: string;
+    theme: MicroappTheme;
+    lang: MicroappLanguage;
+  }
 >;
 
 export type MicroappRouteChangeMessage = WindowMessage<

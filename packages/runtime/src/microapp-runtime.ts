@@ -32,6 +32,7 @@ import { buildMicroappUrl } from './build-microapp-url';
 import { MicroappRouteState } from './microapp-route-state';
 
 export type MicroappRuntimeOptions = {
+  id: string;
   iframe: HTMLIFrameElement;
   homeUrl: string;
   baseUrl?: URL | string;
@@ -42,6 +43,7 @@ export type MicroappRuntimeOptions = {
 };
 
 export class MicroappRuntime {
+  readonly #id: string;
   readonly #iframe: HTMLIFrameElement;
   readonly #messageBus: MicroappMessageBus;
   #homeUrl: URL;
@@ -57,6 +59,7 @@ export class MicroappRuntime {
   #pendingMessages: MicroappMessages[] = [];
 
   constructor({
+    id,
     iframe,
     homeUrl,
     baseUrl,
@@ -65,6 +68,7 @@ export class MicroappRuntime {
     theme,
     lang,
   }: MicroappRuntimeOptions) {
+    this.#id = id;
     this.#iframe = iframe;
     this.#homeUrl = buildUrlWithTrailingSlash(homeUrl);
 
@@ -115,11 +119,16 @@ export class MicroappRuntime {
 
     this.#messageBus.send(
       MICROAPP_INIT_ACKNOWLEDGEMENT_EVENT_NAME,
-      {},
+      {
+        id: this.#id,
+        theme: this.#theme,
+        lang: this.#lang,
+      },
       iframeContentWindow
     );
 
     for (const message of this.#pendingMessages) {
+      console.info('[@microapp-io/runtime] Sending pending message', message);
       this.#messageBus.send(message.type, message.payload, iframeContentWindow);
     }
 

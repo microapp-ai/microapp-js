@@ -40,6 +40,7 @@ const script = minifyAndObfuscateScript(`
       if (window.__MICROAPP__.hasParentAcknowledgedInit) {
         return;
       }
+      console.info('[@microapp-io/runtime-injector] Sending init');
       window.parent.postMessage(
         {
           type: '${MICROAPP_INIT_EVENT_NAME}',
@@ -60,7 +61,12 @@ const script = minifyAndObfuscateScript(`
       const isInitAcknowledgementEvent = event.data.type === '${MICROAPP_INIT_ACKNOWLEDGEMENT_EVENT_NAME}';
 
       if (isInitAcknowledgementEvent) {
+        const { id, theme, lang } = event.data.payload;
+        console.info('[@microapp-io/runtime-injector] Parent has acknowledged init', { id, theme, lang });
         window.__MICROAPP__.hasParentAcknowledgedInit = true;
+        window.__MICROAPP__.id = id;
+        window.__MICROAPP__.theme = theme;
+        window.__MICROAPP__.lang = lang;
         return;
       }
 
@@ -68,6 +74,7 @@ const script = minifyAndObfuscateScript(`
 
       if (isUserPreferencesEvent) {
         const { theme, lang } = event.data.payload;
+        console.info('[@microapp-io/runtime-injector] User preferences updated', { theme, lang });
         window.__MICROAPP__.theme = theme;
         window.__MICROAPP__.lang = lang;
       }
@@ -90,6 +97,7 @@ const script = minifyAndObfuscateScript(`
     // Only notify if URL or title has actually changed
     if (canNotifyRouteChange()) {
       lastRoute = getCurrentData();
+      console.info('[@microapp-io/runtime-injector] Route change', { trigger, ...lastRoute });
       window.parent.postMessage(
         {
           type: '${MICROAPP_ROUTE_CHANGE_EVENT_NAME}',
@@ -199,6 +207,7 @@ export function getResizingScriptBuilder(): MicroappScriptBuilder {
       document.documentElement.offsetHeight
     );
 
+    console.info('[@microapp-io/runtime-injector] Height change', { trigger, widthInPixel, heightInPixel });
     window.parent.postMessage({
       type: '${MICROAPP_RESIZE_EVENT_NAME}',
       payload: { trigger, widthInPixel, heightInPixel }
