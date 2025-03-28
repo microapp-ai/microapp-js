@@ -21,7 +21,7 @@ export function build03ScriptsRequestHtmlRewriter({
       getAllowedTargetOriginUrlByRequestOrThrow(request);
 
     // TODO: Throw error if app is not defined when we add all missing apps to the API
-    const appId = app?.id || '__MICROAPP_NOT_FOUND__';
+    const appId = app?.id || '__MICROAPP_ID_NOT_FOUND__';
 
     htmlRewriter
       // 1) Inject routing script at the beginning of <head>
