@@ -63,7 +63,7 @@ export function Microapp({
 }: MicroappProps) {
   if ('id' in rest) {
     console.warn(
-      '[Microapp] The "id" prop is not supported. Use "title" instead.'
+      '[@microapp-io/runtime] The "id" prop is not supported. Use "title" instead.'
     );
   }
 
@@ -98,17 +98,21 @@ export function Microapp({
         setIsLoading(false);
         onError?.(
           new MicroappInitializationError(
-            '[Microapp] Failed to initialize',
+            '[@microapp-io/runtime] Failed to initialize',
             error
           )
         );
       }
-      return;
     }
 
-    if (Object.keys(changedValues).length > 0) {
+    if (runtime && Object.keys(changedValues).length > 0) {
       runtime.update(changedValues);
     }
+
+    return () => {
+      runtimeRef.current?.tearDown();
+      runtimeRef.current = null;
+    };
   }, [getChangedValues, runtimeOptions, onError]);
 
   const handleLoad = () => {
@@ -124,7 +128,7 @@ export function Microapp({
 
   if (!isMicroappContext) {
     console.error(
-      '[Microapp] The "Microapp" component must be a child of "MicroappProvider".'
+      '[@microapp-io/runtime] The "Microapp" component must be a child of "MicroappProvider".'
     );
     return null;
   }

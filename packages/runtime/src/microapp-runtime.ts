@@ -58,6 +58,9 @@ export class MicroappRuntime {
   #hasInitialized = false;
   #pendingMessages: MicroappMessages[] = [];
 
+  #tearDownMessageBus: (() => void) | null = null;
+  #tearDownWindowEventListeners: (() => void) | null = null;
+
   constructor({
     id,
     iframe,
@@ -75,8 +78,6 @@ export class MicroappRuntime {
     this.#theme = theme ?? this.#theme;
     this.#lang = lang ?? this.#lang;
 
-    // TODO: We are not using the targetOrigin in the runtime, so we can remove this
-    // and simplify the other attributes as well
     this.#targetOrigin = targetOrigin
       ? this.#buildAllowedTargetOriginOrThrow(targetOrigin)
       : this.#getWindowAllowedTargetOriginOrThrow(iframe);
@@ -92,26 +93,54 @@ export class MicroappRuntime {
       lang: this.#lang,
     });
 
-    this.#iframe.src = this.#src;
     this.#messageBus = new MicroappMessageBus({
       targetOrigin: buildOriginUrl(this.#src),
     });
 
-    this.#setUpMessageBus();
+    this.setUp();
+  }
 
-    this.#updateUserPreferences();
+  setUp(): void {
+    this.#iframe.src = this.#src;
+    this.#setUpMessageBus();
     this.#setUpWindowEventListeners();
   }
 
-  #setUpMessageBus() {
-    this.#messageBus.on(MICROAPP_INIT_EVENT_NAME, this.#handleInit);
+  tearDown(): void {
+    if (this.#tearDownMessageBus) {
+      this.#tearDownMessageBus();
+      this.#tearDownMessageBus = null;
+    }
 
-    this.#messageBus.on(
+    if (this.#tearDownWindowEventListeners) {
+      this.#tearDownWindowEventListeners();
+      this.#tearDownWindowEventListeners = null;
+    }
+
+    this.#iframe.src = '';
+  }
+
+  #setUpMessageBus() {
+    const tearDownInit = this.#messageBus.on(
+      MICROAPP_INIT_EVENT_NAME,
+      this.#handleInit
+    );
+
+    const tearDownRouteChange = this.#messageBus.on(
       MICROAPP_ROUTE_CHANGE_EVENT_NAME,
       this.#handleRouteChange
     );
 
-    this.#messageBus.on(MICROAPP_RESIZE_EVENT_NAME, this.#handleIframeResize);
+    const tearDownResize = this.#messageBus.on(
+      MICROAPP_RESIZE_EVENT_NAME,
+      this.#handleIframeResize
+    );
+
+    this.#tearDownMessageBus = () => {
+      tearDownInit();
+      tearDownRouteChange();
+      tearDownResize();
+    };
   }
 
   #handleInit = () => {
@@ -252,11 +281,17 @@ export class MicroappRuntime {
       100
     );
 
+    const tearDownListeners: Array<() => void> = [];
+
     ['resize', 'orientationchange', 'fullscreenchange'].forEach((eventName) => {
-      window.addEventListener(eventName, () => {
+      const eventListener = () => {
         notifySetViewportSize(
           eventName as MicroappMessagePayload<MicroappResizeMessage>['trigger']
         );
+      };
+      window.addEventListener(eventName, eventListener);
+      tearDownListeners.push(() => {
+        window.removeEventListener(eventName, eventListener);
       });
     });
 
@@ -265,6 +300,9 @@ export class MicroappRuntime {
     });
 
     resizeObserver.observe(document.body);
+    tearDownListeners.push(() => {
+      resizeObserver.disconnect();
+    });
 
     const mutationObserver = new MutationObserver(() => {
       notifySetViewportSize('mutationObserver');
@@ -276,7 +314,17 @@ export class MicroappRuntime {
       attributes: true,
     });
 
+    tearDownListeners.push(() => {
+      mutationObserver.disconnect();
+    });
+
     notifySetViewportSize('load');
+
+    this.#tearDownWindowEventListeners = () => {
+      for (const tearDownListener of tearDownListeners) {
+        tearDownListener();
+      }
+    };
   }
 
   update(
