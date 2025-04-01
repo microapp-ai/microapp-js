@@ -97,8 +97,17 @@ export function buildAppRequestTransformer({
       return request;
     }
 
-    // TODO: Change domainName to publicUrl when API is updated.
-    requestUrl.hostname = app.domainName;
+    if (app.status !== 'published') {
+      logger.error('App not published', app);
+      return request;
+    }
+
+    if (!app.liveDeployment) {
+      logger.error('App has no live deployment', app);
+      return request;
+    }
+
+    requestUrl.hostname = app.liveDeployment.hostUrl;
     logger.debug('App host URL', requestUrl.hostname);
 
     const updatedRequest = new Request(requestUrl, request);

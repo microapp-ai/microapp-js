@@ -3,17 +3,25 @@ import type {
   RequestHTMLRewriterBuilderInput,
   RequestHTMLRewriterInput,
 } from '../types';
+import { buildLogger } from '../utils';
 
 export function build04AnalyticsRequestHtmlRewriter({
   env,
   app,
+  debug,
 }: RequestHTMLRewriterBuilderInput): RequestHTMLRewriter {
+  const logger = buildLogger({
+    identifier: 'analytics-request-html-rewriter',
+    debug,
+  });
+
   async function rewrite({
     htmlRewriter,
   }: RequestHTMLRewriterInput): Promise<void> {
     const websiteId = app?.analyticsWebsiteId;
 
     if (!websiteId) {
+      logger.warn('No analytics website ID found for app');
       return;
     }
 
