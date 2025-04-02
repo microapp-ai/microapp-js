@@ -1,4 +1,9 @@
-import type {AuthRepo, AuthRepoBuildLoginUrlParams, UnsubscribeCallback, UserAuthenticatedCallback} from './auth-repo';
+import type {
+  AuthRepo,
+  AuthRepoBuildLoginUrlParams,
+  UnsubscribeCallback,
+  UserAuthenticatedCallback,
+} from './auth-repo';
 import type { User } from './user';
 import type { AuthConfig } from './auth-config';
 import { invariant } from './utils';
@@ -6,7 +11,6 @@ import { NoAuthenticatedUserError } from './errors';
 
 export class HttpAuthRepo implements AuthRepo {
   private onUserAuthenticatedCallback: UserAuthenticatedCallback | null = null;
-
 
   constructor(private config: AuthConfig) {}
 
@@ -34,20 +38,21 @@ export class HttpAuthRepo implements AuthRepo {
 
   async getUser(): Promise<User> {
     const getUserUrl = this.config.buildUrl({
-      path: '/api/auth/me',
+      path: '/api/auth/me/',
     });
 
-    const response = await fetch(getUserUrl);
+    const response = await fetch(getUserUrl, {
+      credentials: 'include',
+    });
 
     if (response.status !== 200) {
-      (this.onUserAuthenticatedCallback)?.(null);
+      this.onUserAuthenticatedCallback?.(null);
       invariant(response.status === 200, 'Could not get auth user');
     }
 
-
     const user = await response.json();
 
-    (this.onUserAuthenticatedCallback)?.(user);
+    this.onUserAuthenticatedCallback?.(user);
 
     return {
       id: user.sub,
@@ -80,10 +85,12 @@ export class HttpAuthRepo implements AuthRepo {
     window.location.href = this.buildLoginUrl();
   }
 
-  onUserAuthenticated(callback: UserAuthenticatedCallback): UnsubscribeCallback {
+  onUserAuthenticated(
+    callback: UserAuthenticatedCallback
+  ): UnsubscribeCallback {
     this.onUserAuthenticatedCallback = callback;
     return () => {
       this.onUserAuthenticatedCallback = null;
-    }
+    };
   }
 }

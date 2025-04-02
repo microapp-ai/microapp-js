@@ -9,9 +9,8 @@ import type {
   MicroappUserPreferencesMessage,
 } from '@microapp-io/runtime';
 
-type UserPreferencesContextType = {
-  preferences: MicroappMessagePayload<MicroappUserPreferencesMessage>;
-};
+type UserPreferencesContextType =
+  MicroappMessagePayload<MicroappUserPreferencesMessage>;
 
 const UserPreferencesContext = React.createContext<
   UserPreferencesContextType | undefined
@@ -22,21 +21,45 @@ export const useUserPreferences = (): UserPreferencesContextType => {
 
   if (!context) {
     throw new Error(
-      'useUserPreferences must be used within a UserPreferencesProvider'
+      '[@microapp-io/react] useUserPreferences must be used within a UserPreferencesProvider'
     );
   }
 
   return context;
 };
 
-export const useTheme = (): MicroappTheme => {
-  const { preferences } = useUserPreferences();
-  return preferences.theme!;
+type UseThemeOptions = {
+  onChange?: (theme: MicroappTheme) => void;
 };
 
-export const useLang = (): MicroappLanguage => {
-  const { preferences } = useUserPreferences();
-  return preferences.lang!;
+export const useTheme = ({ onChange }: UseThemeOptions = {}): MicroappTheme => {
+  const { theme } = useUserPreferences();
+
+  React.useEffect(() => {
+    if (onChange) {
+      onChange(theme);
+    }
+  }, [theme, onChange]);
+
+  return theme;
+};
+
+type UseLangOptions = {
+  onChange?: (lang: MicroappLanguage) => void;
+};
+
+export const useLang = ({
+  onChange,
+}: UseLangOptions = {}): MicroappLanguage => {
+  const { lang } = useUserPreferences();
+
+  React.useEffect(() => {
+    if (onChange) {
+      onChange(lang);
+    }
+  }, [lang, onChange]);
+
+  return lang;
 };
 
 type UserPreferencesProviderProps = PropsWithChildren<{
@@ -51,13 +74,18 @@ export const UserPreferencesProvider: React.FC<
     [sandbox]
   );
 
-  const preferences = React.useSyncExternalStore(
-    (onChange) => userPreferences.onUpdate(onChange),
-    () => userPreferences.getPreferences()
+  const [preferences, setPreferences] = React.useState(
+    userPreferences.getPreferences()
   );
 
+  React.useEffect(() => {
+    return userPreferences.onUpdate((newPreferences) => {
+      setPreferences(newPreferences);
+    });
+  }, [userPreferences]);
+
   return (
-    <UserPreferencesContext.Provider value={{ preferences }}>
+    <UserPreferencesContext.Provider value={preferences}>
       {children}
     </UserPreferencesContext.Provider>
   );

@@ -3,7 +3,7 @@ export function buildLogger({
   debug,
 }: {
   identifier: string;
-  debug?: boolean;
+  debug: boolean;
 }) {
   const prefix = `[${identifier}] `;
   return {

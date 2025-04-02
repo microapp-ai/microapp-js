@@ -1,5 +1,7 @@
 import type { WindowMessage } from './window-post-message-bus';
 import type {
+  MICROAPP_INIT_ACKNOWLEDGEMENT_EVENT_NAME,
+  MICROAPP_INIT_EVENT_NAME,
   MICROAPP_RESIZE_EVENT_NAME,
   MICROAPP_ROUTE_CHANGE_EVENT_NAME,
   MICROAPP_SET_VIEWPORT_SIZE_EVENT_NAME,
@@ -8,6 +10,23 @@ import type {
 
 export type MicroappLanguage = 'en' | 'es' | 'pt';
 export type MicroappTheme = 'light' | 'dark';
+
+export type MicroappInitMessage = WindowMessage<
+  typeof MICROAPP_INIT_EVENT_NAME,
+  {
+    url: string;
+    title: string;
+  }
+>;
+
+export type MicroappInitAcknowledgementMessage = WindowMessage<
+  typeof MICROAPP_INIT_ACKNOWLEDGEMENT_EVENT_NAME,
+  {
+    id: string;
+    theme: MicroappTheme;
+    lang: MicroappLanguage;
+  }
+>;
 
 export type MicroappRouteChangeMessage = WindowMessage<
   typeof MICROAPP_ROUTE_CHANGE_EVENT_NAME,
@@ -41,7 +60,7 @@ export type MicroappResizeMessage = WindowMessage<
 
 export type MicroappUserPreferencesMessage = WindowMessage<
   typeof MICROAPP_USER_PREFERENCES_EVENT_NAME,
-  { theme?: MicroappTheme; lang?: MicroappLanguage }
+  { theme: MicroappTheme; lang: MicroappLanguage }
 >;
 
 export type MicroappSetViewportSizeMessage = WindowMessage<
@@ -60,6 +79,8 @@ export type MicroappSetViewportSizeMessage = WindowMessage<
 >;
 
 export type MicroappMessages =
+  | MicroappInitMessage
+  | MicroappInitAcknowledgementMessage
   | MicroappRouteChangeMessage
   | MicroappResizeMessage
   | MicroappUserPreferencesMessage
@@ -70,3 +91,12 @@ export type MicroappMessageType<TMessage extends MicroappMessages> =
 
 export type MicroappMessagePayload<TMessage extends MicroappMessages> =
   TMessage['payload'];
+
+export type WindowMicroapp = {
+  id: string;
+  hasRouting: boolean;
+  hasResizing: boolean;
+  hasParentAcknowledgedInit: boolean;
+  theme: MicroappTheme | null;
+  lang: MicroappLanguage | null;
+};

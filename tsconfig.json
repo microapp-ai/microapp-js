@@ -2,9 +2,9 @@
   "files": [],
   "references": [
     { "path": "packages/auth" },
-    { "path": "packages/cli" },
-    { "path": "packages/create-microapp" },
     { "path": "packages/react" },
-    { "path": "packages/scripts" }
+    { "path": "packages/runtime" },
+    { "path": "packages/runtime-injector" },
+    { "path": "packages/user-preferences" }
   ]
 }

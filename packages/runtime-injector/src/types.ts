@@ -7,6 +7,34 @@ export interface Env {
 
 export type MicroappApp = {
   id: string;
-  slug: string;
+  status: 'draft' | 'published' | 'archived';
+  liveDeployment: null | {
+    hostUrl: string;
+  };
   analyticsWebsiteId: string;
+};
+
+export type RequestHTMLRewriterInput = {
+  request: Request;
+  htmlRewriter: HTMLRewriter;
+};
+
+export type RequestHTMLRewriterOutput = void | Promise<void>;
+
+export type RequestHTMLRewriter = {
+  rewrite: (input: RequestHTMLRewriterInput) => RequestHTMLRewriterOutput;
+};
+
+export type RequestHTMLRewriterBuilderInput = {
+  env: Env;
+  debug: boolean;
+  app: MicroappApp | null;
+};
+
+export type RequestHTMLRewriterBuilder = (
+  input: RequestHTMLRewriterBuilderInput
+) => RequestHTMLRewriter;
+
+export type RequestTransformer = {
+  transform: (request: Request) => Promise<Request>;
 };

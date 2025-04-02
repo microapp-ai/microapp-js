@@ -1,6 +1,6 @@
 {
   "name": "@microapp-io/auth",
-  "version": "2.0.0",
+  "version": "2.0.3",
   "repository": {
     "type": "git",
     "url": "https://github.com/microapp-io/microapp-js",
@@ -13,6 +13,10 @@
   "unpkg": "./dist/auth.umd.min.js",
   "module": "./dist/auth.js",
   "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "rollup -c",
+    "lint": "eslint --cache ."
+  },
   "files": [
     "dist/",
     "*.ts",

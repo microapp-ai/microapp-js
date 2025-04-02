@@ -2,6 +2,8 @@ import {
   ALLOWED_MICROAPP_ORIGIN_HOSTNAMES,
   DEFAULT_MICROAPP_LANGUAGE,
   DEFAULT_MICROAPP_THEME,
+  MICROAPP_INIT_ACKNOWLEDGEMENT_EVENT_NAME,
+  MICROAPP_INIT_EVENT_NAME,
   MICROAPP_RESIZE_EVENT_NAME,
   MICROAPP_ROUTE_CHANGE_EVENT_NAME,
   MICROAPP_SET_VIEWPORT_SIZE_EVENT_NAME,
@@ -12,13 +14,14 @@ import { MicroappMessageBus } from './microapp-message-bus';
 import type {
   MicroappLanguage,
   MicroappMessagePayload,
+  MicroappMessages,
   MicroappResizeMessage,
   MicroappRouteChangeMessage,
   MicroappTheme,
-  MicroappUserPreferencesMessage,
 } from './types';
 
 import {
+  buildOriginUrl,
   buildPathnameWithBeginningAndTrailingSlash,
   buildUrlOrCurrentWindowLocation,
   buildUrlWithTrailingSlash,
@@ -29,6 +32,7 @@ import { buildMicroappUrl } from './build-microapp-url';
 import { MicroappRouteState } from './microapp-route-state';
 
 export type MicroappRuntimeOptions = {
+  id: string;
   iframe: HTMLIFrameElement;
   homeUrl: string;
   baseUrl?: URL | string;
@@ -39,6 +43,7 @@ export type MicroappRuntimeOptions = {
 };
 
 export class MicroappRuntime {
+  readonly #id: string;
   readonly #iframe: HTMLIFrameElement;
   readonly #messageBus: MicroappMessageBus;
   #homeUrl: URL;
@@ -50,7 +55,14 @@ export class MicroappRuntime {
   #theme: MicroappTheme = DEFAULT_MICROAPP_THEME;
   #lang: MicroappLanguage = DEFAULT_MICROAPP_LANGUAGE;
 
+  #hasInitialized = false;
+  #pendingMessages: MicroappMessages[] = [];
+
+  #tearDownMessageBus: (() => void) | null = null;
+  #tearDownWindowEventListeners: (() => void) | null = null;
+
   constructor({
+    id,
     iframe,
     homeUrl,
     baseUrl,
@@ -59,11 +71,13 @@ export class MicroappRuntime {
     theme,
     lang,
   }: MicroappRuntimeOptions) {
+    this.#id = id;
     this.#iframe = iframe;
     this.#homeUrl = buildUrlWithTrailingSlash(homeUrl);
 
     this.#theme = theme ?? this.#theme;
     this.#lang = lang ?? this.#lang;
+
     this.#targetOrigin = targetOrigin
       ? this.#buildAllowedTargetOriginOrThrow(targetOrigin)
       : this.#getWindowAllowedTargetOriginOrThrow(iframe);
@@ -79,28 +93,87 @@ export class MicroappRuntime {
       lang: this.#lang,
     });
 
-    this.#iframe.src = this.#src;
     this.#messageBus = new MicroappMessageBus({
-      targetOrigin: this.#targetOrigin,
+      targetOrigin: buildOriginUrl(this.#src),
     });
 
-    this.#setUpMessageBus();
+    this.setUp();
+  }
 
-    this.#updateUserPreferences();
+  setUp(): void {
+    this.#iframe.src = this.#src;
+    this.#setUpMessageBus();
     this.#setUpWindowEventListeners();
   }
 
+  tearDown(): void {
+    if (this.#tearDownMessageBus) {
+      this.#tearDownMessageBus();
+      this.#tearDownMessageBus = null;
+    }
+
+    if (this.#tearDownWindowEventListeners) {
+      this.#tearDownWindowEventListeners();
+      this.#tearDownWindowEventListeners = null;
+    }
+
+    this.#iframe.src = '';
+  }
+
   #setUpMessageBus() {
-    this.#messageBus.on(
+    const tearDownInit = this.#messageBus.on(
+      MICROAPP_INIT_EVENT_NAME,
+      this.#handleInit
+    );
+
+    const tearDownRouteChange = this.#messageBus.on(
       MICROAPP_ROUTE_CHANGE_EVENT_NAME,
       this.#handleRouteChange
     );
-    this.#messageBus.on(MICROAPP_RESIZE_EVENT_NAME, this.#handleIframeResize);
-    this.#messageBus.on(
-      MICROAPP_USER_PREFERENCES_EVENT_NAME,
-      this.#handlePreferencesChange
+
+    const tearDownResize = this.#messageBus.on(
+      MICROAPP_RESIZE_EVENT_NAME,
+      this.#handleIframeResize
     );
+
+    this.#tearDownMessageBus = () => {
+      tearDownInit();
+      tearDownRouteChange();
+      tearDownResize();
+    };
   }
+
+  #handleInit = () => {
+    const iframeContentWindow = this.#getIframeContentWindowOrThrow();
+
+    this.#messageBus.send(
+      MICROAPP_INIT_ACKNOWLEDGEMENT_EVENT_NAME,
+      {
+        id: this.#id,
+        theme: this.#theme,
+        lang: this.#lang,
+      },
+      iframeContentWindow
+    );
+
+    for (const message of this.#pendingMessages) {
+      console.info('[@microapp-io/runtime] Sending pending message', message);
+      this.#messageBus.send(message.type, message.payload, iframeContentWindow);
+    }
+
+    this.#hasInitialized = true;
+    this.#pendingMessages = [];
+  };
+
+  #getIframeContentWindowOrThrow = (): Window => {
+    const contentWindow = this.#iframe.contentWindow;
+    if (!contentWindow) {
+      throw new Error(
+        '[@microapp-io/runtime] The iframe does not have a content window'
+      );
+    }
+    return contentWindow;
+  };
 
   #handleRouteChange = ({
     url: urlString,
@@ -170,25 +243,26 @@ export class MicroappRuntime {
     }
   };
 
-  #handlePreferencesChange = ({
-    theme,
-    lang,
-  }: MicroappMessagePayload<MicroappUserPreferencesMessage>) => {
-    if (theme) this.#theme = theme;
-    if (lang) this.#lang = lang;
-
-    this.#updateUserPreferences();
+  #updateUserPreferences = () => {
+    this.#sendMessageIfInitialized(MICROAPP_USER_PREFERENCES_EVENT_NAME, {
+      theme: this.#theme,
+      lang: this.#lang,
+    });
   };
 
-  #updateUserPreferences = () => {
-    this.#messageBus.send(
-      MICROAPP_USER_PREFERENCES_EVENT_NAME,
-      {
-        theme: this.#theme,
-        lang: this.#lang,
-      },
-      this.#iframe.contentWindow ?? undefined
-    );
+  #sendMessageIfInitialized = (
+    type: MicroappMessages['type'],
+    payload: MicroappMessages['payload']
+  ) => {
+    if (this.#hasInitialized) {
+      this.#messageBus.send(
+        type,
+        payload,
+        this.#getIframeContentWindowOrThrow()
+      );
+      return;
+    }
+    this.#pendingMessages.push({ type, payload } as MicroappMessages);
   };
 
   #setUpWindowEventListeners() {
@@ -198,7 +272,7 @@ export class MicroappRuntime {
 
     const notifySetViewportSize = throttle(
       (trigger: MicroappMessagePayload<MicroappResizeMessage>['trigger']) => {
-        this.#messageBus.send(MICROAPP_SET_VIEWPORT_SIZE_EVENT_NAME, {
+        this.#sendMessageIfInitialized(MICROAPP_SET_VIEWPORT_SIZE_EVENT_NAME, {
           trigger,
           widthInPixel: window.innerWidth,
           heightInPixel: window.innerHeight,
@@ -207,11 +281,17 @@ export class MicroappRuntime {
       100
     );
 
+    const tearDownListeners: Array<() => void> = [];
+
     ['resize', 'orientationchange', 'fullscreenchange'].forEach((eventName) => {
-      window.addEventListener(eventName, () => {
+      const eventListener = () => {
         notifySetViewportSize(
           eventName as MicroappMessagePayload<MicroappResizeMessage>['trigger']
         );
+      };
+      window.addEventListener(eventName, eventListener);
+      tearDownListeners.push(() => {
+        window.removeEventListener(eventName, eventListener);
       });
     });
 
@@ -220,6 +300,9 @@ export class MicroappRuntime {
     });
 
     resizeObserver.observe(document.body);
+    tearDownListeners.push(() => {
+      resizeObserver.disconnect();
+    });
 
     const mutationObserver = new MutationObserver(() => {
       notifySetViewportSize('mutationObserver');
@@ -231,7 +314,17 @@ export class MicroappRuntime {
       attributes: true,
     });
 
+    tearDownListeners.push(() => {
+      mutationObserver.disconnect();
+    });
+
     notifySetViewportSize('load');
+
+    this.#tearDownWindowEventListeners = () => {
+      for (const tearDownListener of tearDownListeners) {
+        tearDownListener();
+      }
+    };
   }
 
   update(
@@ -282,6 +375,7 @@ export class MicroappRuntime {
       });
 
       this.#iframe.src = this.#src;
+      this.#messageBus.targetOrigin = buildOriginUrl(this.#src);
     }
 
     const shouldUpdateUserPreferences = 'theme' in options || 'lang' in options;
@@ -298,7 +392,7 @@ export class MicroappRuntime {
 
     if (!parentWindow) {
       throw new Error(
-        '[MicroappRuntime] The iframe does not have a parent window.'
+        '[@microapp-io/runtime] The iframe does not have a parent window'
       );
     }
 
@@ -314,7 +408,7 @@ export class MicroappRuntime {
 
     if (!isParentUrlAllowed) {
       throw new Error(
-        '[MicroappRuntime] The parent window origin is only allowed to be the production or staging marketplace URLs.'
+        '[@microapp-io/runtime] The parent window origin is only allowed to be the production or staging marketplace URLs'
       );
     }
 

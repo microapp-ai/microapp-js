@@ -8,3 +8,4 @@ export * from './microapp-route-state';
 export * from './microapp-runtime';
 export * from './types';
 export * from './window-post-message-bus';
+export * from './global.d';

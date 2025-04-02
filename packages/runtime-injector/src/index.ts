@@ -1,48 +1,73 @@
-import type { Env } from './types';
-import { buildProtocolRequestOptimizer } from './create-request-protocol-optimizer';
-import type { RequestTransformerBuilder } from './build-request-transformer';
-import { buildRequestTransformer } from './build-request-transformer';
+import type {
+  Env,
+  RequestHTMLRewriterBuilder,
+  RequestTransformer,
+} from './types';
+import { buildRequestRewriter } from './build-request-rewriter';
 import {
-  build01MetaRequestTransformer,
-  build02SeoRequestTransformer,
-  build03ScriptsRequestTransformer,
-  build04AnalyticsRequestTransformer,
-} from './request-transformers';
+  build01MetaRequestHtmlRewriter,
+  build02SeoRequestHtmlRewriter,
+  build03ScriptsRequestHtmlRewriter,
+  build04AnalyticsRequestHtmlRewriter,
+} from './html-rewriters';
+import { buildAppRequestTransformer } from './build-app-request-transformer';
+import { buildProtocolRequestTransformer } from './build-protocol-request-transformer';
 
 const worker = {
   async fetch(request: Request, env: Env): Promise<Response> {
     // NB: This is a debug flag that can be used to force optimization for a specific IP address.
     // const ip = request.headers.get('cf-connecting-ip');
-    // const debug = ip === '2804:d45:3719:2300:9073:a958:1207:cc52';
+    // const debug = ip === '2804:d45:3719:2300:2133:ae1:10ce:87bf';
     const debug = false;
 
-    const protocolRequestOptimizer = buildProtocolRequestOptimizer({
+    const appRequestTransformer = buildAppRequestTransformer({ env, debug });
+    const protocolRequestTransformer = buildProtocolRequestTransformer({
       env,
       debug,
     });
 
-    const requestUrl = await protocolRequestOptimizer.buildRequestUrl(request);
-    const response = await fetch(requestUrl, request);
-    await protocolRequestOptimizer.handleResponse(response);
+    const transformedRequest = await transformRequest({
+      request,
+      transformers: [appRequestTransformer, protocolRequestTransformer],
+    });
 
-    const requestTransformer = buildRequestTransformer({ debug });
+    const response = await fetch(transformedRequest, request);
+    await protocolRequestTransformer.handleResponse(response);
 
-    if (!requestTransformer.shouldTransformRequest(request)) {
+    const requestRewriter = buildRequestRewriter({ debug });
+
+    if (!requestRewriter.shouldRewrite(request)) {
       return response;
     }
 
-    const transformers: RequestTransformerBuilder[] = [
-      build01MetaRequestTransformer,
-      build02SeoRequestTransformer,
-      build03ScriptsRequestTransformer,
-      build04AnalyticsRequestTransformer,
+    const rewriters: RequestHTMLRewriterBuilder[] = [
+      build01MetaRequestHtmlRewriter,
+      build02SeoRequestHtmlRewriter,
+      build03ScriptsRequestHtmlRewriter,
+      build04AnalyticsRequestHtmlRewriter,
     ];
 
-    return requestTransformer.transform(request, response, {
+    const app = await appRequestTransformer.getAppByRequest(request);
+    return requestRewriter.rewrite(request, response, {
       env,
-      transformers,
+      rewriters,
+      app,
     });
   },
 };
+
+async function transformRequest({
+  request,
+  transformers,
+}: {
+  request: Request;
+  transformers: RequestTransformer[];
+}): Promise<Request> {
+  for (const transformer of transformers) {
+    request = await transformer.transform(request);
+  }
+
+  return request;
+}
 
 export default worker;
