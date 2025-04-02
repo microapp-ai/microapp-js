@@ -115,8 +115,18 @@ export class HttpPaymentsRepo implements PaymentsRepository {
     return {
       id: subscriptionPlan.id,
       name: subscriptionPlan.name,
+      description: subscriptionPlan.description,
       priceInCents: subscriptionPlan.priceInCents,
       cycle: subscriptionPlan.cycle as SubscriptionPlanCycle,
+      features: subscriptionPlan.features?.map(
+        (feature: { id: string; name: string; description?: string }) => {
+          return {
+            id: feature.id,
+            name: feature.name,
+            description: feature.description,
+          };
+        }
+      ),
     };
   }
 
