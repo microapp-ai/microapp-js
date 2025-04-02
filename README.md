@@ -12,6 +12,7 @@ This repository is a monorepo containing the following packages:
 - [`runtime`](/packages/runtime)
 - [`runtime-injector`](/packages/runtime-injector)
 - [`user-preferences`](/packages/user-preferences)
+- [`payments`](/packages/payments)
 
 ## About
 
