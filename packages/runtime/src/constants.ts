@@ -4,6 +4,7 @@ export const ALLOWED_MICROAPP_ORIGIN_HOSTNAMES = [
   'microapp.io',
   'www.microapp.io',
   'staging.microapp.io',
+  'app.microapp.io',
   'localhost',
 ];
 
