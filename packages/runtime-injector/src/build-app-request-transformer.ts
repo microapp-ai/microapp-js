@@ -78,7 +78,7 @@ export function buildAppRequestTransformer({
       }
     );
 
-    if (!response.ok) {
+    if (response.status !== 200) {
       const body = await response.text();
       logger.error('Failed to fetch app data', {
         status: response.status,
