@@ -19,6 +19,8 @@ export class MicroappRouteState {
       typeof event === 'object' &&
       event !== null &&
       event instanceof PopStateEvent &&
+      typeof event.state === 'object' &&
+      event.state !== null &&
       'homeUrl' in event.state &&
       typeof event.state.homeUrl === 'string' &&
       'path' in event.state &&
