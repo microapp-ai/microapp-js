@@ -182,18 +182,21 @@ export class MicroappRuntime {
       return;
     }
     const url = buildUrlWithTrailingSlash(urlString);
-    const newPathWithHash = this.#buildHistoryPathFromUrl(url);
-    const currentPathWithHash = window.location.pathname + window.location.hash;
+    const newPath = this.#buildHistoryPathFromUrl(url);
+    const currentPath = window.location.pathname;
 
-    if (currentPathWithHash === newPathWithHash) {
+    if (currentPath === newPath) {
       return;
     }
+
+    const currentHash = window.location.hash;
+    const newPathWithHash = `${newPath}${currentHash}`;
 
     // NB: We use replaceState instead of pushState to avoid adding to the history stack twice
     window.history.replaceState(
       new MicroappRouteState({
         homeUrl: this.#homeUrl.toString(),
-        path: newPathWithHash,
+        path: newPath,
       }),
       '',
       newPathWithHash
@@ -208,7 +211,6 @@ export class MicroappRuntime {
     }
 
     let path = buildPathnameWithBeginningAndTrailingSlash(url.pathname);
-    let hash = url.hash || this.#currentUrl?.hash || this.#baseUrl?.hash || '';
 
     if (this.#baseUrl) {
       // Extract relative path if needed and format it properly
@@ -233,10 +235,6 @@ export class MicroappRuntime {
 
     if (searchParams) {
       path += `?${searchParams}`;
-    }
-
-    if (hash) {
-      path += hash;
     }
 
     return path;
