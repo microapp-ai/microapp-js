@@ -202,6 +202,7 @@ export class MicroappRuntime {
     }
 
     let path = buildPathnameWithBeginningAndTrailingSlash(url.pathname);
+    let hash = url.hash || this.#currentUrl?.hash || this.#baseUrl?.hash || '';
 
     if (this.#baseUrl) {
       // Extract relative path if needed and format it properly
@@ -228,8 +229,8 @@ export class MicroappRuntime {
       path += `?${searchParams}`;
     }
 
-    if (url.hash) {
-      path += `#${url.hash}`;
+    if (hash) {
+      path += hash;
     }
 
     return path;
