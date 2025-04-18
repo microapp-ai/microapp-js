@@ -16,6 +16,8 @@ export class MicroappRouteState {
     event: Event
   ): event is PopStateEvent {
     return (
+      typeof event === 'object' &&
+      event !== null &&
       event instanceof PopStateEvent &&
       'homeUrl' in event.state &&
       typeof event.state.homeUrl === 'string' &&
