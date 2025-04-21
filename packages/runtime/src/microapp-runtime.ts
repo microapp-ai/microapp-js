@@ -1,6 +1,6 @@
 import {
   ALLOWED_MICROAPP_ORIGIN_HOSTNAMES,
-  DEFAULT_MICROAPP_LANGUAGE,
+  DEFAULT_MICROAPP_LANGUAGE, DEFAULT_MICROAPP_REQUEST_TIMEOUT_IN_MS,
   DEFAULT_MICROAPP_THEME,
   MICROAPP_INIT_ACKNOWLEDGEMENT_EVENT_NAME,
   MICROAPP_INIT_EVENT_NAME,
@@ -8,16 +8,20 @@ import {
   MICROAPP_ROUTE_CHANGE_EVENT_NAME,
   MICROAPP_SET_VIEWPORT_SIZE_EVENT_NAME,
   MICROAPP_URL_PARAM_NAMES,
+  MICROAPP_USER_APP_SUBSCRIPTION_EVENT_NAME,
+  MICROAPP_USER_AUTHENTICATED_EVENT_NAME,
   MICROAPP_USER_PREFERENCES_EVENT_NAME,
 } from './constants';
-import { MicroappMessageBus } from './microapp-message-bus';
+import {MicroappMessageBus} from './microapp-message-bus';
 import type {
+  MicroappAppSubscription,
   MicroappLanguage,
   MicroappMessagePayload,
   MicroappMessages,
   MicroappResizeMessage,
   MicroappRouteChangeMessage,
   MicroappTheme,
+  MicroappUser,
 } from './types';
 
 import {
@@ -28,8 +32,9 @@ import {
   removeTrailingSlashFromUrl,
   throttle,
 } from './utils';
-import { buildMicroappUrl } from './build-microapp-url';
-import { MicroappRouteState } from './microapp-route-state';
+import {buildMicroappUrl} from './build-microapp-url';
+import {MicroappRouteState} from './microapp-route-state';
+import {WindowMessage} from "./window-post-message-bus";
 
 export type MicroappRuntimeOptions = {
   id: string;
@@ -40,6 +45,8 @@ export type MicroappRuntimeOptions = {
   targetOrigin?: string;
   theme?: MicroappTheme;
   lang?: MicroappLanguage;
+  user?: MicroappUser;
+  appSubscription?: MicroappAppSubscription;
 };
 
 export class MicroappRuntime {
@@ -54,6 +61,9 @@ export class MicroappRuntime {
 
   #theme: MicroappTheme = DEFAULT_MICROAPP_THEME;
   #lang: MicroappLanguage = DEFAULT_MICROAPP_LANGUAGE;
+
+  #user: MicroappUser | undefined;
+  #appSubscription: MicroappAppSubscription | undefined;
 
   #hasInitialized = false;
   #pendingMessages: MicroappMessages[] = [];
@@ -70,6 +80,8 @@ export class MicroappRuntime {
     targetOrigin,
     theme,
     lang,
+    user,
+    appSubscription,
   }: MicroappRuntimeOptions) {
     this.#id = id;
     this.#iframe = iframe;
@@ -92,6 +104,9 @@ export class MicroappRuntime {
       theme: this.#theme,
       lang: this.#lang,
     });
+
+    this.#user = user;
+    this.#appSubscription = appSubscription;
 
     this.#messageBus = new MicroappMessageBus({
       targetOrigin: buildOriginUrl(this.#src),
@@ -255,6 +270,18 @@ export class MicroappRuntime {
     });
   };
 
+  #updateUser = () => {
+    this.#sendMessageIfInitialized(MICROAPP_USER_AUTHENTICATED_EVENT_NAME, {
+      user: this.#user,
+    });
+  };
+
+  #updateAppSubscription = () => {
+    this.#sendMessageIfInitialized(MICROAPP_USER_APP_SUBSCRIPTION_EVENT_NAME, {
+      appSubscription: this.#appSubscription,
+    });
+  };
+
   #sendMessageIfInitialized = (
     type: MicroappMessages['type'],
     payload: MicroappMessages['payload']
@@ -343,7 +370,7 @@ export class MicroappRuntime {
         | 'theme'
         | 'lang'
         | 'user'
-        | 'subscription'
+        | 'appSubscription'
       >
     >
   ): void {
@@ -371,6 +398,14 @@ export class MicroappRuntime {
       this.#lang = options.lang;
     }
 
+    if (options.user) {
+      this.#user = options.user;
+    }
+
+    if (options.appSubscription) {
+      this.#appSubscription = options.appSubscription;
+    }
+
     const shouldUpdateIframeSrc =
       'homeUrl' in options ||
       'baseUrl' in options ||
@@ -394,6 +429,18 @@ export class MicroappRuntime {
 
     if (shouldUpdateUserPreferences) {
       this.#updateUserPreferences();
+    }
+
+    const shouldUpdateUser = 'user' in options;
+
+    if (shouldUpdateUser) {
+      this.#updateUser()
+    }
+
+    const shouldUpdateSubscription = 'appSubscription' in options;
+
+    if (shouldUpdateSubscription) {
+      this.#updateAppSubscription()
     }
   }
 
@@ -427,5 +474,23 @@ export class MicroappRuntime {
     targetOrigin.pathname = removeTrailingSlashFromUrl(targetOrigin.pathname);
 
     return targetOrigin.toString();
+  };
+
+  request = <
+    TRequestType extends WindowMessage<string, Record<string, unknown>>,
+    TResponseType extends WindowMessage<string, Record<string, unknown>>
+  >(
+    requestType: TRequestType,
+    responseType: TResponseType,
+    payload: any,
+    timeoutInMs = DEFAULT_MICROAPP_REQUEST_TIMEOUT_IN_MS,
+  ): Promise<any> => {
+
+    return this.#messageBus.request({
+      requestType,
+      responseType,
+      payload,
+      timeoutInMs,
+    });
   };
 }

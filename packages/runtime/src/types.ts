@@ -5,6 +5,8 @@ import type {
   MICROAPP_RESIZE_EVENT_NAME,
   MICROAPP_ROUTE_CHANGE_EVENT_NAME,
   MICROAPP_SET_VIEWPORT_SIZE_EVENT_NAME,
+  MICROAPP_USER_APP_SUBSCRIPTION_EVENT_NAME,
+  MICROAPP_USER_AUTHENTICATED_EVENT_NAME,
   MICROAPP_USER_PREFERENCES_EVENT_NAME,
 } from './constants';
 
@@ -84,7 +86,9 @@ export type MicroappMessages =
   | MicroappRouteChangeMessage
   | MicroappResizeMessage
   | MicroappUserPreferencesMessage
-  | MicroappSetViewportSizeMessage;
+  | MicroappSetViewportSizeMessage
+  | MicroappUserAuthenticatedMessage
+  | MicroappAppSubscriptionMessage;
 
 export type MicroappMessageType<TMessage extends MicroappMessages> =
   TMessage['type'];
@@ -100,3 +104,29 @@ export type WindowMicroapp = {
   theme: MicroappTheme | null;
   lang: MicroappLanguage | null;
 };
+
+export type MicroappUser = {
+  id: string;
+  name: string;
+  username: string;
+}
+
+export type MicroappUserAuthenticatedMessage = WindowMessage<
+  typeof MICROAPP_USER_AUTHENTICATED_EVENT_NAME,
+  {
+    user: MicroappUser | undefined;
+  }
+>;
+
+export type MicroappAppSubscription = {
+  id: string;
+  appId: string;
+  subscriptionPlanId: string;
+}
+
+export type MicroappAppSubscriptionMessage = WindowMessage<
+  typeof MICROAPP_USER_APP_SUBSCRIPTION_EVENT_NAME,
+  {
+    appSubscription: MicroappAppSubscription | undefined;
+  }
+>;

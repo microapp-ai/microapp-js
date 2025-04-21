@@ -112,7 +112,7 @@ export class WindowPostMessageBus<
     responseType: TResponseType;
     payload: ExtractPayload<TMessage, TRequestType>;
     timeoutInMs?: number;
-  }): Promise<ExtractPayload<TResponseType, TRequestType>> => {
+  }): Promise<ExtractPayload<TMessage, TResponseType>> => {
     return new Promise((resolve, reject) => {
       let unsubscribe: (() => void) | undefined;
       this.send(requestType, payload);
@@ -123,14 +123,14 @@ export class WindowPostMessageBus<
       }, timeoutInMs);
 
       const handler = (
-        response: ExtractPayload<TResponseType, TRequestType>
+        response: ExtractPayload<TMessage, TResponseType>
       ) => {
         clearTimeout(timeoutId);
         unsubscribe?.();
         resolve(response);
       };
 
-      unsubscribe = this.on(responseType as unknown as TResponseType, handler);
+      unsubscribe = this.on(responseType, handler);
     });
   };
 }
