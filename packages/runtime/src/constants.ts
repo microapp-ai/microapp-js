@@ -26,3 +26,5 @@ export const MICROAPP_RESIZE_EVENT_NAME = '@microapp:resize';
 export const MICROAPP_USER_PREFERENCES_EVENT_NAME = '@microapp:userPreferences';
 export const MICROAPP_SET_VIEWPORT_SIZE_EVENT_NAME =
   '@microapp:setViewportSize';
+
+export const DEFAULT_MICROAPP_REQUEST_TIMEOUT_IN_MS = 1000 * 30;

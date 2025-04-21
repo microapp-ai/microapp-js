@@ -336,7 +336,14 @@ export class MicroappRuntime {
     options: Partial<
       Pick<
         MicroappRuntimeOptions,
-        'homeUrl' | 'baseUrl' | 'currentUrl' | 'targetOrigin' | 'theme' | 'lang'
+        | 'homeUrl'
+        | 'baseUrl'
+        | 'currentUrl'
+        | 'targetOrigin'
+        | 'theme'
+        | 'lang'
+        | 'user'
+        | 'subscription'
       >
     >
   ): void {
