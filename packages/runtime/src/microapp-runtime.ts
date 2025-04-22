@@ -8,6 +8,7 @@ import {
   MICROAPP_ROUTE_CHANGE_EVENT_NAME,
   MICROAPP_SET_VIEWPORT_SIZE_EVENT_NAME,
   MICROAPP_URL_PARAM_NAMES,
+  MICROAPP_USER_APP_SUBSCRIPTION_EVENT_NAME,
   MICROAPP_USER_AUTHENTICATED_EVENT_NAME,
   MICROAPP_USER_PREFERENCES_EVENT_NAME,
 } from './constants';
@@ -43,7 +44,6 @@ export type MicroappRuntimeOptions = {
   targetOrigin?: string;
   theme?: MicroappTheme;
   lang?: MicroappLanguage;
-  onRequireSubscription?: () => Promise<void>;
   user?: MicroappUser;
   appSubscription?: MicroappAppSubscription;
 };
@@ -69,8 +69,6 @@ export class MicroappRuntime {
 
   #tearDownMessageBus: (() => void) | null = null;
   #tearDownWindowEventListeners: (() => void) | null = null;
-  
-  #onRequireSubscription: (() => Promise<void>) | undefined;
 
   constructor({
     id,
@@ -81,7 +79,6 @@ export class MicroappRuntime {
     targetOrigin,
     theme,
     lang,
-                onRequireSubscription,
     user,
     appSubscription,
   }: MicroappRuntimeOptions) {
@@ -113,8 +110,6 @@ export class MicroappRuntime {
     this.#messageBus = new MicroappMessageBus({
       targetOrigin: buildOriginUrl(this.#src),
     });
-    
-    this.#onRequireSubscription = onRequireSubscription;
 
     this.setUp();
   }
