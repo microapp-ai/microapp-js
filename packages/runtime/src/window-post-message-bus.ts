@@ -122,9 +122,7 @@ export class WindowPostMessageBus<
         reject(new Error('Timeout'));
       }, timeoutInMs);
 
-      const handler = (
-        response: ExtractPayload<TMessage, TResponseType>
-      ) => {
+      const handler = (response: ExtractPayload<TMessage, TResponseType>) => {
         clearTimeout(timeoutId);
         unsubscribe?.();
         resolve(response);

@@ -108,8 +108,7 @@ export type WindowMicroapp = {
 export type MicroappUser = {
   id: string;
   name: string;
-  username: string;
-}
+};
 
 export type MicroappUserAuthenticatedMessage = WindowMessage<
   typeof MICROAPP_USER_AUTHENTICATED_EVENT_NAME,
@@ -121,8 +120,36 @@ export type MicroappUserAuthenticatedMessage = WindowMessage<
 export type MicroappAppSubscription = {
   id: string;
   appId: string;
-  subscriptionPlanId: string;
-}
+  user: {
+    id: string;
+    name: string;
+    email: string;
+  };
+  active: boolean;
+  subscriptionPlan: {
+    id: string;
+    name: string;
+    description?: string;
+    priceInCents: number;
+    cycle: string;
+    features: Array<{
+      id: string;
+      name: string;
+      description?: string;
+    }>;
+    createdAt: Date;
+    updatedAt: Date;
+    archivedAt?: Date;
+  };
+  paymentsProvider: string;
+  paymentsSubscriptionManagementUrl: string;
+  paymentsSubscriptionId: string;
+  paymentsPaymentId: string;
+  createdAt: Date;
+  updatedAt: Date;
+  cancelledAt?: Date;
+  endsAt?: Date;
+};
 
 export type MicroappAppSubscriptionMessage = WindowMessage<
   typeof MICROAPP_USER_APP_SUBSCRIPTION_EVENT_NAME,

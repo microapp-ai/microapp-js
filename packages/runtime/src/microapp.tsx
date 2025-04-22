@@ -60,6 +60,9 @@ export function Microapp({
   onError,
   loadingComponent,
   title,
+                           onRequireSubscription,
+                           // onRequestAuthenticatedUser,onRequireAuthenticatedUser
+
   ...rest
 }: MicroappProps) {
   if ('id' in rest) {
@@ -71,8 +74,8 @@ export function Microapp({
   const iframeRef = React.useRef<HTMLIFrameElement | null>(null);
   const runtimeRef = React.useRef<MicroappRuntime | null>(null);
   const runtimeOptions = React.useMemo(
-    () => ({ id, homeUrl, baseUrl, currentUrl, targetOrigin, theme, lang }),
-    [id, homeUrl, baseUrl, currentUrl, targetOrigin, theme, lang]
+    () => ({ id, homeUrl, baseUrl, currentUrl, targetOrigin, theme, lang, onRequireSubscription }),
+    [id, homeUrl, baseUrl, currentUrl, targetOrigin, theme, lang, onRequireSubscription]
   );
 
   const [isLoading, setIsLoading] = React.useState(true);

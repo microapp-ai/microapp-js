@@ -1,15 +1,11 @@
 {
   "compilerOptions": {
     "target": "es2021",
-    "lib": [
-      "es2021"
-    ],
+    "lib": ["es2021"],
     "jsx": "react-jsx",
     "module": "es2022",
     "moduleResolution": "Bundler",
-    "types": [
-      "@cloudflare/workers-types/2023-07-01"
-    ],
+    "types": ["@cloudflare/workers-types/2023-07-01"],
     "resolveJsonModule": true,
     "allowJs": true,
     "checkJs": false,
@@ -20,11 +16,6 @@
     "strict": true,
     "skipLibCheck": true
   },
-  "exclude": [
-    "test"
-  ],
-  "include": [
-    "worker-configuration.d.ts",
-    "src/**/*.ts"
-  ]
+  "exclude": ["test"],
+  "include": ["worker-configuration.d.ts", "src/**/*.ts"]
 }
