@@ -6,7 +6,11 @@ import {
   getAllowedTargetOriginUrlByRequest,
   getAllowedTargetOriginUrlByRequestOrThrow,
 } from './utils';
-import type { Env, MicroappApp, RequestHTMLRewriterBuilder } from './types';
+import type {
+  Env,
+  MicroappMarketplaceApp,
+  RequestHTMLRewriterBuilder,
+} from './types';
 
 export function buildRequestRewriter({ debug }: { debug: boolean }): {
   shouldRewrite: (request: Request) => boolean;
@@ -19,7 +23,7 @@ export function buildRequestRewriter({ debug }: { debug: boolean }): {
     }: {
       rewriters: RequestHTMLRewriterBuilder[];
       env: Env;
-      app: MicroappApp | null;
+      app: MicroappMarketplaceApp | null;
     }
   ) => Promise<Response>;
 } {
@@ -33,7 +37,7 @@ export function buildRequestRewriter({ debug }: { debug: boolean }): {
     }: {
       env: Env;
       rewriters: RequestHTMLRewriterBuilder[];
-      app: MicroappApp | null;
+      app: MicroappMarketplaceApp | null;
     }
   ): Promise<Response> {
     const isHtmlContentType = doesRequestHaveContentType({

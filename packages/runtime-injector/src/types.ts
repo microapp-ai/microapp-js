@@ -5,13 +5,15 @@ export interface Env {
   ANALYTICS_SCRIPT_URL: string;
 }
 
-export type MicroappApp = {
-  id: string;
-  status: 'draft' | 'published' | 'archived';
-  liveDeployment: null | {
-    hostUrl: string;
-  };
-  analyticsWebsiteId: string;
+export type MicroappMarketplaceApp = {
+  source: 'api' | 'marketplace';
+  marketplacePublicAppId: string | null;
+  marketplacePrivateAppId: string | null;
+  apiId: string | null;
+  analyticsWebsiteId: string | null;
+  publicUrl: string;
+  privateUrl: string | null;
+  isPublishedOnMarketplace: boolean;
 };
 
 export type RequestHTMLRewriterInput = {
@@ -28,7 +30,7 @@ export type RequestHTMLRewriter = {
 export type RequestHTMLRewriterBuilderInput = {
   env: Env;
   debug: boolean;
-  app: MicroappApp | null;
+  app: MicroappMarketplaceApp | null;
 };
 
 export type RequestHTMLRewriterBuilder = (

@@ -60,6 +60,7 @@ export function Microapp({
   onError,
   loadingComponent,
   title,
+
   ...rest
 }: MicroappProps) {
   if ('id' in rest) {

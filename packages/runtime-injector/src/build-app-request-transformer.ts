@@ -1,5 +1,5 @@
 import { buildLogger } from './utils';
-import type { Env, MicroappApp, RequestTransformer } from './types';
+import type { Env, MicroappMarketplaceApp, RequestTransformer } from './types';
 
 const FIVE_MINUTES_IN_SECONDS = 60 * 5;
 const APP_CACHE_EXPIRATION_IN_SECONDS = FIVE_MINUTES_IN_SECONDS;
@@ -11,7 +11,7 @@ export function buildAppRequestTransformer({
   env: Env;
   debug: boolean;
 }): RequestTransformer & {
-  getAppByRequest: (request: Request) => Promise<MicroappApp | null>;
+  getAppByRequest: (request: Request) => Promise<MicroappMarketplaceApp | null>;
 } {
   const logger = buildLogger({
     identifier: 'app-request-transformer',
@@ -20,7 +20,7 @@ export function buildAppRequestTransformer({
 
   async function getAppByRequest(
     request: Request
-  ): Promise<MicroappApp | null> {
+  ): Promise<MicroappMarketplaceApp | null> {
     const appSlug = getAppSlugByRequest(request);
 
     if (!appSlug) {
@@ -31,7 +31,7 @@ export function buildAppRequestTransformer({
     const cache = await env.CACHE.get(cacheKey);
 
     if (cache) {
-      const cachedData = JSON.parse(cache) as MicroappApp;
+      const cachedData = JSON.parse(cache) as MicroappMarketplaceApp;
       logger.debug('App data from cache', cachedData);
       return cachedData;
     }
@@ -62,18 +62,23 @@ export function buildAppRequestTransformer({
   }
 
   function buildCacheKeyByAppSlug(appSlug: string) {
-    return `apps/${appSlug}`;
+    return `marketplace-apps/${appSlug}`;
   }
 
-  async function fetchAppBySlug(appSlug: string): Promise<MicroappApp | null> {
-    const response = await fetch(`${env.MICROAPP_API_URL}/apps/${appSlug}`, {
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${env.MICROAPP_API_KEY}`,
-      },
-    });
+  async function fetchAppBySlug(
+    appSlug: string
+  ): Promise<MicroappMarketplaceApp | null> {
+    const response = await fetch(
+      `${env.MICROAPP_API_URL}/marketplace/apps/${appSlug}`,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${env.MICROAPP_API_KEY}`,
+        },
+      }
+    );
 
-    if (!response.ok) {
+    if (response.status !== 200) {
       const body = await response.text();
       logger.error('Failed to fetch app data', {
         status: response.status,
@@ -82,7 +87,7 @@ export function buildAppRequestTransformer({
       return null;
     }
 
-    const appData = (await response.json()) as MicroappApp;
+    const appData = (await response.json()) as MicroappMarketplaceApp;
     return appData;
   }
 
@@ -97,18 +102,19 @@ export function buildAppRequestTransformer({
       return request;
     }
 
-    if (app.status !== 'published') {
+    if (!app.isPublishedOnMarketplace) {
       logger.error('App not published', app);
       return request;
     }
 
-    if (!app.liveDeployment) {
-      logger.error('App has no live deployment', app);
-      return request;
+    if (!app.privateUrl) {
+      throw new Error('App private URL is not set');
     }
 
-    requestUrl.hostname = app.liveDeployment.hostUrl;
-    logger.debug('App host URL', requestUrl.hostname);
+    const hostUrl = new URL(app.privateUrl);
+    requestUrl.protocol = hostUrl.protocol;
+    requestUrl.hostname = hostUrl.hostname;
+    logger.debug('App host URL', requestUrl.toString());
 
     const updatedRequest = new Request(requestUrl, request);
     return updatedRequest;

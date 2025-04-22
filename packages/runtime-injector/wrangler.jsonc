@@ -6,9 +6,7 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "microapp-runtime-injector",
   "main": "src/index.ts",
-  "compatibility_flags": [
-    "nodejs_compat"
-  ],
+  "compatibility_flags": ["nodejs_compat"],
   "compatibility_date": "2025-02-14",
   "observability": {
     "enabled": true
@@ -18,7 +16,7 @@
    * Smart Placement
    * Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
    */
-   "placement": { "mode": "smart" },
+  "placement": { "mode": "smart" },
 
   /**
    * Bindings
@@ -37,10 +35,10 @@
    * Environment Variables
    * https://developers.cloudflare.com/workers/wrangler/configuration/#environment-variables
    */
-   "vars": {
-     "MICROAPP_API_URL": "https://api.microapp.io",
-     "ANALYTICS_SCRIPT_URL": "https://umami.microapp.io/script.js"
-   }
+  "vars": {
+    "MICROAPP_API_URL": "https://api.microapp.io",
+    "ANALYTICS_SCRIPT_URL": "https://umami.microapp.io/script.js"
+  }
 
   /**
    * Note: Use secrets to store sensitive data.

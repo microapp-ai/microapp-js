@@ -11,28 +11,21 @@ import {
   build04AnalyticsRequestHtmlRewriter,
 } from './html-rewriters';
 import { buildAppRequestTransformer } from './build-app-request-transformer';
-import { buildProtocolRequestTransformer } from './build-protocol-request-transformer';
 
 const worker = {
   async fetch(request: Request, env: Env): Promise<Response> {
     // NB: This is a debug flag that can be used to force optimization for a specific IP address.
     // const ip = request.headers.get('cf-connecting-ip');
-    // const debug = ip === '2804:d45:3719:2300:2133:ae1:10ce:87bf';
+    // const debug = ip === '2804:d45:3719:2300:c0b5:ab7:e692:fb9b';
     const debug = false;
 
     const appRequestTransformer = buildAppRequestTransformer({ env, debug });
-    const protocolRequestTransformer = buildProtocolRequestTransformer({
-      env,
-      debug,
-    });
-
     const transformedRequest = await transformRequest({
       request,
-      transformers: [appRequestTransformer, protocolRequestTransformer],
+      transformers: [appRequestTransformer],
     });
 
     const response = await fetch(transformedRequest, request);
-    await protocolRequestTransformer.handleResponse(response);
 
     const requestRewriter = buildRequestRewriter({ debug });
 

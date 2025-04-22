@@ -1,4 +1,8 @@
-import type {AuthRepo, UnsubscribeCallback, UserAuthenticatedCallback} from './auth-repo';
+import type {
+  AuthRepo,
+  UnsubscribeCallback,
+  UserAuthenticatedCallback,
+} from './auth-repo';
 import type { User } from './user';
 import { NoAuthenticatedUserError } from './errors';
 import { invariant, isProduction, warning } from './utils';
@@ -55,7 +59,7 @@ export class SandboxAuthRepo implements AuthRepo {
   async getUser(): Promise<User> {
     this.throwIfNotEnabled();
     if (this.authenticatedUser === null) {
-      (this.onUserAuthenticatedCallback)?.(null);
+      this.onUserAuthenticatedCallback?.(null);
       throw new NoAuthenticatedUserError('Could not get auth user');
     }
 
@@ -78,14 +82,16 @@ export class SandboxAuthRepo implements AuthRepo {
   async requestLogin(): Promise<void> {
     this.authenticatedUser = await this._getUser();
     if (this.authenticatedUser) {
-      (this.onUserAuthenticatedCallback)?.(this.authenticatedUser);
+      this.onUserAuthenticatedCallback?.(this.authenticatedUser);
     }
   }
 
-  onUserAuthenticated(callback: UserAuthenticatedCallback): UnsubscribeCallback {
+  onUserAuthenticated(
+    callback: UserAuthenticatedCallback
+  ): UnsubscribeCallback {
     this.onUserAuthenticatedCallback = callback;
     return () => {
       this.onUserAuthenticatedCallback = null;
-    }
+    };
   }
 }
