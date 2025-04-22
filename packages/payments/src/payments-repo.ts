@@ -1,4 +1,4 @@
-import { MicroappAppSubscription } from '@microapp-io/runtime';
+import type { MicroappAppSubscription } from '@microapp-io/runtime';
 
 export type UserSubscribedCallback = (
   subscription: MicroappAppSubscription | null

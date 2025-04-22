@@ -6,7 +6,7 @@ import type {
   UserSubscribedCallback,
 } from './payments-repo';
 import { invariant } from './utils';
-import { MicroappAppSubscription } from '@microapp-io/runtime';
+import type { MicroappAppSubscription } from '@microapp-io/runtime';
 import { MessageBusPaymentsRepo } from './message-bus-payments-repo';
 
 export type PaymentsOptions = {

@@ -1,4 +1,5 @@
-import { SandboxPaymentsRepo, SubscriptionPlanCycle } from '../src';
+import { SandboxPaymentsRepo } from '../src';
+import { SubscriptionPlanCycle } from "@microapp-io/runtime";
 
 describe('SandboxPaymentsRepo', () => {
   it('does not have subscription until requested', async () => {
@@ -6,13 +7,24 @@ describe('SandboxPaymentsRepo', () => {
       enabled: true,
       subscription: () => ({
         id: 'some-subscription',
-        createdAt: new Date(),
+        appId: 'some-app-id',
+        user: {
+          id: 'some-user',
+          email: 'some-email',
+          name: 'some-name',
+        },
+        active: true,
         subscriptionPlan: {
           id: 'some-subscription-plan',
           name: 'free',
           priceInCents: 0,
           cycle: SubscriptionPlanCycle.ONE_TIME,
+          features: [],
+          createdAt: new Date(),
+          updatedAt: new Date(),
         },
+        createdAt: new Date(),
+        updatedAt: new Date(),
       }),
     });
 
@@ -40,16 +52,27 @@ describe('SandboxPaymentsRepo', () => {
   it('returns provided subscription', async () => {
     const repo = new SandboxPaymentsRepo({
       enabled: true,
-      subscription: {
+      subscription: () => ({
         id: 'some-subscription',
-        createdAt: new Date(),
+        appId: 'some-app-id',
+        user: {
+          id: 'some-user',
+          email: 'some-email',
+          name: 'some-name',
+        },
+        active: true,
         subscriptionPlan: {
           id: 'some-subscription-plan',
           name: 'free',
           priceInCents: 0,
           cycle: SubscriptionPlanCycle.ONE_TIME,
+          features: [],
+          createdAt: new Date(),
+          updatedAt: new Date(),
         },
-      },
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }),
     });
 
     const hasSubscription = await repo.hasSubscription();
@@ -71,13 +94,24 @@ describe('SandboxPaymentsRepo', () => {
       enabled: true,
       subscription: () => ({
         id: 'some-subscription',
-        createdAt: createdAt,
+        appId: 'some-app-id',
+        user: {
+          id: 'some-user',
+          email: 'some-email',
+          name: 'some-name',
+        },
+        active: true,
         subscriptionPlan: {
           id: 'some-subscription-plan',
           name: 'free',
           priceInCents: 0,
           cycle: SubscriptionPlanCycle.ONE_TIME,
+          features: [],
+          createdAt: new Date(),
+          updatedAt: new Date(),
         },
+        createdAt: new Date(),
+        updatedAt: new Date(),
       }),
     });
 

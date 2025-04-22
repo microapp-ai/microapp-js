@@ -5,7 +5,7 @@ import type {
 } from './payments-repo';
 import { NoSubscriptionError } from './errors';
 import { invariant, isProduction, warning } from './utils';
-import { MicroappAppSubscription } from '@microapp-io/runtime';
+import type { MicroappAppSubscription } from '@microapp-io/runtime';
 
 export type SandboxPaymentsOptions =
   | boolean

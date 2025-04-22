@@ -149,10 +149,10 @@ export type MicroappAppSubscription = {
     updatedAt: Date;
     archivedAt?: Date;
   };
-  paymentsProvider: string;
-  paymentsSubscriptionManagementUrl: string;
-  paymentsSubscriptionId: string;
-  paymentsPaymentId: string;
+  paymentsProvider?: string;
+  paymentsSubscriptionManagementUrl?: string;
+  paymentsSubscriptionId?: string;
+  paymentsPaymentId?: string;
   createdAt: Date;
   updatedAt: Date;
   cancelledAt?: Date;
