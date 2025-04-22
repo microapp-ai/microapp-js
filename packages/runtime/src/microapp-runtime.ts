@@ -8,16 +8,20 @@ import {
   MICROAPP_ROUTE_CHANGE_EVENT_NAME,
   MICROAPP_SET_VIEWPORT_SIZE_EVENT_NAME,
   MICROAPP_URL_PARAM_NAMES,
+  MICROAPP_USER_APP_SUBSCRIPTION_EVENT_NAME,
+  MICROAPP_USER_AUTHENTICATED_EVENT_NAME,
   MICROAPP_USER_PREFERENCES_EVENT_NAME,
 } from './constants';
 import { MicroappMessageBus } from './microapp-message-bus';
 import type {
+  MicroappAppSubscription,
   MicroappLanguage,
   MicroappMessagePayload,
   MicroappMessages,
   MicroappResizeMessage,
   MicroappRouteChangeMessage,
   MicroappTheme,
+  MicroappUser,
 } from './types';
 
 import {
@@ -40,6 +44,8 @@ export type MicroappRuntimeOptions = {
   targetOrigin?: string;
   theme?: MicroappTheme;
   lang?: MicroappLanguage;
+  user?: MicroappUser;
+  appSubscription?: MicroappAppSubscription;
 };
 
 export class MicroappRuntime {
@@ -54,6 +60,9 @@ export class MicroappRuntime {
 
   #theme: MicroappTheme = DEFAULT_MICROAPP_THEME;
   #lang: MicroappLanguage = DEFAULT_MICROAPP_LANGUAGE;
+
+  #user: MicroappUser | undefined;
+  #appSubscription: MicroappAppSubscription | undefined;
 
   #hasInitialized = false;
   #pendingMessages: MicroappMessages[] = [];
@@ -70,6 +79,8 @@ export class MicroappRuntime {
     targetOrigin,
     theme,
     lang,
+    user,
+    appSubscription,
   }: MicroappRuntimeOptions) {
     this.#id = id;
     this.#iframe = iframe;
@@ -92,6 +103,9 @@ export class MicroappRuntime {
       theme: this.#theme,
       lang: this.#lang,
     });
+
+    this.#user = user;
+    this.#appSubscription = appSubscription;
 
     this.#messageBus = new MicroappMessageBus({
       targetOrigin: buildOriginUrl(this.#src),
@@ -255,6 +269,18 @@ export class MicroappRuntime {
     });
   };
 
+  #updateUser = () => {
+    this.#sendMessageIfInitialized(MICROAPP_USER_AUTHENTICATED_EVENT_NAME, {
+      user: this.#user,
+    });
+  };
+
+  #updateAppSubscription = () => {
+    this.#sendMessageIfInitialized(MICROAPP_USER_APP_SUBSCRIPTION_EVENT_NAME, {
+      appSubscription: this.#appSubscription,
+    });
+  };
+
   #sendMessageIfInitialized = (
     type: MicroappMessages['type'],
     payload: MicroappMessages['payload']
@@ -336,7 +362,14 @@ export class MicroappRuntime {
     options: Partial<
       Pick<
         MicroappRuntimeOptions,
-        'homeUrl' | 'baseUrl' | 'currentUrl' | 'targetOrigin' | 'theme' | 'lang'
+        | 'homeUrl'
+        | 'baseUrl'
+        | 'currentUrl'
+        | 'targetOrigin'
+        | 'theme'
+        | 'lang'
+        | 'user'
+        | 'appSubscription'
       >
     >
   ): void {
@@ -364,6 +397,14 @@ export class MicroappRuntime {
       this.#lang = options.lang;
     }
 
+    if (options.user) {
+      this.#user = options.user;
+    }
+
+    if (options.appSubscription) {
+      this.#appSubscription = options.appSubscription;
+    }
+
     const shouldUpdateIframeSrc =
       'homeUrl' in options ||
       'baseUrl' in options ||
@@ -387,6 +428,18 @@ export class MicroappRuntime {
 
     if (shouldUpdateUserPreferences) {
       this.#updateUserPreferences();
+    }
+
+    const shouldUpdateUser = 'user' in options;
+
+    if (shouldUpdateUser) {
+      this.#updateUser();
+    }
+
+    const shouldUpdateSubscription = 'appSubscription' in options;
+
+    if (shouldUpdateSubscription) {
+      this.#updateAppSubscription();
     }
   }
 
