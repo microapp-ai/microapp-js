@@ -1,4 +1,3 @@
-import type { UserSubscription } from './subscription';
 import type { SandboxPaymentsOptions } from './sandbox-payments-repo';
 import { SandboxPaymentsRepo } from './sandbox-payments-repo';
 import type { PaymentsConfigParams } from './payments-config';
@@ -8,8 +7,9 @@ import type {
   UnsubscribeCallback,
   UserSubscribedCallback,
 } from './payments-repo';
-import { HttpPaymentsRepo } from './http-payments-repo';
 import { invariant } from './utils';
+import { MicroappAppSubscription } from '@microapp-io/runtime';
+import { MessageBusPaymentsRepo } from './message-bus-payments-repo';
 
 export type PaymentsOptions = {
   config?: Partial<PaymentsConfigParams>;
@@ -22,7 +22,7 @@ export class Payments {
 
   constructor({ config, sandbox }: PaymentsOptions = {}) {
     this.config = new PaymentsConfig(config);
-    this.repo = new HttpPaymentsRepo(this.config);
+    this.repo = new MessageBusPaymentsRepo();
 
     const isSandboxEnabled = sandbox
       ? SandboxPaymentsRepo.isEnabled(sandbox)
@@ -37,7 +37,7 @@ export class Payments {
     return this.repo.hasSubscription();
   }
 
-  async getSubscription(): Promise<UserSubscription | null> {
+  async getSubscription(): Promise<MicroappAppSubscription | null> {
     return this.repo.getSubscription();
   }
 

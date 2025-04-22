@@ -28,6 +28,8 @@ export const MICROAPP_SET_VIEWPORT_SIZE_EVENT_NAME =
   '@microapp:setViewportSize';
 export const MICROAPP_USER_AUTHENTICATED_EVENT_NAME =
   '@microapp:userAuthenticated';
+export const MICROAPP_REQUEST_USER_APP_SUBSCRIPTION_EVENT_NAME =
+  '@microapp:requestUserAppSubscription';
 export const MICROAPP_USER_APP_SUBSCRIPTION_EVENT_NAME =
   '@microapp:userAppSubscription';
 

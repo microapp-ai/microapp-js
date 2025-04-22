@@ -3,25 +3,25 @@ import type {
   UnsubscribeCallback,
   UserSubscribedCallback,
 } from './payments-repo';
-import type { UserSubscription } from './subscription';
 import { NoSubscriptionError } from './errors';
 import { invariant, isProduction, warning } from './utils';
+import { MicroappAppSubscription } from '@microapp-io/runtime';
 
 export type SandboxPaymentsOptions =
   | boolean
   | {
       enabled?: boolean;
       subscription:
-        | UserSubscription
+        | MicroappAppSubscription
         | null
-        | (() => UserSubscription | null)
-        | (() => Promise<UserSubscription | null>);
+        | (() => MicroappAppSubscription | null)
+        | (() => Promise<MicroappAppSubscription | null>);
     };
 
 export class SandboxPaymentsRepo implements PaymentsRepository {
   private readonly enabled: boolean;
-  private readonly _getSubscription: () => Promise<UserSubscription | null>;
-  private internalSubscription: UserSubscription | null = null;
+  private readonly _getSubscription: () => Promise<MicroappAppSubscription | null>;
+  private internalSubscription: MicroappAppSubscription | null = null;
   private onUserSubscribedCallback: UserSubscribedCallback | null = null;
 
   static isEnabled(options?: SandboxPaymentsOptions): boolean {
@@ -36,9 +36,9 @@ export class SandboxPaymentsRepo implements PaymentsRepository {
   static parseOptions(options: SandboxPaymentsOptions): {
     enabled: boolean;
     getSubscription:
-      | UserSubscription
+      | MicroappAppSubscription
       | null
-      | (() => Promise<UserSubscription | null>);
+      | (() => Promise<MicroappAppSubscription | null>);
   } {
     if (typeof options === 'boolean') {
       return { enabled: options, getSubscription: null };
@@ -86,7 +86,7 @@ export class SandboxPaymentsRepo implements PaymentsRepository {
     return subscription !== null;
   }
 
-  async getSubscription(): Promise<UserSubscription | null> {
+  async getSubscription(): Promise<MicroappAppSubscription | null> {
     this.throwIfNotEnabled();
     if (this.internalSubscription === null) {
       this.onUserSubscribedCallback?.(null);

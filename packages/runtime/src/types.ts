@@ -1,7 +1,8 @@
 import type { WindowMessage } from './window-post-message-bus';
-import type {
+import {
   MICROAPP_INIT_ACKNOWLEDGEMENT_EVENT_NAME,
   MICROAPP_INIT_EVENT_NAME,
+  MICROAPP_REQUEST_USER_APP_SUBSCRIPTION_EVENT_NAME,
   MICROAPP_RESIZE_EVENT_NAME,
   MICROAPP_ROUTE_CHANGE_EVENT_NAME,
   MICROAPP_SET_VIEWPORT_SIZE_EVENT_NAME,
@@ -88,7 +89,8 @@ export type MicroappMessages =
   | MicroappUserPreferencesMessage
   | MicroappSetViewportSizeMessage
   | MicroappUserAuthenticatedMessage
-  | MicroappAppSubscriptionMessage;
+  | MicroappAppSubscriptionMessage
+  | RequestMicroappAppSubscriptionMessage;
 
 export type MicroappMessageType<TMessage extends MicroappMessages> =
   TMessage['type'];
@@ -117,6 +119,12 @@ export type MicroappUserAuthenticatedMessage = WindowMessage<
   }
 >;
 
+export enum SubscriptionPlanCycle {
+  ONE_TIME = 'ONE_TIME',
+  MONTHLY = 'MONTHLY',
+  YEARLY = 'YEARLY',
+}
+
 export type MicroappAppSubscription = {
   id: string;
   appId: string;
@@ -131,7 +139,7 @@ export type MicroappAppSubscription = {
     name: string;
     description?: string;
     priceInCents: number;
-    cycle: string;
+    cycle: SubscriptionPlanCycle;
     features: Array<{
       id: string;
       name: string;
@@ -156,4 +164,9 @@ export type MicroappAppSubscriptionMessage = WindowMessage<
   {
     appSubscription: MicroappAppSubscription | undefined;
   }
+>;
+
+export type RequestMicroappAppSubscriptionMessage = WindowMessage<
+  typeof MICROAPP_REQUEST_USER_APP_SUBSCRIPTION_EVENT_NAME,
+  {}
 >;

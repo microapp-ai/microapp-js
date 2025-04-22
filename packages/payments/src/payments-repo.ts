@@ -1,14 +1,14 @@
-import type { UserSubscription } from './subscription';
+import { MicroappAppSubscription } from '@microapp-io/runtime';
 
 export type UserSubscribedCallback = (
-  subscription: UserSubscription | null
+  subscription: MicroappAppSubscription | null
 ) => void;
 export type UnsubscribeCallback = () => void;
 
 export interface PaymentsRepository {
   hasSubscription(): Promise<boolean>;
 
-  getSubscription(): Promise<UserSubscription | null>;
+  getSubscription(): Promise<MicroappAppSubscription | null>;
 
   requestSubscription(): void;
 
