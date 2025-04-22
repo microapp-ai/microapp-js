@@ -1,7 +1,5 @@
 import type { SandboxPaymentsOptions } from './sandbox-payments-repo';
 import { SandboxPaymentsRepo } from './sandbox-payments-repo';
-import type { PaymentsConfigParams } from './payments-config';
-import { PaymentsConfig } from './payments-config';
 import type {
   PaymentsRepository,
   UnsubscribeCallback,
@@ -12,16 +10,13 @@ import { MicroappAppSubscription } from '@microapp-io/runtime';
 import { MessageBusPaymentsRepo } from './message-bus-payments-repo';
 
 export type PaymentsOptions = {
-  config?: Partial<PaymentsConfigParams>;
   sandbox?: SandboxPaymentsOptions;
 };
 
 export class Payments {
-  readonly config: PaymentsConfig;
   private readonly repo: PaymentsRepository;
 
-  constructor({ config, sandbox }: PaymentsOptions = {}) {
-    this.config = new PaymentsConfig(config);
+  constructor({ sandbox }: PaymentsOptions = {}) {
     this.repo = new MessageBusPaymentsRepo();
 
     const isSandboxEnabled = sandbox
