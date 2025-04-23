@@ -26,6 +26,8 @@ export const MICROAPP_RESIZE_EVENT_NAME = '@microapp:resize';
 export const MICROAPP_USER_PREFERENCES_EVENT_NAME = '@microapp:userPreferences';
 export const MICROAPP_SET_VIEWPORT_SIZE_EVENT_NAME =
   '@microapp:setViewportSize';
+export const MICROAPP_REQUEST_USER_AUTHENTICATED_EVENT_NAME =
+  '@microapp:requestUserAuthenticated';
 export const MICROAPP_USER_AUTHENTICATED_EVENT_NAME =
   '@microapp:userAuthenticated';
 export const MICROAPP_USER_APP_SUBSCRIPTION_EVENT_NAME =
