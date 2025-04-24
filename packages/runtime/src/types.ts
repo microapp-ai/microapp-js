@@ -3,6 +3,7 @@ import {
   MICROAPP_INIT_ACKNOWLEDGEMENT_EVENT_NAME,
   MICROAPP_INIT_EVENT_NAME,
   MICROAPP_REQUEST_USER_APP_SUBSCRIPTION_EVENT_NAME,
+  MICROAPP_REQUEST_USER_AUTHENTICATED_EVENT_NAME,
   MICROAPP_RESIZE_EVENT_NAME,
   MICROAPP_ROUTE_CHANGE_EVENT_NAME,
   MICROAPP_SET_VIEWPORT_SIZE_EVENT_NAME,
@@ -90,7 +91,8 @@ export type MicroappMessages =
   | MicroappSetViewportSizeMessage
   | MicroappUserAuthenticatedMessage
   | MicroappAppSubscriptionMessage
-  | RequestMicroappAppSubscriptionMessage;
+  | RequestMicroappAppSubscriptionMessage
+  | RequestMicroappUserAuthenticatedMessage;
 
 export type MicroappMessageType<TMessage extends MicroappMessages> =
   TMessage['type'];
@@ -109,8 +111,14 @@ export type WindowMicroapp = {
 
 export type MicroappUser = {
   id: string;
-  name: string;
+  pictureUrl: string;
+  email: string;
 };
+
+export type RequestMicroappUserAuthenticatedMessage = WindowMessage<
+  typeof MICROAPP_REQUEST_USER_AUTHENTICATED_EVENT_NAME,
+  {}
+>;
 
 export type MicroappUserAuthenticatedMessage = WindowMessage<
   typeof MICROAPP_USER_AUTHENTICATED_EVENT_NAME,

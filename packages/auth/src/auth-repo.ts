@@ -1,6 +1,5 @@
 import type { User } from './user';
 
-export type AuthRepoBuildLoginUrlParams = { returnTo?: string };
 export type UserAuthenticatedCallback = (user: User | null) => void;
 export type UnsubscribeCallback = () => void;
 
