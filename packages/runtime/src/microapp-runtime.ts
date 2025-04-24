@@ -4,6 +4,8 @@ import {
   DEFAULT_MICROAPP_THEME,
   MICROAPP_INIT_ACKNOWLEDGEMENT_EVENT_NAME,
   MICROAPP_INIT_EVENT_NAME,
+  MICROAPP_REQUIRE_USER_APP_SUBSCRIPTION_EVENT_NAME,
+  MICROAPP_REQUIRE_USER_AUTHENTICATED_EVENT_NAME,
   MICROAPP_RESIZE_EVENT_NAME,
   MICROAPP_ROUTE_CHANGE_EVENT_NAME,
   MICROAPP_SET_VIEWPORT_SIZE_EVENT_NAME,
@@ -45,7 +47,9 @@ export type MicroappRuntimeOptions = {
   theme?: MicroappTheme;
   lang?: MicroappLanguage;
   user?: MicroappUser;
+  onRequireUser: () => void;
   appSubscription?: MicroappAppSubscription;
+  onRequireAppSubscription: () => void;
 };
 
 export class MicroappRuntime {
@@ -62,7 +66,9 @@ export class MicroappRuntime {
   #lang: MicroappLanguage = DEFAULT_MICROAPP_LANGUAGE;
 
   #user: MicroappUser | undefined;
+  #onRequireUser: () => void;
   #appSubscription: MicroappAppSubscription | undefined;
+  #onRequireAppSubscription: () => void;
 
   #hasInitialized = false;
   #pendingMessages: MicroappMessages[] = [];
@@ -80,7 +86,9 @@ export class MicroappRuntime {
     theme,
     lang,
     user,
+    onRequireUser,
     appSubscription,
+    onRequireAppSubscription,
   }: MicroappRuntimeOptions) {
     this.#id = id;
     this.#iframe = iframe;
@@ -105,7 +113,9 @@ export class MicroappRuntime {
     });
 
     this.#user = user;
+    this.#onRequireUser = onRequireUser;
     this.#appSubscription = appSubscription;
+    this.#onRequireAppSubscription = onRequireAppSubscription;
 
     this.#messageBus = new MicroappMessageBus({
       targetOrigin: buildOriginUrl(this.#src),
@@ -150,10 +160,22 @@ export class MicroappRuntime {
       this.#handleIframeResize
     );
 
+    const tearDownRequireAppSubscription = this.#messageBus.on(
+      MICROAPP_REQUIRE_USER_APP_SUBSCRIPTION_EVENT_NAME,
+      this.#handleRequireAppSubscription
+    );
+
+    const tearDownRequireUser = this.#messageBus.on(
+      MICROAPP_REQUIRE_USER_AUTHENTICATED_EVENT_NAME,
+      this.#handleRequireUser
+    );
+
     this.#tearDownMessageBus = () => {
       tearDownInit();
       tearDownRouteChange();
       tearDownResize();
+      tearDownRequireAppSubscription();
+      tearDownRequireUser();
     };
   }
 
@@ -260,6 +282,46 @@ export class MicroappRuntime {
     if (this.#iframe) {
       this.#iframe.style.height = `${heightInPixel}px`;
     }
+  };
+
+  #handleRequireAppSubscription = () => {
+    if (this.#appSubscription) {
+      console.log(
+        '[@microapp-io/runtime] App subscription already exists, no need to require it again'
+      );
+      return;
+    }
+
+    if (typeof window === 'undefined') {
+      console.warn(
+        '[@microapp-io/runtime] App subscription is not available in this environment'
+      );
+      return;
+    }
+
+    console.log(
+      '[@microapp-io/runtime] App subscription required, notifying the host'
+    );
+    this.#onRequireAppSubscription();
+  };
+
+  #handleRequireUser = () => {
+    if (this.#user) {
+      console.log(
+        '[@microapp-io/runtime] User already exists, no need to require it again'
+      );
+      return;
+    }
+
+    if (typeof window === 'undefined') {
+      console.warn(
+        '[@microapp-io/runtime] User is not available in this environment'
+      );
+      return;
+    }
+
+    console.log('[@microapp-io/runtime] User required, notifying the host');
+    this.#onRequireUser();
   };
 
   #updateUserPreferences = () => {

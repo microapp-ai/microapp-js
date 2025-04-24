@@ -1,7 +1,4 @@
-import {
-  ALLOWED_MICROAPP_ORIGIN_HOSTNAMES,
-  DEFAULT_MICROAPP_REQUEST_TIMEOUT_IN_MS,
-} from './constants';
+import { ALLOWED_MICROAPP_ORIGIN_HOSTNAMES } from './constants';
 
 export type WindowMessage<
   TType extends string,
@@ -98,37 +95,4 @@ export class WindowPostMessageBus<
       }) !== undefined
     );
   }
-
-  public request = <
-    TRequestType extends TMessage['type'],
-    TResponseType extends TMessage['type']
-  >({
-    requestType,
-    responseType,
-    payload,
-    timeoutInMs = DEFAULT_MICROAPP_REQUEST_TIMEOUT_IN_MS,
-  }: {
-    requestType: TRequestType;
-    responseType: TResponseType;
-    payload: ExtractPayload<TMessage, TRequestType>;
-    timeoutInMs?: number;
-  }): Promise<ExtractPayload<TMessage, TResponseType>> => {
-    return new Promise((resolve, reject) => {
-      let unsubscribe: (() => void) | undefined;
-      this.send(requestType, payload);
-
-      const timeoutId = setTimeout(() => {
-        unsubscribe?.();
-        reject(new Error('Timeout'));
-      }, timeoutInMs);
-
-      const handler = (response: ExtractPayload<TMessage, TResponseType>) => {
-        clearTimeout(timeoutId);
-        unsubscribe?.();
-        resolve(response);
-      };
-
-      unsubscribe = this.on(responseType, handler);
-    });
-  };
 }

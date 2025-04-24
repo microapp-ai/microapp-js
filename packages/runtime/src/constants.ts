@@ -26,13 +26,13 @@ export const MICROAPP_RESIZE_EVENT_NAME = '@microapp:resize';
 export const MICROAPP_USER_PREFERENCES_EVENT_NAME = '@microapp:userPreferences';
 export const MICROAPP_SET_VIEWPORT_SIZE_EVENT_NAME =
   '@microapp:setViewportSize';
-export const MICROAPP_REQUEST_USER_AUTHENTICATED_EVENT_NAME =
-  '@microapp:requestUserAuthenticated';
 export const MICROAPP_USER_AUTHENTICATED_EVENT_NAME =
   '@microapp:userAuthenticated';
-export const MICROAPP_REQUEST_USER_APP_SUBSCRIPTION_EVENT_NAME =
-  '@microapp:requestUserAppSubscription';
+export const MICROAPP_REQUIRE_USER_AUTHENTICATED_EVENT_NAME =
+  '@microapp:requireUserAuthenticated';
 export const MICROAPP_USER_APP_SUBSCRIPTION_EVENT_NAME =
   '@microapp:userAppSubscription';
+export const MICROAPP_REQUIRE_USER_APP_SUBSCRIPTION_EVENT_NAME =
+  '@microapp:requireUserAppSubscription';
 
 export const DEFAULT_MICROAPP_REQUEST_TIMEOUT_IN_MS = 1000 * 30;

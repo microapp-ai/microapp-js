@@ -1,9 +1,9 @@
 import type { WindowMessage } from './window-post-message-bus';
-import {
+import type {
   MICROAPP_INIT_ACKNOWLEDGEMENT_EVENT_NAME,
   MICROAPP_INIT_EVENT_NAME,
-  MICROAPP_REQUEST_USER_APP_SUBSCRIPTION_EVENT_NAME,
-  MICROAPP_REQUEST_USER_AUTHENTICATED_EVENT_NAME,
+  MICROAPP_REQUIRE_USER_APP_SUBSCRIPTION_EVENT_NAME,
+  MICROAPP_REQUIRE_USER_AUTHENTICATED_EVENT_NAME,
   MICROAPP_RESIZE_EVENT_NAME,
   MICROAPP_ROUTE_CHANGE_EVENT_NAME,
   MICROAPP_SET_VIEWPORT_SIZE_EVENT_NAME,
@@ -91,11 +91,8 @@ export type MicroappMessages =
   | MicroappSetViewportSizeMessage
   | MicroappUserAuthenticatedMessage
   | MicroappAppSubscriptionMessage
-  | RequestMicroappAppSubscriptionMessage
-  | RequestMicroappUserAuthenticatedMessage;
-
-export type MicroappMessageType<TMessage extends MicroappMessages> =
-  TMessage['type'];
+  | MicroappRequireUserAuthenticatedMessage
+  | MicroappRequireAppSubscriptionMessage;
 
 export type MicroappMessagePayload<TMessage extends MicroappMessages> =
   TMessage['payload'];
@@ -115,16 +112,16 @@ export type MicroappUser = {
   email: string;
 };
 
-export type RequestMicroappUserAuthenticatedMessage = WindowMessage<
-  typeof MICROAPP_REQUEST_USER_AUTHENTICATED_EVENT_NAME,
-  {}
->;
-
 export type MicroappUserAuthenticatedMessage = WindowMessage<
   typeof MICROAPP_USER_AUTHENTICATED_EVENT_NAME,
   {
     user: MicroappUser | undefined;
   }
+>;
+
+export type MicroappRequireUserAuthenticatedMessage = WindowMessage<
+  typeof MICROAPP_REQUIRE_USER_AUTHENTICATED_EVENT_NAME,
+  {}
 >;
 
 export enum SubscriptionPlanCycle {
@@ -174,7 +171,7 @@ export type MicroappAppSubscriptionMessage = WindowMessage<
   }
 >;
 
-export type RequestMicroappAppSubscriptionMessage = WindowMessage<
-  typeof MICROAPP_REQUEST_USER_APP_SUBSCRIPTION_EVENT_NAME,
+export type MicroappRequireAppSubscriptionMessage = WindowMessage<
+  typeof MICROAPP_REQUIRE_USER_APP_SUBSCRIPTION_EVENT_NAME,
   {}
 >;

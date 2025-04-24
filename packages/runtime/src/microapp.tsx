@@ -13,7 +13,16 @@ type MicroappProps = {
   loadingComponent?: React.ReactNode;
 } & Pick<
   MicroappRuntimeOptions,
-  'homeUrl' | 'baseUrl' | 'currentUrl' | 'targetOrigin' | 'theme' | 'lang'
+  | 'homeUrl'
+  | 'baseUrl'
+  | 'currentUrl'
+  | 'targetOrigin'
+  | 'theme'
+  | 'lang'
+  | 'user'
+  | 'onRequireUser'
+  | 'appSubscription'
+  | 'onRequireAppSubscription'
 > &
   Omit<
     React.IframeHTMLAttributes<HTMLIFrameElement>,
@@ -56,11 +65,14 @@ export function Microapp({
   targetOrigin,
   theme,
   lang,
+  user,
+  onRequireUser,
+  appSubscription,
+  onRequireAppSubscription,
   onLoad,
   onError,
   loadingComponent,
   title,
-
   ...rest
 }: MicroappProps) {
   if ('id' in rest) {
@@ -72,8 +84,32 @@ export function Microapp({
   const iframeRef = React.useRef<HTMLIFrameElement | null>(null);
   const runtimeRef = React.useRef<MicroappRuntime | null>(null);
   const runtimeOptions = React.useMemo(
-    () => ({ id, homeUrl, baseUrl, currentUrl, targetOrigin, theme, lang }),
-    [id, homeUrl, baseUrl, currentUrl, targetOrigin, theme, lang]
+    () => ({
+      id,
+      homeUrl,
+      baseUrl,
+      currentUrl,
+      targetOrigin,
+      theme,
+      lang,
+      user,
+      onRequireUser,
+      appSubscription,
+      onRequireAppSubscription,
+    }),
+    [
+      id,
+      homeUrl,
+      baseUrl,
+      currentUrl,
+      targetOrigin,
+      theme,
+      lang,
+      user,
+      onRequireUser,
+      appSubscription,
+      onRequireAppSubscription,
+    ]
   );
 
   const [isLoading, setIsLoading] = React.useState(true);
