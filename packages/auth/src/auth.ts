@@ -1,29 +1,24 @@
-import type { AuthConfigParams } from './auth-config';
-import { AuthConfig } from './auth-config';
 import type {
   AuthRepo,
   UnsubscribeCallback,
   UserAuthenticatedCallback,
 } from './auth-repo';
 import type { User } from './user';
-import { HttpAuthRepo } from './http-auth-repo';
 import type { SandboxAuthOptions } from './sandbox-auth-repo';
 import { SandboxAuthRepo } from './sandbox-auth-repo';
 import { invariant } from './utils';
+import { MessageBusAuthRepo } from './message-bus-auth-repo';
 
 export type AuthOptions = {
-  config?: Partial<AuthConfigParams>;
   sandbox?: SandboxAuthOptions;
 };
 
 export class Auth {
-  readonly config: AuthConfig;
   private readonly repo: AuthRepo;
   private user?: User;
 
-  constructor({ config, sandbox }: AuthOptions = {}) {
-    this.config = new AuthConfig(config);
-    this.repo = new HttpAuthRepo(this.config);
+  constructor({ sandbox }: AuthOptions = {}) {
+    this.repo = new MessageBusAuthRepo();
 
     const isSandboxEnabled = sandbox
       ? SandboxAuthRepo.isEnabled(sandbox)
