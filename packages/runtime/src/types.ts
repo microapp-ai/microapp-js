@@ -2,6 +2,7 @@ import type { WindowMessage } from './window-post-message-bus';
 import {
   MICROAPP_INIT_ACKNOWLEDGEMENT_EVENT_NAME,
   MICROAPP_INIT_EVENT_NAME,
+  MICROAPP_REQUEST_USER_APP_SUBSCRIPTION_EVENT_NAME,
   MICROAPP_REQUEST_USER_AUTHENTICATED_EVENT_NAME,
   MICROAPP_RESIZE_EVENT_NAME,
   MICROAPP_ROUTE_CHANGE_EVENT_NAME,
@@ -90,6 +91,7 @@ export type MicroappMessages =
   | MicroappSetViewportSizeMessage
   | MicroappUserAuthenticatedMessage
   | MicroappAppSubscriptionMessage
+  | RequestMicroappAppSubscriptionMessage
   | RequestMicroappUserAuthenticatedMessage;
 
 export type MicroappMessageType<TMessage extends MicroappMessages> =
@@ -125,6 +127,12 @@ export type MicroappUserAuthenticatedMessage = WindowMessage<
   }
 >;
 
+export enum SubscriptionPlanCycle {
+  ONE_TIME = 'ONE_TIME',
+  MONTHLY = 'MONTHLY',
+  YEARLY = 'YEARLY',
+}
+
 export type MicroappAppSubscription = {
   id: string;
   appId: string;
@@ -139,7 +147,7 @@ export type MicroappAppSubscription = {
     name: string;
     description?: string;
     priceInCents: number;
-    cycle: string;
+    cycle: SubscriptionPlanCycle;
     features: Array<{
       id: string;
       name: string;
@@ -149,10 +157,10 @@ export type MicroappAppSubscription = {
     updatedAt: Date;
     archivedAt?: Date;
   };
-  paymentsProvider: string;
-  paymentsSubscriptionManagementUrl: string;
-  paymentsSubscriptionId: string;
-  paymentsPaymentId: string;
+  paymentsProvider?: string;
+  paymentsSubscriptionManagementUrl?: string;
+  paymentsSubscriptionId?: string;
+  paymentsPaymentId?: string;
   createdAt: Date;
   updatedAt: Date;
   cancelledAt?: Date;
@@ -164,4 +172,9 @@ export type MicroappAppSubscriptionMessage = WindowMessage<
   {
     appSubscription: MicroappAppSubscription | undefined;
   }
+>;
+
+export type RequestMicroappAppSubscriptionMessage = WindowMessage<
+  typeof MICROAPP_REQUEST_USER_APP_SUBSCRIPTION_EVENT_NAME,
+  {}
 >;

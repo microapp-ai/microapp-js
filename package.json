@@ -8,7 +8,8 @@
       "packages/react",
       "packages/runtime",
       "packages/runtime-injector",
-      "packages/user-preferences"
+      "packages/user-preferences",
+      "packages/payments"
     ]
   },
   "scripts": {
