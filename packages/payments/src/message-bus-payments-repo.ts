@@ -3,20 +3,21 @@ import type {
   UnsubscribeCallback,
   UserSubscribedCallback,
 } from './payments-repo';
-import { invariant } from './utils';
-import {
-  MICROAPP_REQUEST_USER_APP_SUBSCRIPTION_EVENT_NAME,
-  MICROAPP_USER_APP_SUBSCRIPTION_EVENT_NAME,
+import type {
   MicroappAppSubscription,
   MicroappAppSubscriptionMessage,
-  MicroappMessageBus,
   MicroappMessagePayload,
+} from '@microapp-io/runtime';
+import {
+  MICROAPP_REQUIRE_USER_APP_SUBSCRIPTION_EVENT_NAME,
+  MICROAPP_USER_APP_SUBSCRIPTION_EVENT_NAME,
+  MicroappMessageBus,
 } from '@microapp-io/runtime';
 
 export class MessageBusPaymentsRepo implements PaymentsRepository {
   private onUserSubscribedCallback: UserSubscribedCallback | null = null;
   private messageBus: MicroappMessageBus;
-  private userSubscription: MicroappAppSubscription | null = null;
+  private subscription: MicroappAppSubscription | null = null;
 
   constructor() {
     this.messageBus = new MicroappMessageBus();
@@ -29,36 +30,22 @@ export class MessageBusPaymentsRepo implements PaymentsRepository {
       (
         userAppSubscription: MicroappMessagePayload<MicroappAppSubscriptionMessage>
       ) => {
-        this.userSubscription = userAppSubscription.appSubscription || null;
-        this.onUserSubscribedCallback?.(this.userSubscription);
+        this.subscription = userAppSubscription.appSubscription || null;
+        this.onUserSubscribedCallback?.(this.subscription);
       }
     );
   }
 
   async hasSubscription(): Promise<boolean> {
-    const userSubscription = this.getUserSubscription();
-
-    return userSubscription !== null;
+    return this.subscription !== null;
   }
 
   async getSubscription(): Promise<MicroappAppSubscription | null> {
-    const userSubscription = await this.getUserSubscription();
-
-    if (userSubscription === null) {
-      this.onUserSubscribedCallback?.(null);
-      return null;
-    }
-
-    return userSubscription;
+    return this.subscription;
   }
 
-  requestSubscription(): void {
-    invariant(
-      typeof window !== 'undefined',
-      'requestSubscription can only be used in the browser'
-    );
-
-    this.messageBus.send(MICROAPP_REQUEST_USER_APP_SUBSCRIPTION_EVENT_NAME, {});
+  requireSubscription(): void {
+    this.messageBus.send(MICROAPP_REQUIRE_USER_APP_SUBSCRIPTION_EVENT_NAME, {});
   }
 
   onUserSubscribed(callback: UserSubscribedCallback): UnsubscribeCallback {
@@ -66,23 +53,5 @@ export class MessageBusPaymentsRepo implements PaymentsRepository {
     return () => {
       this.onUserSubscribedCallback = null;
     };
-  }
-
-  private async getUserSubscription(): Promise<MicroappAppSubscription | null> {
-    try {
-      const userSubscription = await this.messageBus.request({
-        requestType: MICROAPP_REQUEST_USER_APP_SUBSCRIPTION_EVENT_NAME,
-        responseType: MICROAPP_USER_APP_SUBSCRIPTION_EVENT_NAME,
-        payload: {},
-      });
-
-      return userSubscription.appSubscription ?? null;
-    } catch (error) {
-      console.error(
-        '[@microapp-io/payments] Failed to get user subscription:',
-        error
-      );
-      return null;
-    }
   }
 }

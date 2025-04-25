@@ -5,7 +5,6 @@ import type {
   UnsubscribeCallback,
   UserSubscribedCallback,
 } from './payments-repo';
-import { invariant } from './utils';
 import type { MicroappAppSubscription } from '@microapp-io/runtime';
 import { MessageBusPaymentsRepo } from './message-bus-payments-repo';
 
@@ -36,13 +35,8 @@ export class Payments {
     return this.repo.getSubscription();
   }
 
-  requestSubscription(): void {
-    invariant(
-      typeof window !== 'undefined',
-      'requestSubscription can only be used in the browser'
-    );
-
-    this.repo.requestSubscription();
+  requireSubscription(): void {
+    this.repo.requireSubscription();
   }
 
   onUserSubscribed(callback: UserSubscribedCallback): UnsubscribeCallback {

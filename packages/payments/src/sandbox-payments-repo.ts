@@ -21,7 +21,7 @@ export type SandboxPaymentsOptions =
 export class SandboxPaymentsRepo implements PaymentsRepository {
   private readonly enabled: boolean;
   private readonly _getSubscription: () => Promise<MicroappAppSubscription | null>;
-  private internalSubscription: MicroappAppSubscription | null = null;
+  private subscription: MicroappAppSubscription | null = null;
   private onUserSubscribedCallback: UserSubscribedCallback | null = null;
 
   static isEnabled(options?: SandboxPaymentsOptions): boolean {
@@ -35,37 +35,30 @@ export class SandboxPaymentsRepo implements PaymentsRepository {
 
   static parseOptions(options: SandboxPaymentsOptions): {
     enabled: boolean;
-    getSubscription:
-      | MicroappAppSubscription
-      | null
-      | (() => Promise<MicroappAppSubscription | null>);
+    getSubscription: () => Promise<MicroappAppSubscription | null>;
   } {
     if (typeof options === 'boolean') {
-      return { enabled: options, getSubscription: null };
+      return { enabled: options, getSubscription: async () => null };
     }
 
     const { enabled = true, subscription } = options;
     return {
       enabled,
-      getSubscription:
-        typeof subscription === 'function'
-          ? async () => subscription()
-          : subscription,
+      getSubscription: async () => {
+        if (typeof subscription === 'function') {
+          return subscription();
+        }
+        return subscription;
+      },
     };
   }
 
   constructor(options: SandboxPaymentsOptions) {
     const { enabled, getSubscription } =
       SandboxPaymentsRepo.parseOptions(options);
+
     this.enabled = enabled;
-
-    this._getSubscription =
-      typeof getSubscription === 'function'
-        ? async () => getSubscription()
-        : async () => getSubscription;
-
-    this.internalSubscription =
-      typeof getSubscription !== 'function' ? getSubscription : null;
+    this._getSubscription = getSubscription;
 
     warning(
       isProduction() && enabled,
@@ -79,28 +72,21 @@ export class SandboxPaymentsRepo implements PaymentsRepository {
 
   async hasSubscription(): Promise<boolean> {
     this.throwIfNotEnabled();
-    if (this.internalSubscription === null) {
-      return false;
-    }
-    const subscription = await this.getSubscription();
-    return subscription !== null;
+    return this.subscription !== null;
   }
 
   async getSubscription(): Promise<MicroappAppSubscription | null> {
     this.throwIfNotEnabled();
-    if (this.internalSubscription === null) {
-      this.onUserSubscribedCallback?.(null);
+    await this.requireSubscription();
+    if (this.subscription === null) {
       throw new NoSubscriptionError('Could not get subscription');
     }
-
-    return this.internalSubscription;
+    return this.subscription;
   }
 
-  async requestSubscription(): Promise<void> {
-    this.internalSubscription = await this._getSubscription();
-    if (this.internalSubscription) {
-      this.onUserSubscribedCallback?.(this.internalSubscription);
-    }
+  async requireSubscription(): Promise<void> {
+    this.subscription = await this._getSubscription();
+    this.onUserSubscribedCallback?.(this.subscription);
   }
 
   onUserSubscribed(callback: UserSubscribedCallback): UnsubscribeCallback {

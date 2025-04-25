@@ -10,7 +10,7 @@ export interface PaymentsRepository {
 
   getSubscription(): Promise<MicroappAppSubscription | null>;
 
-  requestSubscription(): void;
+  requireSubscription(): void;
 
   onUserSubscribed(callback: UserSubscribedCallback): UnsubscribeCallback;
 }
