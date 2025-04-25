@@ -21,7 +21,7 @@ function getRollupConfig(
 ) {
   const { ROOT_DIR, PKG_DIR, SOURCE_DIR, OUTPUT_DIR } = getBuildDirectories(
     name,
-    'auth'
+    'payments'
   );
 
   const banner = createBanner('@microapp-io/payments', version);
