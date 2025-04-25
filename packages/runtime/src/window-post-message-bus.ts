@@ -1,4 +1,7 @@
-import { ALLOWED_MICROAPP_ORIGIN_HOSTNAMES } from './constants';
+import {
+  ALLOWED_MICROAPP_ORIGIN_HOSTNAMES,
+  DEFAULT_MICROAPP_REQUEST_TIMEOUT_IN_MS,
+} from './constants';
 
 export type WindowMessage<
   TType extends string,
@@ -94,5 +97,56 @@ export class WindowPostMessageBus<
         return allowedOriginHostname === eventOriginUrl.hostname;
       }) !== undefined
     );
+  }
+
+  request = <
+    TRequestType extends TMessage['type'],
+    TResponseType extends TMessage['type']
+  >(
+    requestType: TRequestType,
+    responseType: TResponseType,
+    payload: ExtractPayload<TMessage, TRequestType>,
+    target?: Window,
+    timeoutInMs: number = DEFAULT_MICROAPP_REQUEST_TIMEOUT_IN_MS
+  ): Promise<ExtractPayload<TMessage, TResponseType>> => {
+    return new Promise((resolve, reject) => {
+      let unsubscribe: (() => void) | undefined;
+      let timeoutId: number | undefined;
+
+      const handler = (responsePayload: any) => {
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
+        resolve(responsePayload);
+        unsubscribe?.();
+      };
+
+      timeoutId = setTimeout(() => {
+        unsubscribe?.();
+        reject(new WindowPostMessageBusTimeoutError(requestType, payload));
+      }, timeoutInMs) as unknown as number;
+
+      unsubscribe = this.on(responseType, handler);
+      this.send(requestType, payload, target);
+    });
+  };
+}
+
+export class WindowPostMessageBusTimeoutError extends Error {
+  readonly #type: string;
+  readonly #payload: unknown;
+
+  constructor(type: string, payload: unknown) {
+    super(`Request timed out for type: ${type}`);
+    this.#type = type;
+    this.#payload = payload;
+  }
+
+  get type() {
+    return this.#type;
+  }
+
+  get payload() {
+    return this.#payload;
   }
 }

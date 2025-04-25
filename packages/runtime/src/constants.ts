@@ -34,3 +34,5 @@ export const MICROAPP_USER_APP_SUBSCRIPTION_EVENT_NAME =
   '@microapp:userAppSubscription';
 export const MICROAPP_REQUIRE_USER_APP_SUBSCRIPTION_EVENT_NAME =
   '@microapp:requireUserAppSubscription';
+
+export const DEFAULT_MICROAPP_REQUEST_TIMEOUT_IN_MS = 1000 * 30;

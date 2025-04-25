@@ -128,6 +128,9 @@ export class MicroappRuntime {
     this.#iframe.src = this.#src;
     this.#setUpMessageBus();
     this.#setUpWindowEventListeners();
+    this.#updateUserPreferences();
+    this.#updateUser();
+    this.#updateAppSubscription();
   }
 
   tearDown(): void {
@@ -431,7 +434,9 @@ export class MicroappRuntime {
         | 'theme'
         | 'lang'
         | 'user'
+        | 'onRequireUser'
         | 'appSubscription'
+        | 'onRequireAppSubscription'
       >
     >
   ): void {
@@ -463,8 +468,16 @@ export class MicroappRuntime {
       this.#user = options.user;
     }
 
+    if (options.onRequireUser) {
+      this.#onRequireUser = options.onRequireUser;
+    }
+
     if (options.appSubscription) {
       this.#appSubscription = options.appSubscription;
+    }
+
+    if (options.onRequireAppSubscription) {
+      this.#onRequireAppSubscription = options.onRequireAppSubscription;
     }
 
     const shouldUpdateIframeSrc =

@@ -1,6 +1,6 @@
 {
   "name": "@microapp-io/runtime",
-  "version": "0.3.2",
+  "version": "0.3.4",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/microapp-io/microapp-js.git",
