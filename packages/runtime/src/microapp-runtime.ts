@@ -4,6 +4,8 @@ import {
   DEFAULT_MICROAPP_THEME,
   MICROAPP_INIT_ACKNOWLEDGEMENT_EVENT_NAME,
   MICROAPP_INIT_EVENT_NAME,
+  MICROAPP_REQUEST_USER_APP_SUBSCRIPTION_EVENT_NAME,
+  MICROAPP_REQUEST_USER_AUTHENTICATED_EVENT_NAME,
   MICROAPP_REQUIRE_USER_APP_SUBSCRIPTION_EVENT_NAME,
   MICROAPP_REQUIRE_USER_AUTHENTICATED_EVENT_NAME,
   MICROAPP_RESIZE_EVENT_NAME,
@@ -168,9 +170,19 @@ export class MicroappRuntime {
       this.#handleRequireAppSubscription
     );
 
+    const tearDownRequestAppSubscription = this.#messageBus.on(
+      MICROAPP_REQUEST_USER_APP_SUBSCRIPTION_EVENT_NAME,
+      this.#handleRequestAppSubscription
+    );
+
     const tearDownRequireUser = this.#messageBus.on(
       MICROAPP_REQUIRE_USER_AUTHENTICATED_EVENT_NAME,
       this.#handleRequireUser
+    );
+
+    const tearDownRequestUser = this.#messageBus.on(
+      MICROAPP_REQUEST_USER_AUTHENTICATED_EVENT_NAME,
+      this.#handleRequestUser
     );
 
     this.#tearDownMessageBus = () => {
@@ -178,7 +190,9 @@ export class MicroappRuntime {
       tearDownRouteChange();
       tearDownResize();
       tearDownRequireAppSubscription();
+      tearDownRequestAppSubscription();
       tearDownRequireUser();
+      tearDownRequestUser();
     };
   }
 
@@ -308,6 +322,23 @@ export class MicroappRuntime {
     this.#onRequireAppSubscription();
   };
 
+  #handleRequestAppSubscription = () => {
+    if (this.#appSubscription) {
+      console.log(
+        '[@microapp-io/runtime] Found app subscription, notifying the host'
+      );
+      this.#sendMessageIfInitialized(
+        MICROAPP_USER_APP_SUBSCRIPTION_EVENT_NAME,
+        this.#appSubscription
+      );
+      return;
+    }
+
+    console.warn(
+      '[@microapp-io/runtime] No app subscription found, notifying the host'
+    );
+  };
+
   #handleRequireUser = () => {
     if (this.#user) {
       console.log(
@@ -325,6 +356,19 @@ export class MicroappRuntime {
 
     console.log('[@microapp-io/runtime] User required, notifying the host');
     this.#onRequireUser();
+  };
+
+  #handleRequestUser = () => {
+    if (this.#user) {
+      console.log('[@microapp-io/runtime] Found user, notifying the host');
+      this.#sendMessageIfInitialized(
+        MICROAPP_USER_AUTHENTICATED_EVENT_NAME,
+        this.#user
+      );
+      return;
+    }
+
+    console.warn('[@microapp-io/runtime] No user found, notifying the host');
   };
 
   #updateUserPreferences = () => {

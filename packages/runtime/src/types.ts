@@ -2,6 +2,7 @@ import type { WindowMessage } from './window-post-message-bus';
 import type {
   MICROAPP_INIT_ACKNOWLEDGEMENT_EVENT_NAME,
   MICROAPP_INIT_EVENT_NAME,
+  MICROAPP_REQUEST_USER_AUTHENTICATED_EVENT_NAME,
   MICROAPP_REQUIRE_USER_APP_SUBSCRIPTION_EVENT_NAME,
   MICROAPP_REQUIRE_USER_AUTHENTICATED_EVENT_NAME,
   MICROAPP_RESIZE_EVENT_NAME,
@@ -11,6 +12,7 @@ import type {
   MICROAPP_USER_AUTHENTICATED_EVENT_NAME,
   MICROAPP_USER_PREFERENCES_EVENT_NAME,
 } from './constants';
+import type { MICROAPP_REQUEST_USER_APP_SUBSCRIPTION_EVENT_NAME } from './constants';
 
 export type MicroappLanguage = 'en' | 'es' | 'pt';
 export type MicroappTheme = 'light' | 'dark';
@@ -92,7 +94,9 @@ export type MicroappMessages =
   | MicroappUserAuthenticatedMessage
   | MicroappAppSubscriptionMessage
   | MicroappRequireUserAuthenticatedMessage
-  | MicroappRequireAppSubscriptionMessage;
+  | MicroappRequestUserAuthenticatedMessage
+  | MicroappRequireAppSubscriptionMessage
+  | MicroappRequestAppSubscriptionMessage;
 
 export type MicroappMessagePayload<TMessage extends MicroappMessages> =
   TMessage['payload'];
@@ -121,6 +125,11 @@ export type MicroappUserAuthenticatedMessage = WindowMessage<
 
 export type MicroappRequireUserAuthenticatedMessage = WindowMessage<
   typeof MICROAPP_REQUIRE_USER_AUTHENTICATED_EVENT_NAME,
+  {}
+>;
+
+export type MicroappRequestUserAuthenticatedMessage = WindowMessage<
+  typeof MICROAPP_REQUEST_USER_AUTHENTICATED_EVENT_NAME,
   {}
 >;
 
@@ -173,5 +182,10 @@ export type MicroappAppSubscriptionMessage = WindowMessage<
 
 export type MicroappRequireAppSubscriptionMessage = WindowMessage<
   typeof MICROAPP_REQUIRE_USER_APP_SUBSCRIPTION_EVENT_NAME,
+  {}
+>;
+
+export type MicroappRequestAppSubscriptionMessage = WindowMessage<
+  typeof MICROAPP_REQUEST_USER_APP_SUBSCRIPTION_EVENT_NAME,
   {}
 >;
