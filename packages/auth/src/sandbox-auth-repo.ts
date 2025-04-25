@@ -31,8 +31,12 @@ export class SandboxAuthRepo implements AuthRepo {
     const { enabled = true, user } = options;
     return {
       enabled,
-      getUser:
-        typeof user === 'function' ? async () => user() : async () => user,
+      getUser: async () => {
+        if (typeof user === 'function') {
+          return user();
+        }
+        return user;
+      },
     };
   }
 
@@ -58,11 +62,10 @@ export class SandboxAuthRepo implements AuthRepo {
 
   async getUser(): Promise<User> {
     this.throwIfNotEnabled();
+    await this.requestLogin();
     if (this.authenticatedUser === null) {
-      this.onUserAuthenticatedCallback?.(null);
       throw new NoAuthenticatedUserError('Could not get auth user');
     }
-
     return this.authenticatedUser;
   }
 
@@ -72,18 +75,12 @@ export class SandboxAuthRepo implements AuthRepo {
 
   async isAuthenticated(): Promise<boolean> {
     this.throwIfNotEnabled();
-    if (this.authenticatedUser === null) {
-      return false;
-    }
-    const user = await this.getUser();
-    return user !== null;
+    return this.authenticatedUser !== null;
   }
 
   async requestLogin(): Promise<void> {
     this.authenticatedUser = await this._getUser();
-    if (this.authenticatedUser) {
-      this.onUserAuthenticatedCallback?.(this.authenticatedUser);
-    }
+    this.onUserAuthenticatedCallback?.(this.authenticatedUser);
   }
 
   onUserAuthenticated(
