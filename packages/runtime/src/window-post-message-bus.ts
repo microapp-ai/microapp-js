@@ -117,6 +117,10 @@ export class WindowPostMessageBus<
         if (timeoutId) {
           clearTimeout(timeoutId);
         }
+        console.log(
+          `[WindowPostMessageBus] Response received: ${responseType} <- ${requestType}`,
+          responsePayload
+        );
         resolve(responsePayload);
         unsubscribe?.();
       };
@@ -127,6 +131,10 @@ export class WindowPostMessageBus<
       }, timeoutInMs) as unknown as number;
 
       unsubscribe = this.on(responseType, handler);
+      console.log(
+        `[WindowPostMessageBus] Request sent: ${requestType} -> ${responseType}`,
+        payload
+      );
       this.send(requestType, payload, target);
     });
   };
