@@ -1,6 +1,6 @@
 {
   "name": "@microapp-io/auth",
-  "version": "2.0.10",
+  "version": "2.0.11",
   "repository": {
     "type": "git",
     "url": "https://github.com/microapp-io/microapp-js",
@@ -29,6 +29,6 @@
     "access": "public"
   },
   "dependencies": {
-    "@microapp-io/runtime": "0.3.2"
+    "@microapp-io/runtime": "0.3.6"
   }
 }

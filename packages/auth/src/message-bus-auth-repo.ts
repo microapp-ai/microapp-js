@@ -10,6 +10,7 @@ import type {
   MicroappUserAuthenticatedMessage,
 } from '@microapp-io/runtime';
 import {
+  MICROAPP_REQUEST_USER_AUTHENTICATED_EVENT_NAME,
   MICROAPP_REQUIRE_USER_APP_SUBSCRIPTION_EVENT_NAME,
   MICROAPP_USER_AUTHENTICATED_EVENT_NAME,
   MicroappMessageBus,
@@ -43,9 +44,22 @@ export class MessageBusAuthRepo implements AuthRepo {
   }
 
   async getUser(): Promise<User> {
+    const payload = await this.messageBus.request(
+      MICROAPP_REQUEST_USER_AUTHENTICATED_EVENT_NAME,
+      MICROAPP_USER_AUTHENTICATED_EVENT_NAME,
+      {}
+    );
+
+    const { user } =
+      payload as MicroappMessagePayload<MicroappUserAuthenticatedMessage>;
+
+    this.user = user || null;
+    this.onUserAuthenticatedCallback?.(this.user);
+
     if (!this.user) {
       throw new NoAuthenticatedUserError('Could not get user');
     }
+
     return this.user;
   }
 
