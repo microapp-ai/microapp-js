@@ -4,7 +4,6 @@ import type {
   UserAuthenticatedCallback,
 } from './auth-repo';
 import type { User } from './user';
-import { invariant } from './utils';
 import type {
   MicroappMessagePayload,
   MicroappUser,
@@ -51,10 +50,6 @@ export class MessageBusAuthRepo implements AuthRepo {
   }
 
   requestLogin(): void {
-    invariant(
-      typeof window !== 'undefined',
-      'requestLogin can only be used in the browser'
-    );
     this.messageBus.send(MICROAPP_REQUIRE_USER_APP_SUBSCRIPTION_EVENT_NAME, {});
   }
 
