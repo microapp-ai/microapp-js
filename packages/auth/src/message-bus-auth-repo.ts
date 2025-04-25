@@ -5,13 +5,15 @@ import type {
 } from './auth-repo';
 import type { User } from './user';
 import { invariant } from './utils';
-import {
-  MICROAPP_REQUEST_USER_AUTHENTICATED_EVENT_NAME,
-  MICROAPP_USER_AUTHENTICATED_EVENT_NAME,
-  MicroappMessageBus,
+import type {
   MicroappMessagePayload,
   MicroappUser,
   MicroappUserAuthenticatedMessage,
+} from '@microapp-io/runtime';
+import {
+  MICROAPP_REQUIRE_USER_APP_SUBSCRIPTION_EVENT_NAME,
+  MICROAPP_USER_AUTHENTICATED_EVENT_NAME,
+  MicroappMessageBus,
 } from '@microapp-io/runtime';
 import { NoAuthenticatedUserError } from './errors';
 
@@ -38,20 +40,14 @@ export class MessageBusAuthRepo implements AuthRepo {
   }
 
   async isAuthenticated(): Promise<boolean> {
-    const user = this.getMicroappUser();
-
-    return user !== null;
+    return this.user !== null;
   }
 
   async getUser(): Promise<User> {
-    const user = await this.getMicroappUser();
-
-    if (user === null) {
-      this.onUserAuthenticatedCallback?.(null);
+    if (!this.user) {
       throw new NoAuthenticatedUserError('Could not get user');
     }
-
-    return user;
+    return this.user;
   }
 
   requestLogin(): void {
@@ -59,8 +55,7 @@ export class MessageBusAuthRepo implements AuthRepo {
       typeof window !== 'undefined',
       'requestLogin can only be used in the browser'
     );
-
-    this.messageBus.send(MICROAPP_REQUEST_USER_AUTHENTICATED_EVENT_NAME, {});
+    this.messageBus.send(MICROAPP_REQUIRE_USER_APP_SUBSCRIPTION_EVENT_NAME, {});
   }
 
   onUserAuthenticated(
@@ -70,20 +65,5 @@ export class MessageBusAuthRepo implements AuthRepo {
     return () => {
       this.onUserAuthenticatedCallback = null;
     };
-  }
-
-  private async getMicroappUser(): Promise<MicroappUser | null> {
-    try {
-      const microappUserMessage = await this.messageBus.request({
-        requestType: MICROAPP_REQUEST_USER_AUTHENTICATED_EVENT_NAME,
-        responseType: MICROAPP_USER_AUTHENTICATED_EVENT_NAME,
-        payload: {},
-      });
-
-      return microappUserMessage.user ?? null;
-    } catch (error) {
-      console.error('[@microapp-io/auth] Failed to get user:', error);
-      return null;
-    }
   }
 }
