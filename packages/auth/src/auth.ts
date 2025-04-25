@@ -6,7 +6,6 @@ import type {
 import type { User } from './user';
 import type { SandboxAuthOptions } from './sandbox-auth-repo';
 import { SandboxAuthRepo } from './sandbox-auth-repo';
-import { invariant } from './utils';
 import { MessageBusAuthRepo } from './message-bus-auth-repo';
 
 export type AuthOptions = {
@@ -30,11 +29,6 @@ export class Auth {
   }
 
   requestLogin(): void {
-    invariant(
-      typeof window !== 'undefined',
-      'requestLogin can only be used in the browser'
-    );
-
     this.repo.requestLogin();
   }
 
