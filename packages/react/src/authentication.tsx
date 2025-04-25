@@ -50,13 +50,16 @@ export function AuthProvider({
     return Object.assign({}, INITIAL_AUTH_CONTEXT);
   });
 
-  const load = React.useCallback(
+  const fetch = React.useCallback(
     async ({ shouldForceRefresh }: { shouldForceRefresh?: boolean } = {}) => {
-      setState((previousState) => ({
-        ...previousState,
-        isLoading: true,
-        error: undefined,
-      }));
+      setState(
+        (previousState) =>
+          ({
+            ...previousState,
+            isLoading: true,
+            error: undefined,
+          } as AuthContextType)
+      );
 
       try {
         const isAuthenticated = await auth.isAuthenticated();
@@ -79,7 +82,7 @@ export function AuthProvider({
         const error =
           causeError instanceof Error
             ? causeError
-            : new LoadUserError({ cause: causeError });
+            : new FetchUserError({ cause: causeError });
 
         setState((previousState) => ({
           ...previousState,
@@ -94,14 +97,32 @@ export function AuthProvider({
   );
 
   React.useEffect(() => {
-    setState((previousState) => ({
-      ...previousState,
-      refresh: () => load({ shouldForceRefresh: true }),
-      requestLogin: () => auth.requestLogin(),
-    }));
+    setState(
+      (previousState) =>
+        ({
+          ...previousState,
+          refresh: () => fetch({ shouldForceRefresh: true }),
+          requestLogin: () => auth.requestLogin(),
+        } as AuthContextType)
+    );
 
-    load();
-  }, [auth, load]);
+    fetch();
+
+    const unsubscribe = auth.onUserAuthenticated((user) => {
+      setState(
+        (previousState) =>
+          ({
+            ...previousState,
+            isAuthenticated: true,
+            user,
+          } as AuthContextType)
+      );
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [auth, fetch]);
 
   return <AuthContext.Provider value={state}>{children}</AuthContext.Provider>;
 }
@@ -141,8 +162,8 @@ export class MissingAuthProviderError extends MicroappReactError {
   }
 }
 
-export class LoadUserError extends MicroappReactError {
+export class FetchUserError extends MicroappReactError {
   constructor({ cause }: { cause?: any } = {}) {
-    super('Could not load user', { cause });
+    super('Could not fetch user', { cause });
   }
 }
