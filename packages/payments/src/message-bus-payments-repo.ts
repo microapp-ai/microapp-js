@@ -9,6 +9,7 @@ import type {
   MicroappMessagePayload,
 } from '@microapp-io/runtime';
 import {
+  MICROAPP_REQUEST_USER_APP_SUBSCRIPTION_EVENT_NAME,
   MICROAPP_REQUIRE_USER_APP_SUBSCRIPTION_EVENT_NAME,
   MICROAPP_USER_APP_SUBSCRIPTION_EVENT_NAME,
   MicroappMessageBus,
@@ -41,6 +42,18 @@ export class MessageBusPaymentsRepo implements PaymentsRepository {
   }
 
   async getSubscription(): Promise<MicroappAppSubscription | null> {
+    const payload = await this.messageBus.request(
+      MICROAPP_REQUEST_USER_APP_SUBSCRIPTION_EVENT_NAME,
+      MICROAPP_USER_APP_SUBSCRIPTION_EVENT_NAME,
+      {}
+    );
+
+    const { appSubscription } =
+      payload as MicroappMessagePayload<MicroappAppSubscriptionMessage>;
+
+    this.subscription = appSubscription || null;
+    this.onUserSubscribedCallback?.(this.subscription);
+
     return this.subscription;
   }
 
