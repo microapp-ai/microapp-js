@@ -1,6 +1,7 @@
 import * as React from 'react';
 import type { AuthOptions, User } from '@microapp-io/auth';
 import { Auth } from '@microapp-io/auth';
+import { MicroappReactError } from './error';
 
 export type AuthContextType =
   | {
@@ -145,15 +146,6 @@ export function useAuth(options?: UseAuthOptions): AuthContextType {
   }, [context.user, options]);
 
   return context;
-}
-
-export class MicroappReactError extends Error {
-  readonly cause?: any;
-
-  constructor(message: string, { cause }: { cause?: any } = {}) {
-    super(message);
-    this.cause = cause;
-  }
 }
 
 export class MissingAuthProviderError extends MicroappReactError {

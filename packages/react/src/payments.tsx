@@ -2,6 +2,7 @@ import * as React from 'react';
 import type { MicroappAppSubscription } from '@microapp-io/runtime';
 import type { PaymentsOptions } from '@microapp-io/payments';
 import { Payments } from '@microapp-io/payments';
+import { MicroappReactError } from './error';
 
 export type SubscriptionContextType =
   | {
@@ -145,15 +146,6 @@ export function useSubscription(
   }, [context.subscription, options]);
 
   return context;
-}
-
-export class MicroappReactError extends Error {
-  readonly cause?: any;
-
-  constructor(message: string, { cause }: { cause?: any } = {}) {
-    super(message);
-    this.cause = cause;
-  }
 }
 
 export class MissingSubscriptionProviderError extends MicroappReactError {

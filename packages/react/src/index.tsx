@@ -1,4 +1,6 @@
 export * from './authentication';
+export * from './error';
+export * from './payments';
 export * from './user-preferences';
 
 // HEY YOU! DON'T TOUCH THIS VARIABLE!
