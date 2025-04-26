@@ -327,9 +327,7 @@ export class MicroappRuntime {
       '[@microapp-io/runtime] Notifying the host about the app subscription',
       this.#appSubscription
     );
-    this.#sendMessageIfInitialized(MICROAPP_USER_APP_SUBSCRIPTION_EVENT_NAME, {
-      appSubscription: this.#appSubscription,
-    });
+    this.#updateAppSubscription();
   };
 
   #handleRequireUser = () => {
@@ -356,10 +354,7 @@ export class MicroappRuntime {
       '[@microapp-io/runtime] Notifying the host about the user authentication',
       this.#user
     );
-    this.#sendMessageIfInitialized(
-      MICROAPP_REQUIRE_USER_AUTHENTICATED_EVENT_NAME,
-      { user: this.#user }
-    );
+    this.#updateUser();
   };
 
   #updateUserPreferences = () => {
