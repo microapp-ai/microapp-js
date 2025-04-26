@@ -61,6 +61,7 @@ export function SubscriptionProvider({
 
     try {
       const subscription = await payments.getSubscription();
+      console.log('[SubscriptionProvider] subscription', subscription);
 
       setState(
         (previousState) =>

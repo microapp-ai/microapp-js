@@ -48,6 +48,7 @@ export class MessageBusPaymentsRepo implements PaymentsRepository {
       {}
     );
 
+    console.log('[MessageBusPaymentsRepo] getSubscription payload', payload);
     const { appSubscription } =
       payload as MicroappMessagePayload<MicroappAppSubscriptionMessage>;
 

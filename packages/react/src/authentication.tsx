@@ -9,7 +9,6 @@ export type AuthContextType =
       isLoading: boolean;
       error?: Error;
       user?: undefined;
-      refresh: () => void;
       requestLogin: () => void;
     }
   | {
@@ -17,7 +16,6 @@ export type AuthContextType =
       isLoading: boolean;
       error?: Error;
       user: User;
-      refresh: () => void;
       requestLogin: () => void;
     };
 
@@ -26,7 +24,6 @@ const INITIAL_AUTH_CONTEXT: AuthContextType = {
   isLoading: false,
   error: undefined,
   user: undefined,
-  refresh: () => {},
   requestLogin: () => {},
 };
 
@@ -51,58 +48,50 @@ export function AuthProvider({
     return Object.assign({}, INITIAL_AUTH_CONTEXT);
   });
 
-  const fetch = React.useCallback(
-    async ({ shouldForceRefresh }: { shouldForceRefresh?: boolean } = {}) => {
+  const fetch = React.useCallback(async () => {
+    setState(
+      (previousState) =>
+        ({
+          ...previousState,
+          isLoading: true,
+          error: undefined,
+        } as AuthContextType)
+    );
+
+    try {
+      const user = await auth.getUser();
+      console.log('[AuthProvider] user', user);
+
       setState(
         (previousState) =>
           ({
             ...previousState,
-            isLoading: true,
-            error: undefined,
+            isAuthenticated: !!user,
+            isLoading: false,
+            user: user ?? undefined,
           } as AuthContextType)
       );
+    } catch (causeError) {
+      const error =
+        causeError instanceof Error
+          ? causeError
+          : new FetchUserError({ cause: causeError });
 
-      try {
-        const isAuthenticated = await auth.isAuthenticated();
-        const user = isAuthenticated
-          ? shouldForceRefresh
-            ? await auth.getUser()
-            : await auth.getCachedUser()
-          : undefined;
-
-        setState(
-          (previousState) =>
-            ({
-              ...previousState,
-              isAuthenticated,
-              isLoading: false,
-              user,
-            } as AuthContextType)
-        );
-      } catch (causeError) {
-        const error =
-          causeError instanceof Error
-            ? causeError
-            : new FetchUserError({ cause: causeError });
-
-        setState((previousState) => ({
-          ...previousState,
-          isAuthenticated: false,
-          isLoading: false,
-          user: undefined,
-          error,
-        }));
-      }
-    },
-    [auth]
-  );
+      setState((previousState) => ({
+        ...previousState,
+        isAuthenticated: false,
+        isLoading: false,
+        user: undefined,
+        error,
+      }));
+    }
+  }, [auth]);
 
   React.useEffect(() => {
     setState(
       (previousState) =>
         ({
           ...previousState,
-          refresh: () => fetch({ shouldForceRefresh: true }),
           requestLogin: () => auth.requestLogin(),
         } as AuthContextType)
     );
@@ -114,8 +103,8 @@ export function AuthProvider({
         (previousState) =>
           ({
             ...previousState,
-            isAuthenticated: true,
-            user,
+            isAuthenticated: !!user,
+            user: user ?? undefined,
           } as AuthContextType)
       );
     });

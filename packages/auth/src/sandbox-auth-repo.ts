@@ -4,7 +4,6 @@ import type {
   UserAuthenticatedCallback,
 } from './auth-repo';
 import type { User } from './user';
-import { NoAuthenticatedUserError } from './errors';
 import { invariant, isProduction, warning } from './utils';
 
 export type SandboxAuthOptions =
@@ -60,12 +59,9 @@ export class SandboxAuthRepo implements AuthRepo {
     );
   }
 
-  async getUser(): Promise<User> {
+  async getUser(): Promise<User | null> {
     this.throwIfNotEnabled();
     await this.requestLogin();
-    if (this.authenticatedUser === null) {
-      throw new NoAuthenticatedUserError('Could not get auth user');
-    }
     return this.authenticatedUser;
   }
 

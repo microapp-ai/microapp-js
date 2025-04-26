@@ -15,7 +15,6 @@ import {
   MICROAPP_USER_AUTHENTICATED_EVENT_NAME,
   MicroappMessageBus,
 } from '@microapp-io/runtime';
-import { NoAuthenticatedUserError } from './errors';
 
 export class MessageBusAuthRepo implements AuthRepo {
   private onUserAuthenticatedCallback: UserAuthenticatedCallback | null = null;
@@ -40,25 +39,23 @@ export class MessageBusAuthRepo implements AuthRepo {
   }
 
   async isAuthenticated(): Promise<boolean> {
-    return this.user !== null;
+    const user = await this.getUser();
+    return user !== null;
   }
 
-  async getUser(): Promise<User> {
+  async getUser(): Promise<User | null> {
     const payload = await this.messageBus.request(
       MICROAPP_REQUEST_USER_AUTHENTICATED_EVENT_NAME,
       MICROAPP_USER_AUTHENTICATED_EVENT_NAME,
       {}
     );
 
+    console.log('[MessageBusAuthRepo] getUser payload', payload);
     const { user } =
       payload as MicroappMessagePayload<MicroappUserAuthenticatedMessage>;
 
     this.user = user || null;
     this.onUserAuthenticatedCallback?.(this.user);
-
-    if (!this.user) {
-      throw new NoAuthenticatedUserError('Could not get user');
-    }
 
     return this.user;
   }

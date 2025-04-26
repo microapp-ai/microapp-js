@@ -6,7 +6,7 @@ export type UnsubscribeCallback = () => void;
 export interface AuthRepo {
   isAuthenticated(): Promise<boolean>;
 
-  getUser(): Promise<User>;
+  getUser(): Promise<User | null>;
 
   requestLogin(): void;
 

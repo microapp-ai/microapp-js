@@ -329,7 +329,7 @@ export class MicroappRuntime {
       );
       this.#sendMessageIfInitialized(
         MICROAPP_USER_APP_SUBSCRIPTION_EVENT_NAME,
-        this.#appSubscription
+        { appSubscription: this.#appSubscription }
       );
       return;
     }
@@ -361,10 +361,9 @@ export class MicroappRuntime {
   #handleRequestUser = () => {
     if (this.#user) {
       console.log('[@microapp-io/runtime] Found user, notifying the host');
-      this.#sendMessageIfInitialized(
-        MICROAPP_USER_AUTHENTICATED_EVENT_NAME,
-        this.#user
-      );
+      this.#sendMessageIfInitialized(MICROAPP_USER_AUTHENTICATED_EVENT_NAME, {
+        user: this.#user,
+      });
       return;
     }
 

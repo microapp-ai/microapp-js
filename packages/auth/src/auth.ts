@@ -14,7 +14,6 @@ export type AuthOptions = {
 
 export class Auth {
   private readonly repo: AuthRepo;
-  private user?: User;
 
   constructor({ sandbox }: AuthOptions = {}) {
     this.repo = new MessageBusAuthRepo();
@@ -36,17 +35,8 @@ export class Auth {
     return this.repo.isAuthenticated();
   }
 
-  async getCachedUser(): Promise<User> {
-    if (!this.user) {
-      return this.getUser();
-    }
-
-    return this.user;
-  }
-
-  async getUser(): Promise<User> {
-    this.user = await this.repo.getUser();
-    return this.user;
+  async getUser(): Promise<User | null> {
+    return this.repo.getUser();
   }
 
   onUserAuthenticated(

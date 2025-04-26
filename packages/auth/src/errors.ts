@@ -7,13 +7,6 @@ export class MicroappAuthError extends Error {
   }
 }
 
-export class NoAuthenticatedUserError extends MicroappAuthError {
-  constructor(message: string) {
-    super(message);
-    this.name = 'NoAuthenticatedUserError';
-  }
-}
-
 export class InvariantError extends MicroappAuthError {
   constructor(message: string) {
     super(message);
