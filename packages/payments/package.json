@@ -1,6 +1,6 @@
 {
   "name": "@microapp-io/payments",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "repository": {
     "type": "git",
     "url": "https://github.com/microapp-io/microapp-js",
@@ -33,6 +33,6 @@
     "access": "public"
   },
   "dependencies": {
-    "@microapp-io/runtime": "0.3.6"
+    "@microapp-io/runtime": "0.3.7"
   }
 }

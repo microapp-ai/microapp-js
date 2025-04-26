@@ -2027,16 +2027,6 @@
     globby "^11.0.0"
     read-yaml-file "^1.1.0"
 
-"@microapp-io/runtime@0.2.36":
-  version "0.2.36"
-  resolved "https://registry.yarnpkg.com/@microapp-io/runtime/-/runtime-0.2.36.tgz#a94845c5cb55c3b8cc60093b958a5cef9b19e4b1"
-  integrity sha512-tTDcE1UKxzdip5SQyNwYUlTRtGbjIT2TUhBbl4nAG5/vftB62hzdmWA4RJRZEbZ+rlX7z2H/sSDYVC3JIGwxgw==
-
-"@microapp-io/runtime@0.2.40":
-  version "0.2.40"
-  resolved "https://registry.yarnpkg.com/@microapp-io/runtime/-/runtime-0.2.40.tgz#2f2cb455a682517945138bad43793441b270363f"
-  integrity sha512-I3TRhPGxdSNpjNRLP4T/eJolTCI5wDqg89G7XQzlhdIoG+1tCntkiA+ZmPmZEgQA94lEVbUxl81tot2M1mCXjg==
-
 "@nicolo-ribaudo/eslint-scope-5-internals@5.1.1-v1":
   version "5.1.1-v1"
   resolved "https://registry.yarnpkg.com/@nicolo-ribaudo/eslint-scope-5-internals/-/eslint-scope-5-internals-5.1.1-v1.tgz#dbf733a965ca47b1973177dc0bb6c889edcfb129"
