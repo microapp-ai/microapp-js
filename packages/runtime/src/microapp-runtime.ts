@@ -323,20 +323,13 @@ export class MicroappRuntime {
   };
 
   #handleRequestAppSubscription = () => {
-    if (this.#appSubscription) {
-      console.log(
-        '[@microapp-io/runtime] Found app subscription, notifying the host'
-      );
-      this.#sendMessageIfInitialized(
-        MICROAPP_USER_APP_SUBSCRIPTION_EVENT_NAME,
-        { appSubscription: this.#appSubscription }
-      );
-      return;
-    }
-
-    console.warn(
-      '[@microapp-io/runtime] No app subscription found, notifying the host'
+    console.log(
+      '[@microapp-io/runtime] Notifying the host about the app subscription',
+      this.#appSubscription
     );
+    this.#sendMessageIfInitialized(MICROAPP_USER_APP_SUBSCRIPTION_EVENT_NAME, {
+      appSubscription: this.#appSubscription,
+    });
   };
 
   #handleRequireUser = () => {
@@ -359,15 +352,14 @@ export class MicroappRuntime {
   };
 
   #handleRequestUser = () => {
-    if (this.#user) {
-      console.log('[@microapp-io/runtime] Found user, notifying the host');
-      this.#sendMessageIfInitialized(MICROAPP_USER_AUTHENTICATED_EVENT_NAME, {
-        user: this.#user,
-      });
-      return;
-    }
-
-    console.warn('[@microapp-io/runtime] No user found, notifying the host');
+    console.log(
+      '[@microapp-io/runtime] Notifying the host about the user authentication',
+      this.#user
+    );
+    this.#sendMessageIfInitialized(
+      MICROAPP_REQUIRE_USER_AUTHENTICATED_EVENT_NAME,
+      { user: this.#user }
+    );
   };
 
   #updateUserPreferences = () => {
