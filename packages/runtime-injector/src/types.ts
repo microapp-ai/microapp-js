@@ -14,6 +14,7 @@ export type MicroappMarketplaceApp = {
   publicUrl: string;
   privateUrl: string | null;
   isPublishedOnMarketplace: boolean;
+  marketplaceUrl: string | null;
 };
 
 export type RequestHTMLRewriterInput = {
