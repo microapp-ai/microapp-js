@@ -75,6 +75,14 @@ function handlePossibleRedirect({
   const locationHeader = response.headers.get('Location');
 
   if (!locationHeader) {
+    console.log(
+      'No Location header found in response. Returning original response.'
+    );
+    return response;
+  }
+
+  if (!locationHeader.startsWith('http')) {
+    console.log('Location header is not a full URL:', locationHeader);
     return response;
   }
 
