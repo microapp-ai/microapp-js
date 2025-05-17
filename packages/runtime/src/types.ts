@@ -2,7 +2,9 @@ import type { WindowMessage } from './window-post-message-bus';
 import type {
   MICROAPP_INIT_ACKNOWLEDGEMENT_EVENT_NAME,
   MICROAPP_INIT_EVENT_NAME,
+  MICROAPP_REQUEST_USER_APP_SUBSCRIPTION_EVENT_NAME,
   MICROAPP_REQUEST_USER_AUTHENTICATED_EVENT_NAME,
+  MICROAPP_REQUEST_USER_JWT_TOKEN_EVENT_NAME,
   MICROAPP_REQUIRE_USER_APP_SUBSCRIPTION_EVENT_NAME,
   MICROAPP_REQUIRE_USER_AUTHENTICATED_EVENT_NAME,
   MICROAPP_RESIZE_EVENT_NAME,
@@ -10,9 +12,9 @@ import type {
   MICROAPP_SET_VIEWPORT_SIZE_EVENT_NAME,
   MICROAPP_USER_APP_SUBSCRIPTION_EVENT_NAME,
   MICROAPP_USER_AUTHENTICATED_EVENT_NAME,
+  MICROAPP_USER_JWT_TOKEN_EVENT_NAME,
   MICROAPP_USER_PREFERENCES_EVENT_NAME,
 } from './constants';
-import type { MICROAPP_REQUEST_USER_APP_SUBSCRIPTION_EVENT_NAME } from './constants';
 
 export type MicroappLanguage = 'en' | 'es' | 'pt';
 export type MicroappTheme = 'light' | 'dark';
@@ -96,7 +98,9 @@ export type MicroappMessages =
   | MicroappRequireUserAuthenticatedMessage
   | MicroappRequestUserAuthenticatedMessage
   | MicroappRequireAppSubscriptionMessage
-  | MicroappRequestAppSubscriptionMessage;
+  | MicroappRequestAppSubscriptionMessage
+  | MicroappUserJwtTokenMessage
+  | MicroappRequestUserJwtTokenMessage;
 
 export type MicroappMessagePayload<TMessage extends MicroappMessages> =
   TMessage['payload'];
@@ -187,5 +191,17 @@ export type MicroappRequireAppSubscriptionMessage = WindowMessage<
 
 export type MicroappRequestAppSubscriptionMessage = WindowMessage<
   typeof MICROAPP_REQUEST_USER_APP_SUBSCRIPTION_EVENT_NAME,
+  {}
+>;
+
+export type MicroappUserJwtTokenMessage = WindowMessage<
+  typeof MICROAPP_USER_JWT_TOKEN_EVENT_NAME,
+  {
+    userJwtToken: string | undefined;
+  }
+>;
+
+export type MicroappRequestUserJwtTokenMessage = WindowMessage<
+  typeof MICROAPP_REQUEST_USER_JWT_TOKEN_EVENT_NAME,
   {}
 >;

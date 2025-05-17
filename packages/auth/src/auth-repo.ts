@@ -11,4 +11,6 @@ export interface AuthRepo {
   requestLogin(): void;
 
   onUserAuthenticated(callback: UserAuthenticatedCallback): UnsubscribeCallback;
+
+  getUserJwtToken(): Promise<string | null>;
 }

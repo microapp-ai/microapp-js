@@ -6,6 +6,7 @@ import {
   MICROAPP_INIT_EVENT_NAME,
   MICROAPP_REQUEST_USER_APP_SUBSCRIPTION_EVENT_NAME,
   MICROAPP_REQUEST_USER_AUTHENTICATED_EVENT_NAME,
+  MICROAPP_REQUEST_USER_JWT_TOKEN_EVENT_NAME,
   MICROAPP_REQUIRE_USER_APP_SUBSCRIPTION_EVENT_NAME,
   MICROAPP_REQUIRE_USER_AUTHENTICATED_EVENT_NAME,
   MICROAPP_RESIZE_EVENT_NAME,
@@ -14,6 +15,7 @@ import {
   MICROAPP_URL_PARAM_NAMES,
   MICROAPP_USER_APP_SUBSCRIPTION_EVENT_NAME,
   MICROAPP_USER_AUTHENTICATED_EVENT_NAME,
+  MICROAPP_USER_JWT_TOKEN_EVENT_NAME,
   MICROAPP_USER_PREFERENCES_EVENT_NAME,
 } from './constants';
 import { MicroappMessageBus } from './microapp-message-bus';
@@ -52,6 +54,7 @@ export type MicroappRuntimeOptions = {
   onRequireUser: () => void;
   appSubscription?: MicroappAppSubscription;
   onRequireAppSubscription: () => void;
+  onRequestUserJwtToken: () => Promise<string | undefined>;
 };
 
 export class MicroappRuntime {
@@ -71,6 +74,7 @@ export class MicroappRuntime {
   #onRequireUser: () => void;
   #appSubscription: MicroappAppSubscription | undefined;
   #onRequireAppSubscription: () => void;
+  #onRequestUserJwtToken: () => Promise<string | undefined>;
 
   #hasInitialized = false;
   #pendingMessages: MicroappMessages[] = [];
@@ -91,6 +95,7 @@ export class MicroappRuntime {
     onRequireUser,
     appSubscription,
     onRequireAppSubscription,
+    onRequestUserJwtToken,
   }: MicroappRuntimeOptions) {
     this.#id = id;
     this.#iframe = iframe;
@@ -118,6 +123,7 @@ export class MicroappRuntime {
     this.#onRequireUser = onRequireUser;
     this.#appSubscription = appSubscription;
     this.#onRequireAppSubscription = onRequireAppSubscription;
+    this.#onRequestUserJwtToken = onRequestUserJwtToken;
 
     this.#messageBus = new MicroappMessageBus({
       targetOrigin: buildOriginUrl(this.#src),
@@ -185,6 +191,11 @@ export class MicroappRuntime {
       this.#handleRequestUser
     );
 
+    const tearDownRequestUserJwtToken = this.#messageBus.on(
+      MICROAPP_REQUEST_USER_JWT_TOKEN_EVENT_NAME,
+      this.#handleRequestUserJwtToken
+    );
+
     this.#tearDownMessageBus = () => {
       tearDownInit();
       tearDownRouteChange();
@@ -193,6 +204,7 @@ export class MicroappRuntime {
       tearDownRequestAppSubscription();
       tearDownRequireUser();
       tearDownRequestUser();
+      tearDownRequestUserJwtToken();
     };
   }
 
@@ -355,6 +367,24 @@ export class MicroappRuntime {
       this.#user
     );
     this.#updateUser();
+  };
+
+  #handleRequestUserJwtToken = async () => {
+    console.log(
+      '[@microapp-io/runtime] User JWT token required, notifying the host'
+    );
+    const userJwtToken = await this.#onRequestUserJwtToken();
+    console.log(
+      '[@microapp-io/runtime] Notifying the host about the user JWT token',
+      {
+        userJwtToken: userJwtToken
+          ? userJwtToken.slice(0, 10) + '...'
+          : undefined,
+      }
+    );
+    this.#sendMessageIfInitialized(MICROAPP_USER_JWT_TOKEN_EVENT_NAME, {
+      userJwtToken,
+    });
   };
 
   #updateUserPreferences = () => {

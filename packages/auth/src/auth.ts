@@ -44,4 +44,8 @@ export class Auth {
   ): UnsubscribeCallback {
     return this.repo.onUserAuthenticated(callback);
   }
+
+  getUserJwtToken(): Promise<string | null> {
+    return this.repo.getUserJwtToken();
+  }
 }

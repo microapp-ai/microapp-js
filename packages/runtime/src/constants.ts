@@ -38,5 +38,8 @@ export const MICROAPP_REQUIRE_USER_APP_SUBSCRIPTION_EVENT_NAME =
   '@microapp:requireUserAppSubscription';
 export const MICROAPP_REQUEST_USER_APP_SUBSCRIPTION_EVENT_NAME =
   '@microapp:requestUserAppSubscription';
+export const MICROAPP_USER_JWT_TOKEN_EVENT_NAME = '@microapp:userJwtToken';
+export const MICROAPP_REQUEST_USER_JWT_TOKEN_EVENT_NAME =
+  '@microapp:requestUserJwt';
 
 export const DEFAULT_MICROAPP_REQUEST_TIMEOUT_IN_MS = 1000 * 30;

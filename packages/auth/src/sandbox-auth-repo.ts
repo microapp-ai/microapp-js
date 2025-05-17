@@ -11,23 +11,30 @@ export type SandboxAuthOptions =
   | {
       enabled?: boolean;
       user: User | null | (() => User | null) | (() => Promise<User | null>);
+      userJwtToken?: string | (() => string | null);
     };
 
 export class SandboxAuthRepo implements AuthRepo {
   private readonly enabled: boolean;
   private readonly _getUser: () => Promise<User | null>;
+  private readonly _getUserJwtToken: () => Promise<string | null>;
   private onUserAuthenticatedCallback: UserAuthenticatedCallback | null = null;
   private authenticatedUser: User | null = null;
 
   static parseOptions(options: SandboxAuthOptions): {
     enabled: boolean;
     getUser: () => Promise<User | null>;
+    getUserJwtToken: () => Promise<string | null>;
   } {
     if (typeof options === 'boolean') {
-      return { enabled: options, getUser: async () => null };
+      return {
+        enabled: options,
+        getUser: async () => null,
+        getUserJwtToken: async () => null,
+      };
     }
 
-    const { enabled = true, user } = options;
+    const { enabled = true, user, userJwtToken } = options;
     return {
       enabled,
       getUser: async () => {
@@ -35,6 +42,12 @@ export class SandboxAuthRepo implements AuthRepo {
           return user();
         }
         return user;
+      },
+      getUserJwtToken: async () => {
+        if (typeof userJwtToken === 'function') {
+          return userJwtToken();
+        }
+        return userJwtToken ?? null;
       },
     };
   }
@@ -49,9 +62,11 @@ export class SandboxAuthRepo implements AuthRepo {
   }
 
   constructor(options: SandboxAuthOptions) {
-    const { enabled, getUser } = SandboxAuthRepo.parseOptions(options);
+    const { enabled, getUser, getUserJwtToken } =
+      SandboxAuthRepo.parseOptions(options);
     this.enabled = enabled;
     this._getUser = getUser;
+    this._getUserJwtToken = getUserJwtToken;
 
     warning(
       isProduction() && enabled,
@@ -86,5 +101,10 @@ export class SandboxAuthRepo implements AuthRepo {
     return () => {
       this.onUserAuthenticatedCallback = null;
     };
+  }
+
+  getUserJwtToken(): Promise<string | null> {
+    this.throwIfNotEnabled();
+    return this._getUserJwtToken();
   }
 }

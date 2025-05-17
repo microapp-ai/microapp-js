@@ -9,6 +9,7 @@ export type AuthContextType =
       isLoading: boolean;
       error?: Error;
       user?: undefined;
+      userJwtToken?: undefined;
       requestLogin: () => void;
     }
   | {
@@ -16,6 +17,7 @@ export type AuthContextType =
       isLoading: boolean;
       error?: Error;
       user: User;
+      userJwtToken: string;
       requestLogin: () => void;
     };
 
@@ -24,6 +26,7 @@ const INITIAL_AUTH_CONTEXT: AuthContextType = {
   isLoading: false,
   error: undefined,
   user: undefined,
+  userJwtToken: undefined,
   requestLogin: () => {},
 };
 
@@ -59,8 +62,21 @@ export function AuthProvider({
     );
 
     try {
-      const user = await auth.getUser();
+      let [user, userJwtToken] = await Promise.all<any>([
+        auth.getUser(),
+        auth.getUserJwtToken(),
+      ]);
+
+      // NB: This is a workaround for TypeScript's type inference
+      // See: https://github.com/microsoft/TypeScript/issues/34925
+      user = user as ReturnType<typeof auth.getUser>;
+      userJwtToken = userJwtToken as ReturnType<typeof auth.getUserJwtToken>;
+
       console.log('[AuthProvider] user', user);
+      console.log(
+        '[AuthProvider] userJwtToken',
+        userJwtToken ? userJwtToken.slice(0, 10) : null
+      );
 
       setState(
         (previousState) =>
@@ -69,6 +85,7 @@ export function AuthProvider({
             isAuthenticated: !!user,
             isLoading: false,
             user: user ?? undefined,
+            userJwtToken: userJwtToken ?? undefined,
           } as AuthContextType)
       );
     } catch (causeError) {
@@ -82,6 +99,7 @@ export function AuthProvider({
         isAuthenticated: false,
         isLoading: false,
         user: undefined,
+        userJwtToken: undefined,
         error,
       }));
     }

@@ -8,11 +8,14 @@ import type {
   MicroappMessagePayload,
   MicroappUser,
   MicroappUserAuthenticatedMessage,
+  MicroappUserJwtTokenMessage,
 } from '@microapp-io/runtime';
 import {
   MICROAPP_REQUEST_USER_AUTHENTICATED_EVENT_NAME,
+  MICROAPP_REQUEST_USER_JWT_TOKEN_EVENT_NAME,
   MICROAPP_REQUIRE_USER_APP_SUBSCRIPTION_EVENT_NAME,
   MICROAPP_USER_AUTHENTICATED_EVENT_NAME,
+  MICROAPP_USER_JWT_TOKEN_EVENT_NAME,
   MicroappMessageBus,
 } from '@microapp-io/runtime';
 
@@ -71,5 +74,26 @@ export class MessageBusAuthRepo implements AuthRepo {
     return () => {
       this.onUserAuthenticatedCallback = null;
     };
+  }
+
+  async getUserJwtToken(): Promise<string | null> {
+    const payload = await this.messageBus.request(
+      MICROAPP_REQUEST_USER_JWT_TOKEN_EVENT_NAME,
+      MICROAPP_USER_JWT_TOKEN_EVENT_NAME,
+      {}
+    );
+
+    const { userJwtToken } =
+      payload as MicroappMessagePayload<MicroappUserJwtTokenMessage>;
+
+    console.log('[MessageBusAuthRepo] getUserJwtToken payload', {
+      userJwtToken: userJwtToken ? userJwtToken.slice(0, 10) + '...' : null,
+    });
+
+    if (userJwtToken) {
+      return userJwtToken;
+    }
+
+    return null;
   }
 }

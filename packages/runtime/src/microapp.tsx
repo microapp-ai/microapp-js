@@ -23,6 +23,7 @@ type MicroappProps = {
   | 'onRequireUser'
   | 'appSubscription'
   | 'onRequireAppSubscription'
+  | 'onRequestUserJwtToken'
 > &
   Omit<
     React.IframeHTMLAttributes<HTMLIFrameElement>,
@@ -69,6 +70,7 @@ export function Microapp({
   onRequireUser,
   appSubscription,
   onRequireAppSubscription,
+  onRequestUserJwtToken,
   onLoad,
   onError,
   loadingComponent,
@@ -96,6 +98,7 @@ export function Microapp({
       onRequireUser,
       appSubscription,
       onRequireAppSubscription,
+      onRequestUserJwtToken,
     }),
     [
       id,
@@ -109,6 +112,7 @@ export function Microapp({
       onRequireUser,
       appSubscription,
       onRequireAppSubscription,
+      onRequestUserJwtToken,
     ]
   );
 
