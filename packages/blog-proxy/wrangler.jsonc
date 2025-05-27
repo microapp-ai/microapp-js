@@ -31,7 +31,8 @@
    * https://developers.cloudflare.com/workers/wrangler/configuration/#environment-variables
    */
   "vars": {
-    "BLOG_ORIGIN_HOSTNAME": "microapp.kinsta.cloud"
+    "BLOG_ORIGIN_HOSTNAME": "microapp.kinsta.cloud",
+    "BLOG_PUBLIC_URL": "https://www.microapp.io/blog"
   }
 
   /**
