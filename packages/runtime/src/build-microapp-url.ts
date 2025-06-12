@@ -19,21 +19,25 @@ export const buildMicroappUrl = (
   }
 ): string => {
   const iframeUrl = buildUrlWithTrailingSlash(microappUrl);
-  const searchParams = new URLSearchParams(iframeUrl.search);
-  searchParams.append(
-    MICROAPP_URL_PARAM_NAMES.TARGET_ORIGIN,
-    targetOrigin.toString()
-  );
-
-  if (theme) searchParams.append(MICROAPP_URL_PARAM_NAMES.THEME, theme);
-  if (lang) searchParams.append(MICROAPP_URL_PARAM_NAMES.LANGUAGE, lang);
-
-  const queryString = searchParams.toString();
-  iframeUrl.search = queryString;
 
   if (!currentUrl && typeof window !== 'undefined') {
     currentUrl = buildUrlWithTrailingSlash(window.location.href);
   }
+
+  const searchParams = currentUrl
+    ? new URLSearchParams(buildUrlWithTrailingSlash(currentUrl).search)
+    : new URLSearchParams(iframeUrl.search);
+
+  searchParams.set(
+    MICROAPP_URL_PARAM_NAMES.TARGET_ORIGIN,
+    targetOrigin.toString()
+  );
+
+  if (theme) searchParams.set(MICROAPP_URL_PARAM_NAMES.THEME, theme);
+  if (lang) searchParams.set(MICROAPP_URL_PARAM_NAMES.LANGUAGE, lang);
+
+  const queryString = searchParams.toString();
+  iframeUrl.search = queryString;
 
   if (baseUrl && currentUrl) {
     baseUrl = buildUrlWithTrailingSlash(baseUrl);
