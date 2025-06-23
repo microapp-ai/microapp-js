@@ -11,6 +11,7 @@ type MicroappProps = {
   onLoad?: () => void;
   onError?: (error: Error) => void;
   loadingComponent?: React.ReactNode;
+  canLoad?: boolean;
 } & Pick<
   MicroappRuntimeOptions,
   | 'homeUrl'
@@ -58,7 +59,12 @@ export function MicroappProvider({ children }: { children?: any }) {
   );
 }
 
-export function Microapp({
+export function Microapp({ canLoad, theme, ...rest }: MicroappProps) {
+  if (!canLoad) <DefaultLoadingSpinner theme={theme} />;
+  return <MicroappIframe {...rest} theme={theme} />;
+}
+
+function MicroappIframe({
   id,
   homeUrl,
   baseUrl,
@@ -75,6 +81,7 @@ export function Microapp({
   onError,
   loadingComponent,
   title,
+  canLoad,
   ...rest
 }: MicroappProps) {
   if ('id' in rest) {
