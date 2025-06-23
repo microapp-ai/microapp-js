@@ -117,6 +117,8 @@ export function AuthProvider({
     fetch();
 
     const unsubscribe = auth.onUserAuthenticated((user) => {
+      console.log('[AuthProvider] Changed user', user ? user.id : 'no user');
+
       setState(
         (previousState) =>
           ({
@@ -125,6 +127,21 @@ export function AuthProvider({
             user: user ?? undefined,
           } as AuthContextType)
       );
+
+      auth.getUserJwtToken().then((userJwtToken) => {
+        console.log(
+          '[AuthProvider] Changed userJwtToken',
+          userJwtToken ? userJwtToken.slice(0, 10) : 'no token'
+        );
+
+        setState(
+          (previousState) =>
+            ({
+              ...previousState,
+              userJwtToken: userJwtToken ?? undefined,
+            } as AuthContextType)
+        );
+      });
     });
 
     return () => {
