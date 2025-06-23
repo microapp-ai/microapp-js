@@ -60,7 +60,7 @@ export function MicroappProvider({ children }: { children?: any }) {
 }
 
 export function Microapp({ canLoad, theme, ...rest }: MicroappProps) {
-  if (!canLoad) <DefaultLoadingSpinner theme={theme} />;
+  if (!canLoad) return <DefaultLoadingSpinner theme={theme} />;
   return <MicroappIframe {...rest} theme={theme} />;
 }
 
