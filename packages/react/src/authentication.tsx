@@ -153,7 +153,8 @@ export function AuthProvider({
 }
 
 type UseAuthOptions = {
-  onChange?: (user?: User) => void;
+  onUserChange?: (user?: User) => void;
+  onUserJwtTokenChange?: (userJwtToken?: string) => void;
 };
 
 export function useAuth(options?: UseAuthOptions): AuthContextType {
@@ -164,10 +165,16 @@ export function useAuth(options?: UseAuthOptions): AuthContextType {
   }
 
   React.useEffect(() => {
-    if (options?.onChange) {
-      options.onChange(context.user);
+    if (options?.onUserChange) {
+      options.onUserChange(context.user);
     }
-  }, [context.user, options]);
+  }, [context.user, options?.onUserChange]);
+
+  React.useEffect(() => {
+    if (options?.onUserJwtTokenChange) {
+      options.onUserJwtTokenChange(context.userJwtToken);
+    }
+  }, [context.userJwtToken, options?.onUserJwtTokenChange]);
 
   return context;
 }
